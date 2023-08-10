@@ -1,0 +1,40 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+a {
+  display: flex;
+  flex-wrap: wrap;
+  align-content: center;
+}
+
+* {
+  box-sizing: border-box;
+  color: #172544;
+}
+
+.circle-button {
+  position: absolute;
+  width: 70px;
+  left: 0;
+  right: 0;
+  margin: auto;
+  height: 70px;
+  border-radius: 50%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 9999999;
+}
+
+.main_circle_text {
+  position: absolute;
+  font-size: 13px;
+  animation: animete_circle_txt 10s linear infinite;
+}
+
+@keyframes animete_circle_txt {
+  100% {
+    transform: rotate(360deg);
+  }
+}
