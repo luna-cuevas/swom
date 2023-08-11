@@ -37,7 +37,7 @@ const ListingsNav = (props: Props) => {
   });
   const [value, setValue] = React.useState({
     startDate: new Date(),
-    endDate: new Date().setMonth(1),
+    endDate: new Date(new Date().setMonth(1)),
   });
 
   const handleValueChange = (newValue: any) => {
@@ -187,7 +187,7 @@ const ListingsNav = (props: Props) => {
             } submenu`}>
             <Datepicker
               placeholder={'Select Dates'}
-              displayFormat={'DD/MM/YYYY'}
+              displayFormat={'MM/DD/YYYY'}
               inputClassName=" px-4 py-2 w-full rounded-md focus:ring-0 font-normal "
               value={value}
               onChange={handleValueChange}
