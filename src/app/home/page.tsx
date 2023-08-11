@@ -35,9 +35,9 @@ const Page = (props: Props) => {
             Nace de la unión de dos palabras Swap (que en inglés significa
             inter- cambio) y por otro lado Home. Ahora bien, remitiendonos a la
             eti- mología de la palabra SWAP, encontramos que esta se relaciona
-            con estrechón de manos: "to strike, strike the hands together", que
-            a su vez también nos arroja como significado, el de intercambiar o
-            comerciar "to exchange, barter, trade".
+            con estrechón de manos: &quot;to strike, strike the hands
+            together&quot;, que a su vez también nos arroja como significado, el
+            de intercambiar o comerciar &quot;to exchange, barter, trade&quot;.
           </p>
         </div>
         <div className="md:w-1/4 md:my-auto my-4 relative h-[50px] ">

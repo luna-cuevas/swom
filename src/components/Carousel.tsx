@@ -15,7 +15,7 @@ const CarouselPage = (props: Props) => {
         props.roundedRight && 'rounded-r-xl'
       }`}>
       {props.images.map((image, index) => (
-        <Image src={image} alt="image" fill objectFit="cover" />
+        <Image key={index} src={image} alt="image" fill objectFit="cover" />
       ))}
     </Carousel>
   );
