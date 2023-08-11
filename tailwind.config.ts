@@ -9,6 +9,8 @@ const config: Config = withMT({
     './src/components/**/*.{js,ts,jsx,tsx,mdx}',
     './src/app/**/*.{js,ts,jsx,tsx,mdx}',
     "./public/**/*.html",
+    "./node_modules/react-tailwindcss-datepicker/dist/index.esm.js",
+
   ],
   theme: {
     extend: {
