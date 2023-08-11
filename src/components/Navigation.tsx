@@ -15,6 +15,9 @@ const Navigation = (props: Props) => {
         <Image src="/swom-logo.jpg" alt="logo" fill objectFit="contain" />
       </div>
       <div className="hidden md:flex gap-8 align-middle">
+        <Link className="m-auto" href="/listings">
+          LISTINGS
+        </Link>
         <button>US</button>
         <Link href="/">BECOME A MEMEBER</Link>
         <Link href="/">SIGN IN</Link>
@@ -51,6 +54,9 @@ const Navigation = (props: Props) => {
         }}
         className={`md:hidden z-20 align-middle gap-4 box-border top-full flex flex-col justify-center text-center transition-all duration-300 ease-in-out overflow-hidden max-h-[100vh] left-0 bg-[#F4ECE8] w-full absolute`}>
         <button>US</button>
+        <Link className="m-auto" href="/">
+          LISTINGS
+        </Link>
         <Link className="m-auto" href="/">
           BECOME A MEMEBER
         </Link>

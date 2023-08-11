@@ -8,8 +8,10 @@ type Props = {};
 const Page = (props: Props) => {
   return (
     <main>
-      <div>
-        <Carousel />
+      <div className="">
+        <div className="h-[87vh]">
+          <Carousel images={['/homepage/hero.jpg', '/homepage/hero.jpg']} />
+        </div>
         <div className="flex bg-[#7F8119] flex-wrap  md:flex-row py-5 text-[#EBDECC] tracking-widest justify-center text-xl gap-2 md:gap-5">
           <p>LONDON</p>
           <p>•</p>
@@ -124,12 +126,12 @@ const Page = (props: Props) => {
         </div>
       </section>
 
-      <section className="h-[30vh] m-auto justify-center bg-[#DED8C9] flex flex-col">
+      <section className="md:h-[30vh] py-6  m-auto justify-center bg-[#DED8C9] flex flex-col">
         <div className="w-2/3 m-auto">
           <div className="w-fit ">
             <h2 className="text-4xl mb-4">Explore</h2>
           </div>
-          <form className="grid w-full grid-cols-6 gap-4">
+          <form className="md:grid w-full flex flex-col justify-center md:grid-cols-6 gap-4">
             <input
               className="bg-[#F4ECE8] rounded-xl p-3 col-span-2"
               placeholder="Location"
@@ -145,7 +147,7 @@ const Page = (props: Props) => {
               <option value="2">2 Guest</option>
               <option value="3">3 Guest</option>
             </select>
-            <button className="bg-[#E88527] rounded-3xl text-white h-fit w-fit py-2 px-8 my-auto">
+            <button className="bg-[#E88527] rounded-3xl mx-auto md:mx-0 text-white h-fit w-fit py-2 px-8 my-auto">
               Search
             </button>
           </form>
