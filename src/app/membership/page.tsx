@@ -75,15 +75,17 @@ const Page = (props: Props) => {
 
         <div className="md:w-11/12 ml-auto bg-[#DDD5D2] px-6 p-4 rounded-3xl md:rounded-l-3xl mt-4">
           <h3 className="uppercase tracking-[0.3rem]">Contact Us!</h3>
-          <p className="text-sm">
-            For questions contact us via Whatsapp or email us at:
-            <Link
-              className="text-blue-500"
-              href="mailto:info@swom.travel"
-              target="_blank"
-              rel="noopener noreferrer">
-              info@swom.travel
-            </Link>
+          <p className="text-sm flex flex-wrap gap-[3px]">
+            For questions contact us via Whatsapp or email us at{' '}
+            <span>
+              <Link
+                className="text-blue-500"
+                href="mailto:info@swom.travel"
+                target="_blank"
+                rel="noopener noreferrer">
+                info@swom.travel
+              </Link>
+            </span>
           </p>
         </div>
       </div>
