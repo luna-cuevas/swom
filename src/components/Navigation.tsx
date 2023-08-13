@@ -18,13 +18,13 @@ const Navigation = (props: Props) => {
   const [mobileActive, setMobileActive] = React.useState(false);
 
   return (
-    <nav className=" relative  px-12  py-4 bg-[#F4ECE8] flex justify-between">
+    <nav className=" relative  md:px-12 px-4  py-4 bg-[#F4ECE8] flex justify-between">
       <div className="flex w-[150px] h-auto relative  justify-center items-center">
         <Link href="/home">
           <Image src="/swom-logo.jpg" alt="logo" fill objectFit="contain" />
         </Link>
       </div>
-      <div className="hidden md:flex gap-8 align-middle">
+      <div className="hidden lg:flex gap-8 align-middle">
         <Link className="m-auto" href="/messages">
           MESSAGES
         </Link>
@@ -40,9 +40,6 @@ const Navigation = (props: Props) => {
         <button>US</button>
         <Link href="/">BECOME A MEMEBER</Link>
         <Link href="/">SIGN IN</Link>
-        {/* <button>
-          
-        </button> */}
 
         <Menu
           dismiss={{
@@ -73,7 +70,7 @@ const Navigation = (props: Props) => {
         </Menu>
       </div>
 
-      <div className="md:hidden">
+      <div className="lg:hidden">
         <button onClick={() => setMobileActive(!mobileActive)}>
           <svg
             width="20"
@@ -95,30 +92,44 @@ const Navigation = (props: Props) => {
           borderTop: mobileActive ? '1px solid #a9a9a9' : 'none',
           padding: mobileActive ? '5px 0' : '0',
         }}
-        className={`md:hidden z-20 align-middle gap-4 box-border top-full flex flex-col justify-center text-center transition-all duration-300 ease-in-out overflow-hidden max-h-[100vh] left-0 bg-[#F4ECE8] w-full absolute`}>
+        className={`lg:hidden z-20 align-middle gap-4 box-border top-full flex flex-col justify-center text-center transition-all duration-300 ease-in-out overflow-hidden max-h-[100vh] left-0 bg-[#F4ECE8] w-full absolute`}>
         <button>US</button>
-        <Link className="m-auto" href="/">
+        <Link className="m-auto" href="/messages">
+          MESSAGES
+        </Link>
+        <Link className="m-auto" href="/profile">
+          PROFILE
+        </Link>
+        <Link className="m-auto" href="/membership">
+          MEMBERSHIP
+        </Link>
+        <Link className="m-auto" href="/listings">
           LISTINGS
         </Link>
+        <button>US</button>
         <Link className="m-auto" href="/">
           BECOME A MEMEBER
         </Link>
         <Link className="m-auto" href="/">
           SIGN IN
         </Link>
-        {/* <button className="m-auto"> */}
         <Menu
-        // dismiss={{
-        //   itemPress: false,
-        // }}
-        >
+          dismiss={{
+            itemPress: false,
+          }}>
           <MenuHandler>
-            <Button>Open Menu</Button>
+            <Button className="bg-[#F4ECE8] mx-auto shadow-none">
+              <Image
+                alt="search"
+                width={20}
+                height={20}
+                src="/search-icon.svg"></Image>
+            </Button>
           </MenuHandler>
           <MenuList>
             <Input
+              crossOrigin=""
               type="text"
-              crossOrigin={true}
               label="Search"
               containerProps={{
                 className: 'mb-4',

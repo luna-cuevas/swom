@@ -27,7 +27,7 @@ const Page = (props: Props) => {
         </div>
       </div>
 
-      <section className="md:h-[50vh] h-[60vh] md:flex-row flex-col  flex px-10 align-middle gap-16  md:justify-evenly">
+      <section className="md:h-[50vh] h-fit md:flex-row flex-col  flex px-10 align-middle md:gap-16  md:justify-evenly">
         <div className="md:w-[40%] h-fit md:my-auto my-4">
           <h2 className="text-4xl tracking-wider">Swom</h2>
           <p className="font-thin">Meaning (M)</p>
@@ -40,7 +40,7 @@ const Page = (props: Props) => {
             de intercambiar o comerciar &quot;to exchange, barter, trade&quot;.
           </p>
         </div>
-        <div className="md:w-1/4 md:my-auto my-4 relative h-[50px] ">
+        <div className="md:w-1/4 md:my-auto my-4 relative h-[200px] ">
           <div className="circle-button">
             <div className="main_circle_text">
               <svg
@@ -154,8 +154,8 @@ const Page = (props: Props) => {
         </div>
       </section>
 
-      <section className="md:min-h-screen py-6 h-fit gap-4 overflow-hidden w-10/12 m-auto justify-center bg-white grid grid-cols-3 ">
-        <div className="grid grid-rows-3 gap-4">
+      <section className="md:min-h-screen py-6 h-fit gap-4 overflow-hidden w-10/12 m-auto justify-center bg-white flex flex-col sm:grid sm:grid-cols-3 ">
+        <div className="sm:grid flex flex-col grid-rows-3 gap-4">
           <div className="row-span-1 text-right">
             <h2 className="text-2xl word-wrap  h-fit">
               THE JOY OF <br /> BEGINNING
@@ -172,7 +172,7 @@ const Page = (props: Props) => {
               erat.
             </p>
           </div>
-          <div className="relative row-span-2">
+          <div className="relative h-[40vh] sm:h-auto row-span-2">
             <Image
               src="/homepage/bottom-1.jpg"
               objectFit="cover"
@@ -181,15 +181,15 @@ const Page = (props: Props) => {
           </div>
         </div>
 
-        <div className="grid grid-rows-4 gap-4">
-          <div className="relative row-span-2">
+        <div className="sm:grid flex flex-col grid-rows-4 gap-4">
+          <div className="relative h-[40vh] sm:h-auto row-span-2">
             <Image
               src="/homepage/bottom-2.jpg"
               objectFit="cover"
               alt="bottom image"
               fill></Image>
           </div>
-          <div className="relative row-span-2">
+          <div className="relative h-[40vh] sm:h-auto row-span-2">
             <Image
               src="/homepage/bottom-3.jpg"
               objectFit="cover"
@@ -198,14 +198,14 @@ const Page = (props: Props) => {
           </div>
         </div>
 
-        <div className="grid grid-rows-5 gap-4">
+        <div className="sm:grid flex flex-col grid-rows-5 gap-4">
           <div className="row-span-1 my-auto">
             <h2 className="text-3xl">
               A photo, a <br /> moment a <br /> short story
             </h2>
           </div>
 
-          <div className="relative row-span-2">
+          <div className="relative h-[40vh] sm:h-auto  row-span-2">
             <Image
               src="/homepage/bottom-4.jpg"
               objectFit="cover"
@@ -213,7 +213,7 @@ const Page = (props: Props) => {
               fill></Image>
           </div>
 
-          <div className="relative row-span-2">
+          <div className="relative h-[40vh] sm:h-auto  row-span-2">
             <Image
               src="/homepage/bottom-5.jpg"
               objectFit="cover"
@@ -222,17 +222,17 @@ const Page = (props: Props) => {
           </div>
         </div>
 
-        <div className="relative col-span-2 h-[20vh] justify-evenly align-middle px-8 m-auto border-l-0 rounded-xl  flex border-2 border-[#7F8119]">
-          <h2 className="h-fit m-auto text-3xl w-1/3">
+        <div className="relative flex-col sm:flex-row w-full md:col-span-2 col-span-3 sm:h-[20vh] justify-evenly align-middle px-8 m-auto border-l-0 rounded-xl  flex border-2 border-[#7F8119]">
+          <h2 className="h-fit m-auto text-3xl sm:w-1/3">
             At the next door, is your dream
           </h2>
-          <p className="h-fit m-auto w-6/12">
+          <p className="h-fit m-auto sm:w-6/12">
             Lorem ipsum dolor sit amet, consectetuer adipiscing elit, sed diam
             nonummy nibh euismod tincidunt ut laoreet dolore magna aliquam erat.
           </p>
         </div>
 
-        <div className="relative h-1/2 my-auto">
+        <div className="relative hidden md:block h-1/2 my-auto">
           <Image
             src="/homepage/bottom-logo.jpg"
             objectFit="contain"
