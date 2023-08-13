@@ -6,7 +6,9 @@ import dummyMessages from '../../data/dummyMessages.json';
 type Props = {};
 
 const Page = (props: Props) => {
-  const [selectedConversation, setSelectedConversation] = useState(null);
+  const [selectedConversation, setSelectedConversation] = useState<
+    number | null
+  >(null);
 
   return (
     <>
