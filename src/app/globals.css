@@ -38,3 +38,11 @@ a {
     transform: rotate(360deg);
   }
 }
+
+.sender {
+  justify-content: flex-start;
+}
+
+.recipient {
+  justify-content: end;
+}

@@ -3,6 +3,14 @@
 import Image from 'next/image';
 import Link from 'next/link';
 import React from 'react';
+import {
+  Menu,
+  MenuHandler,
+  Button,
+  MenuList,
+  MenuItem,
+  Input,
+} from '@material-tailwind/react';
 
 type Props = {};
 
@@ -12,9 +20,14 @@ const Navigation = (props: Props) => {
   return (
     <nav className=" relative  px-12  py-4 bg-[#F4ECE8] flex justify-between">
       <div className="flex w-[150px] h-auto relative  justify-center items-center">
-        <Image src="/swom-logo.jpg" alt="logo" fill objectFit="contain" />
+        <Link href="/home">
+          <Image src="/swom-logo.jpg" alt="logo" fill objectFit="contain" />
+        </Link>
       </div>
       <div className="hidden md:flex gap-8 align-middle">
+        <Link className="m-auto" href="/messages">
+          MESSAGES
+        </Link>
         <Link className="m-auto" href="/profile">
           PROFILE
         </Link>
@@ -27,13 +40,37 @@ const Navigation = (props: Props) => {
         <button>US</button>
         <Link href="/">BECOME A MEMEBER</Link>
         <Link href="/">SIGN IN</Link>
-        <button>
-          <Image
-            alt="search"
-            width={20}
-            height={20}
-            src="/search-icon.svg"></Image>
-        </button>
+        {/* <button>
+          
+        </button> */}
+
+        <Menu
+          dismiss={{
+            itemPress: false,
+          }}>
+          <MenuHandler>
+            <Button className="bg-[#F4ECE8] shadow-none">
+              <Image
+                alt="search"
+                width={20}
+                height={20}
+                src="/search-icon.svg"></Image>
+            </Button>
+          </MenuHandler>
+          <MenuList>
+            <Input
+              crossOrigin=""
+              type="text"
+              label="Search"
+              containerProps={{
+                className: 'mb-4',
+              }}
+            />
+            <MenuItem>Menu Item 1</MenuItem>
+            <MenuItem>Menu Item 2</MenuItem>
+            <MenuItem>Menu Item 3</MenuItem>
+          </MenuList>
+        </Menu>
       </div>
 
       <div className="md:hidden">
@@ -69,13 +106,35 @@ const Navigation = (props: Props) => {
         <Link className="m-auto" href="/">
           SIGN IN
         </Link>
-        <button className="m-auto">
-          <Image
+        {/* <button className="m-auto"> */}
+        <Menu
+        // dismiss={{
+        //   itemPress: false,
+        // }}
+        >
+          <MenuHandler>
+            <Button>Open Menu</Button>
+          </MenuHandler>
+          <MenuList>
+            <Input
+              type="text"
+              crossOrigin={true}
+              label="Search"
+              containerProps={{
+                className: 'mb-4',
+              }}
+            />
+            <MenuItem>Menu Item 1</MenuItem>
+            <MenuItem>Menu Item 2</MenuItem>
+            <MenuItem>Menu Item 3</MenuItem>
+          </MenuList>
+        </Menu>
+        {/* <Image
             alt="search"
             width={20}
             height={20}
-            src="/search-icon.svg"></Image>
-        </button>
+            src="/search-icon.svg"></Image> */}
+        {/* </button> */}
       </div>
     </nav>
   );
