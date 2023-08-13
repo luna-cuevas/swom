@@ -1,0 +1,100 @@
+[
+  {
+    "convoID": 1,
+    "convoPic": "/profile/profile-pic-placeholder.png",
+    "convoName": "Convo 1",
+    "convoMembers": ["me", "user2"],
+    "messages": [
+      {
+        "messageID": 1,
+        "messageSender": "me",
+        "messageContent": "Hello",
+        "messageTime": "2019-11-11T00:00:00.000Z"
+      },
+      {
+        "messageID": 2,
+        "messageSender": "user2",
+        "messageContent": "Hi",
+        "messageTime": "2019-11-11T00:00:00.000Z"
+      }
+    ]
+  },
+  {
+    "convoID": 2,
+    "convoPic": "/profile/profile-pic-placeholder.png",
+
+    "convoName": "Convo 2",
+    "convoMembers": ["me", "user3"],
+    "messages": [
+      {
+        "messageID": 1,
+        "messageSender": "me",
+        "messageContent": "test1",
+        "messageTime": "2019-11-11T00:00:00.000Z"
+      },
+      {
+        "messageID": 2,
+        "messageSender": "user3",
+        "messageContent": "Test2",
+        "messageTime": "2019-11-11T00:00:00.000Z"
+      },
+      {
+        "messageID": 3,
+        "messageSender": "user3",
+        "messageContent": "Test6",
+        "messageTime": "2019-11-11T00:00:00.000Z"
+      },
+      {
+        "messageID": 4,
+        "messageSender": "me",
+        "messageContent": "Test10",
+        "messageTime": "2019-11-11T00:00:00.000Z"
+      },
+      {
+        "messageID": 5,
+        "messageSender": "me",
+        "messageContent": "Test1232",
+        "messageTime": "2019-11-11T00:00:00.000Z"
+      },
+      {
+        "messageID": 6,
+        "messageSender": "me",
+        "messageContent": "Test10",
+        "messageTime": "2019-11-11T00:00:00.000Z"
+      },
+      {
+        "messageID": 7,
+        "messageSender": "user3",
+        "messageContent": "ekfbw",
+        "messageTime": "2019-11-11T00:00:00.000Z"
+      },
+      {
+        "messageID": 8,
+        "messageSender": "user3",
+        "messageContent": "ekfbw",
+        "messageTime": "2019-11-11T00:00:00.000Z"
+      }
+    ]
+  },
+  {
+    "convoID": 3,
+    "convoPic": "/profile/profile-pic-placeholder.png",
+
+    "convoName": "Convo 3",
+    "convoMembers": ["me", "user5"],
+    "messages": [
+      {
+        "messageID": 1,
+        "messageSender": "me",
+        "messageContent": "Hejnjnljnllo",
+        "messageTime": "2019-11-11T00:00:00.000Z"
+      },
+      {
+        "messageID": 2,
+        "messageSender": "user4",
+        "messageContent": "flewjnljewfjln",
+        "messageTime": "2019-11-11T00:00:00.000Z"
+      }
+    ]
+  }
+]
