@@ -14,12 +14,12 @@ a {
 }
 
 .circle-button {
-  position: absolute;
-  width: 70px;
+  position: relative;
+  width: 100%;
   left: 0;
   right: 0;
   margin: auto;
-  height: 70px;
+  height: 200px;
   border-radius: 50%;
   display: flex;
   justify-content: center;
