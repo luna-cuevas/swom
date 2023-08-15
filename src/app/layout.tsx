@@ -2,6 +2,7 @@ import './globals.css';
 import type { Metadata } from 'next';
 import Navigation from '@/components/Navigation';
 import Footer from '@/components/Footer';
+import Script from 'next/script';
 
 export const metadata: Metadata = {
   title: 'Create Next App',
@@ -19,7 +20,7 @@ export default function RootLayout({
         <Navigation />
         {children}
         <Footer />
-        <script async src="https://player.vimeo.com/api/player.js"></script>
+        <Script async src="https://player.vimeo.com/api/player.js"></Script>
       </body>
     </html>
   );
