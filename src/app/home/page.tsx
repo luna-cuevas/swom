@@ -9,21 +9,37 @@ const Page = (props: Props) => {
   return (
     <main>
       <div className="">
-        <div className="h-[87vh]">
-          <Carousel images={['/homepage/hero.jpg', '/homepage/hero.jpg']} />
+        <div className="h-[87vh] bg-black relative">
+          <div className="absolute w-fit z-50 h-fit top-0 bottom-0 left-0 right-0 m-auto ">
+            <h2 className="text-[#ffffff] uppercase text-3xl tracking-widest text-center">
+              Make Memories <br /> All over the <br /> world
+            </h2>
+          </div>
+          <Carousel
+            images={[
+              '/homepage/hero-image-1.png',
+              '/homepage/hero-image-2.png',
+              '/homepage/hero-image-3.png',
+              '/homepage/hero-image-4.png',
+              '/homepage/hero-image-5.png',
+              '/homepage/hero-image-6.png',
+              '/homepage/hero-image-7.png',
+              '/homepage/hero-image-8.png',
+            ]}
+          />
         </div>
-        <div className="flex bg-[#7F8119] flex-wrap  md:flex-row py-5 text-[#EBDECC] tracking-widest justify-center text-xl gap-2 md:gap-5">
-          <p>LONDON</p>
-          <p>•</p>
-          <p>PARIS</p>
-          <p>•</p>
-          <p>NEW YORK</p>
-          <p>•</p>
-          <p>VIETNAM</p>
-          <p>•</p>
-          <p>COLOMBIA</p>
-          <p>•</p>
-          <p>SWITZERLAND</p>
+        <div className="flex bg-[#7F8119] flex-wrap   md:flex-row py-5  tracking-widest justify-center text-xl gap-2 md:gap-5">
+          <p className="!text-[#EBDECC] font-sans">LONDON</p>
+          <p className="!text-[#EBDECC] font-sans">•</p>
+          <p className="!text-[#EBDECC] font-sans">PARIS</p>
+          <p className="!text-[#EBDECC] font-sans">•</p>
+          <p className="!text-[#EBDECC] font-sans">NEW YORK</p>
+          <p className="!text-[#EBDECC] font-sans">•</p>
+          <p className="!text-[#EBDECC] font-sans">VIETNAM</p>
+          <p className="!text-[#EBDECC] font-sans">•</p>
+          <p className="!text-[#EBDECC] font-sans">COLOMBIA</p>
+          <p className="!text-[#EBDECC] font-sans">•</p>
+          <p className="!text-[#EBDECC] font-sans">SWITZERLAND</p>
         </div>
       </div>
 
@@ -126,10 +142,15 @@ const Page = (props: Props) => {
         </div>
       </section>
 
-      <section className="md:h-[30vh] py-6  m-auto justify-center bg-[#DED8C9] flex flex-col">
+      <section
+        style={{
+          backgroundImage: 'url(/homepage/hero-image-5.png)',
+          backgroundSize: 'cover',
+        }}
+        className="md:h-[30vh] py-6  m-auto justify-center  flex flex-col">
         <div className="w-2/3 m-auto">
           <div className="w-fit ">
-            <h2 className="text-4xl mb-4">Explore</h2>
+            <h2 className="text-4xl bold  shadow-2xl mb-4">Explore</h2>
           </div>
           <form className="md:grid w-full flex flex-col justify-center md:grid-cols-6 gap-4">
             <input
@@ -162,8 +183,10 @@ const Page = (props: Props) => {
             </h2>
           </div>
           <div className="row-span-1">
-            <p className="text-sm">HOME, SWEET HOME</p>
-            <h1 className="text-4xl my-6">
+            <p className="text-sm font-sans tracking-widest">
+              HOME, SWEET HOME
+            </p>
+            <h1 className="text-4xl font-bold font-sans my-6">
               we are a revolution in the way of traveling
             </h1>
             <p>
@@ -200,7 +223,7 @@ const Page = (props: Props) => {
 
         <div className="sm:grid flex flex-col grid-rows-5 gap-4">
           <div className="row-span-1 my-auto">
-            <h2 className="text-3xl">
+            <h2 className="text-3xl font-bold font-sans">
               A photo, a <br /> moment a <br /> short story
             </h2>
           </div>
@@ -223,7 +246,7 @@ const Page = (props: Props) => {
         </div>
 
         <div className="relative flex-col sm:flex-row w-full md:col-span-2 col-span-3 sm:h-[20vh] justify-evenly align-middle px-8 m-auto border-l-0 rounded-xl  flex border-2 border-[#7F8119]">
-          <h2 className="h-fit m-auto text-3xl sm:w-1/3">
+          <h2 className="h-fit m-auto text-3xl sm:w-1/3 font-bold font-sans">
             At the next door, is your dream
           </h2>
           <p className="h-fit m-auto sm:w-6/12">

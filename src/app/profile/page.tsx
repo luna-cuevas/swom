@@ -6,7 +6,7 @@ type Props = {};
 const page = (props: Props) => {
   return (
     <main className="bg-[#F4ECE8] min-h-[80vh] relative flex flex-col">
-      <h1 className="py-4 px-12 bg-[#172544] text-white tracking-[0.3rem] uppercase">
+      <h1 className="py-4 px-12 bg-[#172544] text-white font-sans tracking-[0.3rem] uppercase">
         My Profile
       </h1>
       <div className="w-full relative max-w-[1000px] my-auto py-12 md:px-16 px-4">
@@ -29,12 +29,14 @@ const page = (props: Props) => {
 
           <div className="h-auto w-[2px] border-x-[1px] border-[#172544]" />
           <div className="md:w-1/2 flex flex-col  pl-6 gap-12 my-4">
-            <h2 className="text-[#D68834] text-center md:text-left tracking-[0.3rem] uppercase font-bold">
+            <h2 className="text-[#D68834] font-sans text-center md:text-left tracking-[0.3rem] uppercase font-bold">
               Profile Settings
             </h2>
             <div className="flex flex-col md:flex-row gap-6">
               <div>
-                <label className="tracking-widest uppercase text-sm" htmlFor="">
+                <label
+                  className="tracking-widest font-bold uppercase text-sm"
+                  htmlFor="">
                   First Name
                 </label>
                 <input
@@ -43,7 +45,9 @@ const page = (props: Props) => {
                 />
               </div>
               <div>
-                <label className="tracking-widest uppercase text-sm" htmlFor="">
+                <label
+                  className="tracking-widest font-bold uppercase text-sm"
+                  htmlFor="">
                   Last Name
                 </label>
                 <input
@@ -54,7 +58,9 @@ const page = (props: Props) => {
             </div>
 
             <div className="flex flex-col">
-              <label className="tracking-widest uppercase text-sm" htmlFor="">
+              <label
+                className="tracking-widest font-bold uppercase text-sm"
+                htmlFor="">
                 Email
               </label>
               <input
@@ -65,7 +71,9 @@ const page = (props: Props) => {
 
             <div className="flex flex-col md:flex-row gap-6">
               <div className="">
-                <label className="tracking-widest uppercase text-sm" htmlFor="">
+                <label
+                  className="tracking-widest font-bold uppercase text-sm"
+                  htmlFor="">
                   Username
                 </label>
                 <input
@@ -74,7 +82,9 @@ const page = (props: Props) => {
                 />
               </div>
               <div className="">
-                <label className="tracking-widest uppercase text-sm" htmlFor="">
+                <label
+                  className="tracking-widest font-bold uppercase text-sm"
+                  htmlFor="">
                   Password
                 </label>
                 <input
@@ -85,7 +95,7 @@ const page = (props: Props) => {
             </div>
             <button
               type="submit"
-              className="w-fit mx-auto md:mx-0 bg-[#D68834] rounded-3xl px-8 py-2 text-white">
+              className="w-fit mx-auto md:mx-0 font-['Noto'] bg-[#D68834] rounded-3xl px-8 py-2 text-white">
               Update Details
             </button>
           </div>

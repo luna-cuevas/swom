@@ -44,7 +44,7 @@ const Page = (props: Props) => {
                     className="rounded-full"
                   />
                 </div>
-                <span className="my-auto">Inbox</span>
+                <span className="my-auto font-sans font-bold">Inbox</span>
               </h2>
               <ul className="">
                 {dummyMessages.map((convo) => (
@@ -89,7 +89,7 @@ const Page = (props: Props) => {
                           className="rounded-full my-auto"
                         />
                       </div>
-                      <span className="my-auto ">
+                      <span className="my-auto font-serif">
                         {selectedConversation !== null &&
                           dummyMessages[selectedConversation - 1]
                             .convoMembers[1]}
@@ -103,7 +103,7 @@ const Page = (props: Props) => {
                             (message) => (
                               <li
                                 key={message.messageID}
-                                className={`flex gap-4 ${
+                                className={`flex  gap-4 ${
                                   message.messageSender === 'me'
                                     ? 'recipient'
                                     : 'sender'
@@ -121,7 +121,7 @@ const Page = (props: Props) => {
                                   />
                                 </div>
                                 <p
-                                  className={`my-auto py-2 md:text-lg px-10 rounded-3xl ${
+                                  className={`my-auto py-2 font-sans md:text-lg px-10 rounded-3xl ${
                                     message.messageSender !== 'me'
                                       ? 'bg-[#E5DEDB]'
                                       : 'bg-gray-300'

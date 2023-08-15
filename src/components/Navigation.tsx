@@ -92,7 +92,7 @@ const Navigation = (props: Props) => {
           borderTop: mobileActive ? '1px solid #a9a9a9' : 'none',
           padding: mobileActive ? '5px 0' : '0',
         }}
-        className={`lg:hidden z-20 align-middle gap-4 box-border top-full flex flex-col justify-center text-center transition-all duration-300 ease-in-out overflow-hidden max-h-[100vh] left-0 bg-[#F4ECE8] w-full absolute`}>
+        className={`lg:hidden z-[10000] align-middle gap-4 box-border top-full flex flex-col justify-center text-center transition-all duration-300 ease-in-out overflow-hidden max-h-[100vh] left-0 bg-[#F4ECE8] w-full absolute`}>
         <button>US</button>
         <Link className="m-auto" href="/messages">
           MESSAGES
