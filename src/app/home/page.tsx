@@ -17,6 +17,7 @@ const Page = (props: Props) => {
           </div>
           <Carousel
             images={[
+              '/homepage/hero-image-9.png',
               '/homepage/hero-image-1.png',
               '/homepage/hero-image-2.png',
               '/homepage/hero-image-3.png',
@@ -46,17 +47,10 @@ const Page = (props: Props) => {
       <section className="md:h-[50vh] h-fit md:flex-row flex-col  flex px-10 align-middle md:gap-16  md:justify-evenly">
         <div className="md:w-[40%] h-fit md:my-auto my-4">
           <h2 className="text-4xl tracking-wider">Swom</h2>
-          <p className="font-thin">Meaning (M)</p>
-          <p className="mt-6">
-            Nace de la unión de dos palabras <strong>Swap</strong> (que en
-            inglés significa inter- cambio) y por otro lado{' '}
-            <strong>Home</strong>. Ahora bien, remitiendonos a la eti- mología
-            de la palabra <strong>SWAP</strong>, encontramos que esta se
-            relaciona con estrechón de manos:{' '}
-            <strong>&quot;to strike, strike the hands together&quot;</strong>,
-            que a su vez también nos arroja como significado, el de intercambiar
-            o comerciar <strong> &quot;to exchange, barter, trade&quot;</strong>
-            .
+          <p className="font-thin">(Verb): to swap you home.</p>
+          <p className="mt-6 text-xl">
+            Get ready to SWOM your way to a whole new address and a suitcase
+            full of memories.
           </p>
         </div>
         <div className="md:w-1/4 md:my-auto my-4 relative h-[200px] ">
@@ -149,7 +143,7 @@ const Page = (props: Props) => {
 
       <section
         style={{
-          backgroundImage: 'url(/homepage/hero-image-5.png)',
+          backgroundImage: 'url(/homepage/explore-bg.png)',
           backgroundSize: 'cover',
         }}
         className="md:h-[30vh] py-6  m-auto justify-center  flex flex-col">
@@ -180,92 +174,95 @@ const Page = (props: Props) => {
         </div>
       </section>
 
-      <section className="md:min-h-screen py-6 h-fit gap-4 overflow-hidden w-10/12 m-auto justify-center bg-white flex flex-col sm:grid sm:grid-cols-3 ">
-        <div className="sm:grid flex flex-col grid-rows-3 gap-4">
-          <div className="row-span-1 text-right">
-            <h2 className="text-2xl word-wrap  h-fit">
-              THE JOY OF <br /> BEGINNING
+      <section className="md:min-h-[1000px] py-6 h-full gap-4 overflow-hidden w-10/12 m-auto justify-center md:grid bg-white flex   flex-col  ">
+        <div className="md:grid md:grid-cols-3 gap-4  h-[70%]">
+          <div className="sm:grid flex flex-col grid-rows-4 gap-4">
+            <div className="row-span-1 text-right">
+              <h2 className="text-2xl word-wrap  h-fit">
+                THE JOY OF <br /> BEGINNING
+              </h2>
+            </div>
+            <div className="row-span-1">
+              <p className="text-sm font-sans tracking-widest">
+                HOME, SWEET HOME
+              </p>
+              <h1 className="text-4xl  font-bold font-sans my-6">
+                WE ARE A REVOLUTION IN THE WAY OF TRAVELING
+              </h1>
+              <p className="text-xl">
+                Get ready to gain diverse cultural experiences and broaden your
+                perspective on life
+              </p>
+            </div>
+            <div className="relative h-[40vh] md:h-full row-span-3">
+              <Image
+                src="/homepage/bottom-1.jpg"
+                objectFit="cover"
+                alt="bottom image"
+                fill></Image>
+            </div>
+          </div>
+
+          <div className="sm:grid  flex flex-col grid-rows-4 gap-4">
+            <div className="relative h-[40vh] sm:h-auto row-span-2">
+              <Image
+                src="/homepage/bottom-2.jpg"
+                objectFit="cover"
+                alt="bottom image"
+                fill></Image>
+            </div>
+            <div className="relative h-[40vh] md:h-auto row-span-2">
+              <Image
+                src="/homepage/bottom-3.jpg"
+                objectFit="cover"
+                alt="bottom image"
+                fill></Image>
+            </div>
+          </div>
+
+          <div className="sm:grid flex flex-col grid-rows-5 gap-4">
+            <div className="row-span-1 my-auto">
+              <h2 className="text-3xl font-bold font-sans">
+                A photo, a <br /> moment a <br /> short story
+              </h2>
+            </div>
+
+            <div className="relative h-[40vh] md:h-auto  row-span-2">
+              <Image
+                src="/homepage/bottom-4.jpg"
+                objectFit="cover"
+                alt="bottom image"
+                fill></Image>
+            </div>
+
+            <div className="relative h-[40vh] md:h-auto  row-span-2">
+              <Image
+                src="/homepage/bottom-5.jpg"
+                objectFit="cover"
+                alt="bottom image"
+                fill></Image>
+            </div>
+          </div>
+        </div>
+
+        <div className=" my-4 flex">
+          <div className="relative flex-col md:flex-row  w-full py-4  justify-evenly align-middle px-8 m-auto border-l-0 rounded-xl  flex border-2 border-[#7F8119]">
+            <h2 className="h-fit m-auto text-2xl md:w-2/3 font-bold font-sans">
+              BE PART OF A HARMONIOUS COOPERATIVE GLOBAL COMMUNITY
             </h2>
-          </div>
-          <div className="row-span-1">
-            <p className="text-sm font-sans tracking-widest">
-              HOME, SWEET HOME
-            </p>
-            <h1 className="text-4xl font-bold font-sans my-6">
-              we are a revolution in the way of traveling
-            </h1>
-            <p>
-              Lorem ipsum dolor sit amet, consectetuer adipiscing elit, sed diam
-              nonummy nibh euismod tincidunt ut laoreet dolore magna aliquam
-              erat.
+            <p className="h-fit text-xl m-auto md:w-6/12">
+              Opening your home to others fosters your capacity for trust and
+              generosity.
             </p>
           </div>
-          <div className="relative h-[40vh] sm:h-auto row-span-2">
+
+          <div className="relative hidden lg:flex w-1/3 h-2/3 xl:h-full my-auto">
             <Image
-              src="/homepage/bottom-1.jpg"
-              objectFit="cover"
+              src="/homepage/bottom-logo.jpg"
+              objectFit="contain"
               alt="bottom image"
               fill></Image>
           </div>
-        </div>
-
-        <div className="sm:grid flex flex-col grid-rows-4 gap-4">
-          <div className="relative h-[40vh] sm:h-auto row-span-2">
-            <Image
-              src="/homepage/bottom-2.jpg"
-              objectFit="cover"
-              alt="bottom image"
-              fill></Image>
-          </div>
-          <div className="relative h-[40vh] sm:h-auto row-span-2">
-            <Image
-              src="/homepage/bottom-3.jpg"
-              objectFit="cover"
-              alt="bottom image"
-              fill></Image>
-          </div>
-        </div>
-
-        <div className="sm:grid flex flex-col grid-rows-5 gap-4">
-          <div className="row-span-1 my-auto">
-            <h2 className="text-3xl font-bold font-sans">
-              A photo, a <br /> moment a <br /> short story
-            </h2>
-          </div>
-
-          <div className="relative h-[40vh] sm:h-auto  row-span-2">
-            <Image
-              src="/homepage/bottom-4.jpg"
-              objectFit="cover"
-              alt="bottom image"
-              fill></Image>
-          </div>
-
-          <div className="relative h-[40vh] sm:h-auto  row-span-2">
-            <Image
-              src="/homepage/bottom-5.jpg"
-              objectFit="cover"
-              alt="bottom image"
-              fill></Image>
-          </div>
-        </div>
-
-        <div className="relative flex-col sm:flex-row w-full md:col-span-2 col-span-3 sm:h-[20vh] justify-evenly align-middle px-8 m-auto border-l-0 rounded-xl  flex border-2 border-[#7F8119]">
-          <h2 className="h-fit m-auto text-3xl sm:w-1/3 font-bold font-sans">
-            At the next door, is your dream
-          </h2>
-          <p className="h-fit m-auto sm:w-6/12">
-            Lorem ipsum dolor sit amet, consectetuer adipiscing elit, sed diam
-            nonummy nibh euismod tincidunt ut laoreet dolore magna aliquam erat.
-          </p>
-        </div>
-
-        <div className="relative hidden md:block h-1/2 my-auto">
-          <Image
-            src="/homepage/bottom-logo.jpg"
-            objectFit="contain"
-            alt="bottom image"
-            fill></Image>
         </div>
       </section>
     </main>

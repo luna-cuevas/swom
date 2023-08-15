@@ -25,6 +25,9 @@ const Navigation = (props: Props) => {
         </Link>
       </div>
       <div className="hidden lg:flex gap-8 align-middle">
+        <Link className="m-auto" href="/how-it-works">
+          HOW IT WORKS
+        </Link>
         <Link className="m-auto" href="/messages">
           MESSAGES
         </Link>
@@ -94,6 +97,9 @@ const Navigation = (props: Props) => {
         }}
         className={`lg:hidden z-[10000] align-middle gap-4 box-border top-full flex flex-col justify-center text-center transition-all duration-300 ease-in-out overflow-hidden max-h-[100vh] left-0 bg-[#F4ECE8] w-full absolute`}>
         <button>US</button>
+        <Link className="m-auto" href="/how-it-works">
+          HOW IT WORKS
+        </Link>
         <Link className="m-auto" href="/messages">
           MESSAGES
         </Link>

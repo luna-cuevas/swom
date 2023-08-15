@@ -69,7 +69,7 @@ const Page = (props: Props) => {
             Cancel Membership
           </button>
           <button className="md:p-4 p-3 hover:bg-[#c7bfbe] rounded-xl text-xs uppercase tracking-[0.3rem] bg-[#DDD5D2] font-bold">
-            Recommend Us
+            Pay Now
           </button>
         </div>
 
