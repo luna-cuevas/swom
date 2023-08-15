@@ -807,6 +807,7 @@ const ListingsNav = (props: Props) => {
         </div>
         <div className="w-fit px-4">Listing ___</div>
       </div>
+
       <style jsx>{`
         .arrow-icon {
           transition: transform 0.3s ease-in-out;

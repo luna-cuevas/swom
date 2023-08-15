@@ -17,7 +17,7 @@ const CarouselPage = (props: Props) => {
           color="white"
           size="lg"
           onClick={handlePrev}
-          className="!absolute bg-[#ffffff35] text-white top-2/4 left-4 -translate-y-2/4">
+          className="!absolute z-50 bg-[#ffffff35] text-white top-2/4 left-4 -translate-y-2/4">
           <svg
             xmlns="http://www.w3.org/2000/svg"
             fill="#fff"
@@ -39,7 +39,7 @@ const CarouselPage = (props: Props) => {
           color="white"
           size="lg"
           onClick={handleNext}
-          className="!absolute bg-[#ffffff35] top-2/4 !right-4 -translate-y-2/4">
+          className="!absolute z-50 bg-[#ffffff35] top-2/4 !right-4 -translate-y-2/4">
           <svg
             xmlns="http://www.w3.org/2000/svg"
             fill="#fff"
@@ -55,11 +55,21 @@ const CarouselPage = (props: Props) => {
           </svg>
         </IconButton>
       )}
-      className={`relative  w-full ${props.roundedLeft && 'rounded-l-xl'} ${
-        props.roundedRight && 'rounded-r-xl'
-      }`}>
+      className={`relative flex  w-full ${
+        props.roundedLeft && 'rounded-l-xl'
+      } ${props.roundedRight && 'rounded-r-xl'}`}>
       {props.images.map((image, index) => (
-        <Image key={index} src={image} alt="image" fill objectFit="cover" />
+        <div className="">
+          <div className="w-full h-full m-auto top-0 z-20 absolute bg-[#00000049]"></div>
+          <Image
+            className=""
+            key={index}
+            src={image}
+            alt="image"
+            fill
+            objectFit="cover"
+          />
+        </div>
       ))}
     </Carousel>
   );

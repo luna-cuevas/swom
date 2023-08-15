@@ -20,7 +20,7 @@ const Page = (props: Props) => {
           <div className="relative w-[250px] h-[80px]">
             <Image src="/swom-logo.jpg" alt="logo" fill objectFit="contain" />
           </div>
-          <h1 className="text-2xl uppercase tracking-[0.3rem] py-2">
+          <h1 className="text-2xl font-sans font-bold uppercase tracking-[0.3rem] py-2">
             Memberships
           </h1>
         </div>
@@ -74,8 +74,8 @@ const Page = (props: Props) => {
         </div>
 
         <div className="md:w-11/12 ml-auto bg-[#DDD5D2] px-6 p-4 rounded-3xl md:rounded-l-3xl mt-4">
-          <h3 className="uppercase tracking-[0.3rem]">Contact Us!</h3>
-          <p className="text-sm flex flex-wrap gap-[3px]">
+          <h3 className="uppercase font-thin tracking-[0.3rem]">Contact Us!</h3>
+          <p className="text-sm flex flex-wrap gap-[3px] font-sans">
             For questions contact us via Whatsapp or email us at{' '}
             <span>
               <Link
