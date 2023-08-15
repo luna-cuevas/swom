@@ -14,7 +14,7 @@ const profileDummyData = {
   profileImage: '/profile/profile-pic-placeholder.png',
 };
 
-const page = (props: Props) => {
+const Page = (props: Props) => {
   const [isPasswordChanged, setIsPasswordChanged] = useState(false);
   const [newPassword, setNewPassword] = useState<string[]>([
     profileDummyData.password,
@@ -208,4 +208,4 @@ const page = (props: Props) => {
   );
 };
 
-export default page;
+export default Page;
