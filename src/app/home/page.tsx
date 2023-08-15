@@ -48,12 +48,15 @@ const Page = (props: Props) => {
           <h2 className="text-4xl tracking-wider">Swom</h2>
           <p className="font-thin">Meaning (M)</p>
           <p className="mt-6">
-            Nace de la unión de dos palabras Swap (que en inglés significa
-            inter- cambio) y por otro lado Home. Ahora bien, remitiendonos a la
-            eti- mología de la palabra SWAP, encontramos que esta se relaciona
-            con estrechón de manos: &quot;to strike, strike the hands
-            together&quot;, que a su vez también nos arroja como significado, el
-            de intercambiar o comerciar &quot;to exchange, barter, trade&quot;.
+            Nace de la unión de dos palabras <strong>Swap</strong> (que en
+            inglés significa inter- cambio) y por otro lado{' '}
+            <strong>Home</strong>. Ahora bien, remitiendonos a la eti- mología
+            de la palabra <strong>SWAP</strong>, encontramos que esta se
+            relaciona con estrechón de manos:{' '}
+            <strong>&quot;to strike, strike the hands together&quot;</strong>,
+            que a su vez también nos arroja como significado, el de intercambiar
+            o comerciar <strong> &quot;to exchange, barter, trade&quot;</strong>
+            .
           </p>
         </div>
         <div className="md:w-1/4 md:my-auto my-4 relative h-[200px] ">
@@ -132,8 +135,10 @@ const Page = (props: Props) => {
 
             <p className="my-4">
               Welcome to our members-only community of travelers around the
-              globe. ¡Exchange your home for free, for travel, for work, for
-              fun!
+              globe.{' '}
+              <strong>
+                ¡Exchange your home for free, for travel, for work, for fun!
+              </strong>
             </p>
             <button className="bg-[#172544] text-[#EBDECC] px-4 py-2 rounded-3xl">
               Become a Member
