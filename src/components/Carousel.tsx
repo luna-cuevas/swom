@@ -59,7 +59,7 @@ const CarouselPage = (props: Props) => {
         props.roundedLeft && 'rounded-l-xl'
       } ${props.roundedRight && 'rounded-r-xl'}`}>
       {props.images.map((image, index) => (
-        <div className="">
+        <div key={index} className="">
           <div className="w-full h-full m-auto top-0 z-20 absolute bg-[#00000049]"></div>
           <Image
             className=""
