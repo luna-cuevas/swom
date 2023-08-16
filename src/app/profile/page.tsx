@@ -68,7 +68,7 @@ const Page = (props: Props) => {
       <div className="w-full relative max-w-[1000px] my-auto py-12 md:px-16 px-4">
         <form
           onSubmit={onSubmit}
-          className="flex md:flex-row flex-col px-4 relative bg-[#F4ECE8] z-20 justify-evenly">
+          className="flex md:flex-row flex-col px-4 relative  z-20 justify-evenly">
           <div className="flex justify-center  flex-col md:w-1/3">
             <div className="relative mx-auto h-20 w-20 rounded-full">
               <Image
@@ -99,7 +99,7 @@ const Page = (props: Props) => {
                 </label>
                 <input
                   value={profileDummyData.name.split(' ')[0] || ''}
-                  className="w-full focus-visible:outline-none bg-[#F4ECE8] border-b-[1px] border-[#172544]"
+                  className="w-full focus-visible:outline-none bg-transparent border-b-[1px] border-[#172544]"
                   type="text"
                 />
               </div>
@@ -111,7 +111,7 @@ const Page = (props: Props) => {
                 </label>
                 <input
                   value={profileDummyData.name.split(' ')[1] || ''}
-                  className="w-full focus-visible:outline-none bg-[#F4ECE8] border-b-[1px] border-[#172544]"
+                  className="w-full focus-visible:outline-none bg-transparent border-b-[1px] border-[#172544]"
                   type="text"
                 />
               </div>
@@ -125,7 +125,7 @@ const Page = (props: Props) => {
               </label>
               <input
                 value={profileDummyData.email || ''}
-                className=" border-b-[1px] focus-visible:outline-none bg-[#F4ECE8] border-[#172544]"
+                className=" border-b-[1px] focus-visible:outline-none bg-transparent border-[#172544]"
                 type="email"
               />
             </div>
@@ -139,7 +139,7 @@ const Page = (props: Props) => {
                 </label>
                 <input
                   value={profileDummyData.username || ''}
-                  className="w-full focus-visible:outline-none bg-[#F4ECE8] border-b-[1px] border-[#172544]"
+                  className="w-full focus-visible:outline-none bg-transparent border-b-[1px] border-[#172544]"
                   type="text"
                 />
               </div>
@@ -154,7 +154,7 @@ const Page = (props: Props) => {
                     handlePasswordChange(e.target.value);
                   }}
                   value={newPassword}
-                  className="w-full focus-visible:outline-none bg-[#F4ECE8] border-b-[1px] border-[#172544]"
+                  className="w-full focus-visible:outline-none bg-transparent border-b-[1px] border-[#172544]"
                   type="password"
                 />
               </div>
@@ -171,7 +171,7 @@ const Page = (props: Props) => {
                     handleConfirmPasswordChange(e.target.value);
                   }}
                   value={confirmPassword}
-                  className="w-full focus-visible:outline-none bg-[#F4ECE8] border-b-[1px] border-[#172544]"
+                  className="w-full focus-visible:outline-none bg-transparent border-b-[1px] border-[#172544]"
                   type="password"
                 />
               </div>
