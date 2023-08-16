@@ -9,7 +9,7 @@ const Page = (props: Props) => {
   return (
     <main
       style={{
-        background: '#f4ece8',
+        background: '#F7F1EE',
       }}>
       <div className="">
         <div className="h-[87vh] bg-black relative">
@@ -261,7 +261,7 @@ const Page = (props: Props) => {
 
           <div className="relative hidden lg:flex w-1/3 h-2/3 xl:h-full my-auto">
             <Image
-              src="/homepage/bottom-logo.jpg"
+              src="/homepage/bottom-logo.png"
               objectFit="contain"
               alt="bottom image"
               fill></Image>
