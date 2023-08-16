@@ -8,7 +8,7 @@ type Props = {};
 
 const Page = (props: Props) => {
   return (
-    <main className="min-h-screen  flex flex-col ">
+    <main className="min-h-screen bg-[#F7F1EE] flex flex-col ">
       <ListingsNav />
       <div className="flex flex-col py-10  justify-evenly h-full gap-4 my-auto">
         <div className="relative md:w-10/12 z-0 h-[40vh]">

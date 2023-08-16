@@ -50,7 +50,7 @@ const ListingsNav = (props: Props) => {
     totalGuests.adults + totalGuests.kids + totalGuests.pets;
 
   return (
-    <div className="w-full relative bg-[#F4ECE8] flex pb-4 pt-6 h-full border-b-[1px] border-[#6C7186]">
+    <div className="w-full relative bg-white flex pb-4 pt-6 h-full border-b-[1px] border-[#6C7186]">
       <div className=" hidden lg:flex w-10/12 justify-evenly mx-auto ">
         {menuItems.map((menuItem, id) => (
           <div
