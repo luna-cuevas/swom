@@ -131,7 +131,7 @@ const Page = (props: Props) => {
               Welcome to our members-only community of travelers around the
               globe.{' '}
               <strong>
-                ¡Exchange your home for free, for travel, for work, for fun!
+                Exchange your home for free, for travel, for work, for fun!
               </strong>
             </p>
             <button className="bg-[#172544] text-[#EBDECC] px-4 py-2 rounded-3xl">

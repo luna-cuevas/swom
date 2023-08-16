@@ -27,7 +27,7 @@ const Page: React.FC<Props> = (props) => {
 
       <div className="md:w-11/12 w-full pr-4 my-4 flex flex-col relative py-4  ">
         <div className="border-r-2 border-y-2 relative rounded-r-3xl border-[#7F8119]">
-          <div className="absolute h-[200%] xl:max-h-[60vh] max-h-[50vh] w-1/3 md:w-1/2">
+          <div className="absolute h-[200%] z-50  xl:max-h-[70vh] max-h-[60vh] w-1/3 md:w-1/2">
             <Image
               src="/how-it-works/hiw-bg-1.png"
               alt="hero"
@@ -53,13 +53,22 @@ const Page: React.FC<Props> = (props) => {
           </div>
         </div>
 
-        <div className="flex w-full gap-4 h-fit">
+        <div className="flex w-full relative gap-4 h-fit">
+          <div className="absolute h-[160vh] bottom-0 left-0 top-0 w-full  md:w-[80%]">
+            <Image
+              src="/how-it-works/bg-line.svg"
+              alt="hero"
+              fill
+              objectPosition="top"
+              objectFit="cover"
+            />
+          </div>
           <div className=" md:w-9/12 mt-20 flex flex-col">
-            <h3 className="uppercase text-[#7F8119] leading-[50px] mb-20 tracking-[0.4rem] w-full text-right border-b-2 border-[#7F8119] text-3xl ml-auto">
+            <h3 className="uppercase text-[#7F8119] leading-[50px] mb-20 tracking-[0.4rem] w-1/2 text-right border-b-2 border-[#7F8119] text-3xl ml-auto">
               Follow these <br />{' '}
               <strong className="text-[#7F8119]">simple steps</strong>{' '}
             </h3>
-            <div className="grid pl-[10%] h-fit grid-cols-2">
+            <div className="grid pl-[10%]  z-50 h-fit grid-cols-2">
               <div className="col-start-2">
                 <h1 className="text-7xl font-bold font-sans">1</h1>
                 <p className="text-2xl">
@@ -95,7 +104,7 @@ const Page: React.FC<Props> = (props) => {
               </div>
             </div>
           </div>
-          <div className="w-3/12 md:flex hidden mt-20 gap-4 min-h-screen  flex-col">
+          <div className="w-3/12 md:flex  hidden mt-20 gap-4 min-h-screen  flex-col">
             <div className="relative h-1/3 w-full">
               <Image
                 src="/how-it-works/step-image-2.png"
