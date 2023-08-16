@@ -1,5 +1,6 @@
 import Image from 'next/image';
 import Link from 'next/link';
+import Script from 'next/script';
 import React from 'react';
 
 type Props = {};
@@ -37,6 +38,7 @@ const Page: React.FC<Props> = (props) => {
           <div
             className="w-1/2 ml-auto"
             style={{ padding: '26.25% 0 0 0', position: 'relative' }}>
+            {/* @ts-ignore */}
             <iframe
               src="https://player.vimeo.com/video/726050137?badge=0&amp;autopause=0&amp;player_id=0&amp;app_id=58479"
               allow="autoplay; fullscreen; picture-in-picture"
@@ -49,7 +51,6 @@ const Page: React.FC<Props> = (props) => {
               }}
               title="SWOM_SWAP YOUR HOME"></iframe>
           </div>
-          <script src="https://player.vimeo.com/api/player.js"></script>
         </div>
 
         <div className="flex w-full gap-4 h-fit">
