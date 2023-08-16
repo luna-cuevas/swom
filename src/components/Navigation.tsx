@@ -18,7 +18,7 @@ const Navigation = (props: Props) => {
   const [mobileActive, setMobileActive] = React.useState(false);
 
   return (
-    <nav className=" relative  md:px-12 px-4  py-4 bg-[#F4ECE8] flex justify-between">
+    <nav className=" relative  md:px-12 px-4  py-4 bg-[#fff] flex justify-between">
       <div className="flex w-[150px] h-auto relative  justify-center items-center">
         <Link href="/home">
           <Image src="/swom-logo.jpg" alt="logo" fill objectFit="contain" />
@@ -49,7 +49,7 @@ const Navigation = (props: Props) => {
             itemPress: false,
           }}>
           <MenuHandler>
-            <Button className="bg-[#F4ECE8] shadow-none">
+            <Button className="bg-[#fff] shadow-none">
               <Image
                 alt="search"
                 width={20}
@@ -124,7 +124,7 @@ const Navigation = (props: Props) => {
             itemPress: false,
           }}>
           <MenuHandler>
-            <Button className="bg-[#F4ECE8] mx-auto shadow-none">
+            <Button className="bg-[#fff] mx-auto shadow-none">
               <Image
                 alt="search"
                 width={20}

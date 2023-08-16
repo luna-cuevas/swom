@@ -61,7 +61,7 @@ const Page = (props: Props) => {
   };
 
   return (
-    <main className="bg-[#F4ECE8] min-h-[80vh] relative flex flex-col">
+    <main className="bg-[#F7F1EE] min-h-[80vh] relative flex flex-col">
       <h1 className="py-4 px-12 bg-[#172544] text-white font-sans tracking-[0.3rem] uppercase">
         My Profile
       </h1>
