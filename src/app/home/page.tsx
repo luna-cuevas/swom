@@ -7,7 +7,10 @@ type Props = {};
 
 const Page = (props: Props) => {
   return (
-    <main>
+    <main
+      style={{
+        background: '#f4ece8',
+      }}>
       <div className="">
         <div className="h-[87vh] bg-black relative">
           <div className="absolute w-fit z-50 h-fit top-0 bottom-0 left-0 right-0 m-auto ">
@@ -174,7 +177,7 @@ const Page = (props: Props) => {
         </div>
       </section>
 
-      <section className="md:min-h-[1000px] py-6 h-full gap-4 overflow-hidden w-10/12 m-auto justify-center md:grid bg-white flex   flex-col  ">
+      <section className="md:min-h-[1000px] py-6 h-full gap-4 overflow-hidden w-10/12 m-auto justify-center md:grid  flex   flex-col  ">
         <div className="md:grid md:grid-cols-3 gap-4  h-[70%]">
           <div className="sm:grid flex flex-col grid-rows-4 gap-4">
             <div className="row-span-1 text-right">

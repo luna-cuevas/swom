@@ -9,8 +9,7 @@ const Page: React.FC<Props> = (props) => {
   return (
     <main
       style={{
-        background:
-          'linear-gradient(180deg, rgba(255,255,255,1) 0%, rgba(244,236,232,1) 100%)',
+        background: '#F7F1EE',
       }}
       className="relative flex flex-col">
       <header className="lg:w-3/4 w-11/12 mx-auto h-[30vh] flex  justify-center  align-middle">

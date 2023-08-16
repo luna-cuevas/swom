@@ -22,7 +22,7 @@ const Page = (props: Props) => {
           />
         </div>
 
-        <div className="bg-[#F4ECE8]  overflow-hidden my-auto h-[80vh] w-full md:w-10/12 sm:rounded-r-2xl lg:rounded-r-[6rem] z-20 relative">
+        <div className="bg-[#F7F1EE]  overflow-hidden my-auto h-[80vh] w-full md:w-10/12 sm:rounded-r-2xl lg:rounded-r-[6rem] z-20 relative">
           <div className="">
             <h1 className="tracking-[0.3rem] uppercase text-3xl bg-[#E5DEDB] py-6 pl-12">
               Messages
