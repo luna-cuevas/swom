@@ -15,7 +15,7 @@ const Page = (props: Props) => {
       <div className="flex h-[50vh] md:w-2/3 m-auto py-4">
         <div className="md:w-1/3 px-4 m-auto">
           <h2 className="uppercase tracking-[0.3rem] font-light font-sans pb-4 text-xl">
-            "I've got a life to <br /> start living."{' '}
+            &quot;I&apos;ve got a life to <br /> start living.&quot;{' '}
           </h2>
           <p className="text-right uppercase tracking-[0.3rem] font-light font-sans pb-4 text-xs">
             - The Holiday (2006)
