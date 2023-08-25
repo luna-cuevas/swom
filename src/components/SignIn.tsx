@@ -55,13 +55,13 @@ const SignIn = (props: Props) => {
           props.setSignInActive(false);
         }}
       />
-      <div className="z-[20000001] rounded-2xl fixed w-2/3 bottom-0 m-auto top-0 flex left-0 right-0 h-fit py-8 bg-[#F7F1EE] border-[6px] border-[#7F8019]">
-        <div className="flex w-[40%] ">
-          <h2 className="uppercase font-sans leading-[60px] p-10 text-right tracking-[0.3rem] m-auto text-4xl">
+      <div className="z-[20000001] rounded-2xl fixed max-w-[800px] md:w-2/3 bottom-0 m-auto top-0 flex lg:flex-row flex-col left-0 right-0 h-fit py-8 bg-[#F7F1EE] border-[6px] border-[#7F8019]">
+        <div className="flex lg:w-[40%] ">
+          <h2 className="uppercase font-sans leading-[60px] p-4 lg:p-10 text-right tracking-[0.3rem] m-auto text-2xl lg:text-4xl">
             Members Login
           </h2>
         </div>
-        <div className="flex w-[60%] ">
+        <div className="flex lg:w-[60%] w-[90%] m-auto ">
           <ToastContainer
             position="bottom-right"
             autoClose={5000}

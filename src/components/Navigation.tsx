@@ -59,19 +59,7 @@ const Navigation = (props: Props) => {
 
   return (
     <nav className=" relative  md:px-12 px-4  py-4 bg-[#fff] flex justify-between">
-      <ToastContainer
-        position="bottom-right"
-        autoClose={5000}
-        hideProgressBar={false}
-        newestOnTop={false}
-        closeOnClick
-        rtl={false}
-        pauseOnFocusLoss
-        draggable
-        pauseOnHover
-        theme="light"
-      />
-      <div className="flex w-[150px] h-auto relative  justify-center items-center">
+      <div className="flex w-[150px] h-auto relative   items-center">
         <Link href="/home">
           <Image src="/swom-logo.jpg" alt="logo" fill objectFit="contain" />
         </Link>
@@ -96,8 +84,9 @@ const Navigation = (props: Props) => {
             </Link>
           </>
         )}
-        <button>US</button>
+        <Link href="/about-us">US</Link>
         <Link href="/">BECOME A MEMEBER</Link>
+
         {activeNavButtons ? (
           <button
             className="m-auto"
@@ -115,6 +104,19 @@ const Navigation = (props: Props) => {
             SIGN IN
           </button>
         )}
+
+        <ToastContainer
+          position="bottom-right"
+          autoClose={5000}
+          hideProgressBar={false}
+          newestOnTop={false}
+          closeOnClick
+          rtl={false}
+          pauseOnFocusLoss
+          draggable
+          pauseOnHover
+          theme="light"
+        />
 
         <Menu
           dismiss={{
@@ -189,7 +191,7 @@ const Navigation = (props: Props) => {
             </Link>
           </>
         )}
-        <button>US</button>
+        <Link href="/about-us">US</Link>
         <Link className="m-auto" href="/">
           BECOME A MEMEBER
         </Link>
