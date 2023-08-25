@@ -3,6 +3,7 @@ import type { Metadata } from 'next';
 import Navigation from '@/components/Navigation';
 import Footer from '@/components/Footer';
 import Script from 'next/script';
+import { StateProvider } from '@/context/StateContext';
 
 export const metadata: Metadata = {
   title: 'Create Next App',
@@ -16,12 +17,14 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <body>
-        <Navigation />
-        {children}
-        <Footer />
-        <Script src="https://player.vimeo.com/api/player.js"></Script>
-      </body>
+      <StateProvider>
+        <body className="relative">
+          <Navigation />
+          {children}
+          <Footer />
+          <Script src="https://player.vimeo.com/api/player.js"></Script>
+        </body>
+      </StateProvider>
     </html>
   );
 }

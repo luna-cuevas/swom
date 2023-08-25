@@ -1,0 +1,89 @@
+<label class="form-label"
+  >Email Address
+  <span style="color: red">*</span>
+</label>
+[email* email class:form-input placeholder "Email"]
+
+<label class="form-label">
+  Confirm Email Address
+  <span style="color: red"> *</span>
+</label>
+[email* email class:form-input placeholder "Email"]
+
+<label class="form-label">
+  Full Name
+  <span style="color: red"> *</span>
+</label>
+[text* your-name class:form-input placeholder "Name"]
+<label class="form-label">
+  Date of Birth
+  <span style="color: red"> *</span>
+</label>
+[date* dob id:datepicker placeholder "Date Of birth"]
+<label class="form-label">
+  Phone Number
+  <span style="color: red"> *</span>
+</label>
+[tel* phone-number class:form-input placeholder "Phome Number"]
+<label class="form-label">
+  Address
+  <span style="color: red"> *</span>
+</label>
+[text* address class:form-input placeholder "Address"]
+<label class="form-label">
+  City
+  <span style="color: red"> *</span>
+</label>
+[text* city class:form-input placeholder "City"]
+<label class="form-label">
+  State
+  <span style="color: red"> *</span>
+</label>
+[text* state class:form-input placeholder "State"]
+<label class="form-label">
+  Please provide your Amazon Order Id #. This number is located on the order
+  confirmation email you received from Amazon.
+  <span style="color: red">*</span>
+</label>
+[text* amazonorder-id class:form-input placeholder "Amazon Order Id #"]
+<label class="form-label">
+  Are you 18 or older?
+  <span style="color: red"> *</span>
+</label>
+[select age class:select-type "Yes" "No"]
+<label class="form-label"
+  >Did you purchase the 247Labkit for yourself or as a gift?
+  <span style="color: red"> *</span>
+</label>
+[select* purch-kit class:select-type "For Myself" "As a Gift"]
+<label class="form-label">
+  How would you like to receive your test results?<span style="color: red">
+    *</span
+  >
+</label>
+[select* result class:select-type "Email" "Phone"]
+<label class="form-label">
+  Please provide your USPS Tracking #. This number is located on your 247Labkit
+  Return Label. See the example below.
+  <span style="color: red"> *</span>
+</label>
+[text* tracking class:form-input placeholder "USPS Tracking #"]
+<img src="" />
+<label class="form-label">
+  Please provide the date you shipped your sample to us for testing. If you have
+  not shipped your sample, please provide an estimated shipping date.<span
+    style="color: red">
+    *</span
+  >
+</label>
+[date* shipping-date id:datepicker placeholder "Shipping Date"]
+<label class="form-label"
+  >To provide you with fast results, please ensure you have completed the
+  Requisition form, and Confirmation form before returning your 247Labkit for
+  testing.
+</label>
+<label class="form-label">
+  For questions or concerns email us at private@247labkit.com or call us at
+  813.932.3741
+</label>
+[submit class:submit-btn "Submit Form"]
