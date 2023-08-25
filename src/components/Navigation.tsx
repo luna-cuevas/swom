@@ -2,7 +2,7 @@
 
 import Image from 'next/image';
 import Link from 'next/link';
-import React from 'react';
+import React, { useEffect } from 'react';
 import {
   Menu,
   MenuHandler,
@@ -11,38 +11,110 @@ import {
   MenuItem,
   Input,
 } from '@material-tailwind/react';
+import SignIn from '@/components/SignIn';
+import { useStateContext } from '@/context/StateContext';
+import { supabaseClient } from '@/utils/supabaseClient';
+import { ToastContainer, toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 type Props = {};
 
 const Navigation = (props: Props) => {
   const [mobileActive, setMobileActive] = React.useState(false);
+  const [signInActive, setSignInActive] = React.useState(false);
+  const { state, setState } = useStateContext();
+  const [activeNavButtons, setActiveNavButtons] = React.useState(false);
+  const supabase = supabaseClient();
+
+  useEffect(() => {
+    const session = localStorage.getItem('session');
+    const user = localStorage.getItem('user');
+    if (session && user) {
+      setState({
+        ...state,
+        session: JSON.parse(session),
+        user: JSON.parse(user),
+      });
+    }
+  }, []);
+
+  useEffect(() => {
+    if (state.session) {
+      setActiveNavButtons(true);
+    } else {
+      setActiveNavButtons(false);
+    }
+  }, [state.session]);
+
+  const handleSignOut = async () => {
+    try {
+      await supabase.auth.signOut();
+      localStorage.clear();
+      setState({ ...state, session: null, user: null });
+      toast.success('Signed out successfully');
+    } catch (error) {
+      console.error('Error signing out:', error);
+    }
+  };
 
   return (
     <nav className=" relative  md:px-12 px-4  py-4 bg-[#fff] flex justify-between">
+      <ToastContainer
+        position="bottom-right"
+        autoClose={5000}
+        hideProgressBar={false}
+        newestOnTop={false}
+        closeOnClick
+        rtl={false}
+        pauseOnFocusLoss
+        draggable
+        pauseOnHover
+        theme="light"
+      />
       <div className="flex w-[150px] h-auto relative  justify-center items-center">
         <Link href="/home">
           <Image src="/swom-logo.jpg" alt="logo" fill objectFit="contain" />
         </Link>
       </div>
       <div className="hidden lg:flex gap-8 align-middle">
-        <Link className="m-auto" href="/how-it-works">
-          HOW IT WORKS
-        </Link>
-        <Link className="m-auto" href="/messages">
-          MESSAGES
-        </Link>
-        <Link className="m-auto" href="/profile">
-          PROFILE
-        </Link>
-        <Link className="m-auto" href="/membership">
-          MEMBERSHIP
-        </Link>
-        <Link className="m-auto" href="/listings">
-          LISTINGS
-        </Link>
+        {activeNavButtons && (
+          <>
+            <Link className="m-auto" href="/how-it-works">
+              HOW IT WORKS
+            </Link>
+            <Link className="m-auto" href="/messages">
+              MESSAGES
+            </Link>
+            <Link className="m-auto" href="/profile">
+              PROFILE
+            </Link>
+            <Link className="m-auto" href="/membership">
+              MEMBERSHIP
+            </Link>
+            <Link className="m-auto" href="/listings">
+              LISTINGS
+            </Link>
+          </>
+        )}
         <button>US</button>
         <Link href="/">BECOME A MEMEBER</Link>
-        <Link href="/">SIGN IN</Link>
+        {activeNavButtons ? (
+          <button
+            className="m-auto"
+            onClick={() => {
+              handleSignOut();
+            }}>
+            SIGN OUT
+          </button>
+        ) : (
+          <button
+            className="m-auto"
+            onClick={() => {
+              setSignInActive(!signInActive);
+            }}>
+            SIGN IN
+          </button>
+        )}
 
         <Menu
           dismiss={{
@@ -73,6 +145,8 @@ const Navigation = (props: Props) => {
         </Menu>
       </div>
 
+      {signInActive && <SignIn setSignInActive={setSignInActive} />}
+
       <div className="lg:hidden">
         <button onClick={() => setMobileActive(!mobileActive)}>
           <svg
@@ -93,32 +167,50 @@ const Navigation = (props: Props) => {
         style={{
           maxHeight: mobileActive ? '100vh' : '0',
           borderTop: mobileActive ? '1px solid #a9a9a9' : 'none',
-          padding: mobileActive ? '5px 0' : '0',
+          padding: mobileActive ? '20px 0' : '0',
         }}
-        className={`lg:hidden z-[10000] align-middle gap-4 box-border top-full flex flex-col justify-center text-center transition-all duration-300 ease-in-out overflow-hidden max-h-[100vh] left-0 bg-[#F4ECE8] w-full absolute`}>
-        <button>US</button>
-        <Link className="m-auto" href="/how-it-works">
-          HOW IT WORKS
-        </Link>
-        <Link className="m-auto" href="/messages">
-          MESSAGES
-        </Link>
-        <Link className="m-auto" href="/profile">
-          PROFILE
-        </Link>
-        <Link className="m-auto" href="/membership">
-          MEMBERSHIP
-        </Link>
-        <Link className="m-auto" href="/listings">
-          LISTINGS
-        </Link>
+        className={`lg:hidden z-[10000] align-middle gap-4  box-border top-full flex flex-col justify-center text-center transition-all duration-300 ease-in-out overflow-hidden max-h-[100vh] left-0 bg-white w-full absolute`}>
+        {activeNavButtons && (
+          <>
+            <Link className="m-auto" href="/how-it-works">
+              HOW IT WORKS
+            </Link>
+            <Link className="m-auto" href="/messages">
+              MESSAGES
+            </Link>
+            <Link className="m-auto" href="/profile">
+              PROFILE
+            </Link>
+            <Link className="m-auto" href="/membership">
+              MEMBERSHIP
+            </Link>
+            <Link className="m-auto" href="/listings">
+              LISTINGS
+            </Link>
+          </>
+        )}
         <button>US</button>
         <Link className="m-auto" href="/">
           BECOME A MEMEBER
         </Link>
-        <Link className="m-auto" href="/">
-          SIGN IN
-        </Link>
+        {activeNavButtons ? (
+          <button
+            className="m-auto"
+            onClick={() => {
+              handleSignOut();
+            }}>
+            SIGN OUT
+          </button>
+        ) : (
+          <button
+            className="m-auto"
+            onClick={() => {
+              setSignInActive(!signInActive);
+            }}>
+            SIGN IN
+          </button>
+        )}
+
         <Menu
           dismiss={{
             itemPress: false,
