@@ -1,6 +1,5 @@
 import Image from 'next/image';
-import React from 'react';
-import { Carousel, IconButton } from '@material-tailwind/react';
+import React, { useState, useEffect } from 'react';
 
 type Props = {
   roundedLeft?: boolean;
@@ -9,69 +8,62 @@ type Props = {
 };
 
 const CarouselPage = (props: Props) => {
+  const [currentImage, setCurrentImage] = useState(0);
+
+  const prevImage = () => {
+    setCurrentImage((prev) =>
+      prev === 0 ? props.images.length - 1 : prev - 1
+    );
+  };
+
+  const nextImage = () => {
+    setCurrentImage((prev) =>
+      prev === props.images.length - 1 ? 0 : prev + 1
+    );
+  };
+
+  useEffect(() => {
+    // Automatically change slides every 5 seconds
+    const intervalId = setInterval(() => {
+      nextImage();
+    }, 8000);
+
+    return () => {
+      // Clear the interval to prevent memory leaks
+      clearInterval(intervalId);
+    };
+  }, [currentImage]);
+
   return (
-    <Carousel
-      prevArrow={({ handlePrev }) => (
-        <IconButton
-          variant="text"
-          color="white"
-          size="lg"
-          onClick={handlePrev}
-          className="!absolute z-50 bg-[#ffffff35] text-white top-2/4 left-4 -translate-y-2/4">
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            fill="#fff"
-            viewBox="0 0 24 24"
-            strokeWidth={2}
-            stroke="#fff"
-            className="h-8 w-8">
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18"
-            />
-          </svg>
-        </IconButton>
-      )}
-      nextArrow={({ handleNext }) => (
-        <IconButton
-          variant="text"
-          color="white"
-          size="lg"
-          onClick={handleNext}
-          className="!absolute z-50 bg-[#ffffff35] top-2/4 !right-4 -translate-y-2/4">
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            fill="#fff"
-            viewBox="0 0 24 24"
-            strokeWidth={2}
-            stroke="#fff"
-            className="h-8 w-8">
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3"
-            />
-          </svg>
-        </IconButton>
-      )}
-      className={`relative flex  w-full ${
-        props.roundedLeft && 'rounded-l-xl'
-      } ${props.roundedRight && 'rounded-r-xl'}`}>
-      {props.images.map((image, index) => (
-        <div key={index} className="">
-          <div className="w-full h-full m-auto top-0 z-20 absolute bg-[#00000049]"></div>
-          <Image
-            className=""
+    <div className="relative h-fit">
+      <button
+        onClick={prevImage}
+        className="absolute z-50 bg-[#2c2c2c6a] text-white top-2/4 left-4 -translate-y-2/4 p-2 rounded-full">
+        Previous
+      </button>
+      <button
+        onClick={nextImage}
+        className="absolute z-50 bg-[#2c2c2c6a] text-white top-2/4 right-4 -translate-y-2/4 p-2 rounded-full">
+        Next
+      </button>
+      <div
+        className={`relative h-fit flex w-full ${
+          props.roundedLeft && 'rounded-l-xl'
+        } ${props.roundedRight && 'rounded-r-xl'}`}>
+        {props.images.map((image, index) => (
+          <div
             key={index}
-            src={image}
-            alt="image"
-            fill
-            objectFit="cover"
-          />
-        </div>
-      ))}
-    </Carousel>
+            className={`h-[80vh] w-full relative ${
+              index === currentImage ? 'block' : 'hidden'
+            } transition-transform duration-[2s] ease-in-out transform ${
+              index === currentImage ? 'translate-x-0' : 'translate-x-full'
+            }`}>
+            <div className="w-full h-full m-auto top-0 z-20 absolute bg-[#00000049]"></div>
+            <Image src={image} alt="image" fill objectFit="cover" />
+          </div>
+        ))}
+      </div>
+    </div>
   );
 };
 

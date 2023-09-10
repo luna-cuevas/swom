@@ -131,7 +131,7 @@ const Page: React.FC<Props> = (props) => {
           </div>
         </div>
         <button className="text-xl font-bold tracking-wider mt-16 hover:bg-[#7f8119d3] text-white rounded-3xl uppercase px-4 py-2 bg-[#7F8119] w-fit mx-auto">
-          Questionnaire
+          Apply Now
         </button>
       </div>
       <div className="bg-[#EB8828] flex my-10 mb-20 relative w-2/3 h-fit py-10 rounded-l-3xl ml-auto">
