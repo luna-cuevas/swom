@@ -6,16 +6,34 @@ type Props = {};
 
 const Page = (props: Props) => {
   return (
-    <main className="flex relative min-h-screen h-[120vh] sm:h-[100vh] md:h-fit overflow-hidden bg-[#17212D]">
-      <div className="relative h-[60vh] w-full">
+    <main className="flex relative min-h-screen flex-col h-[120vh] sm:h-[100vh] md:h-fit overflow-hidden bg-[#17212D]">
+      <div className="relative h-screen w-full">
         <Image
           src="/membership/membership.webp"
           alt="hero"
           fill
+          objectPosition="bottom"
           objectFit="cover"
         />
       </div>
-      <div className="md:w-2/3 max-w-[1000px] w-11/12 z-20 m-auto top-6 md:top-0 md:bottom-0 md:pl-8 p-2 md:px-0  py-4 left-0 right-0 rounded-2xl h-fit min-h-[70vh] absolute bg-[#F4ECE8]">
+
+      <div className="h-[15vh] flex bg-[#17212D] w-full">
+        <div className=" w-fit m-auto ">
+          <div className="relative w-12 h-12 mx-auto">
+            <Image
+              src="/membership/swom-blue.png"
+              alt="logo"
+              fill
+              objectFit="cover"
+            />
+          </div>
+          <h2 className="text-2xl font-sans text-center my-4 tracking-[0.3rem] uppercase text-white">
+            Traveling to a whole new level
+          </h2>
+        </div>
+      </div>
+
+      <div className="md:w-2/3 max-w-[1000px] w-11/12 z-20 m-auto top-6 md:top-0 md:bottom-0 md:pl-8 p-2 md:px-0  py-4 left-0 right-0 rounded-2xl h-fit overflow-scroll max-h-[70vh] absolute bg-[#F4ECE8]">
         <div className="w-full text-center md:text-left h-fit pb-2 mb-4 border-b-2 border-gray-400">
           <div className="relative w-[250px] h-[80px]">
             <Image src="/swom-logo.jpg" alt="logo" fill objectFit="contain" />
@@ -88,20 +106,6 @@ const Page = (props: Props) => {
             </span>
           </p>
         </div>
-      </div>
-
-      <div className="absolute bottom-6 w-fit m-auto left-0 right-0">
-        <div className="relative w-12 h-12 mx-auto">
-          <Image
-            src="/membership/swom-blue.png"
-            alt="logo"
-            fill
-            objectFit="cover"
-          />
-        </div>
-        <h2 className="text-2xl text-center tracking-widest uppercase text-white">
-          Traveling to a whole new level
-        </h2>
       </div>
     </main>
   );

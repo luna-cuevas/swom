@@ -12,7 +12,7 @@ const Page = (props: Props) => {
         background: '#F7F1EE',
       }}>
       <div className="">
-        <div className="h-[87vh] bg-black relative">
+        <div className="h-[80vh] bg-black relative">
           <div className="absolute w-fit z-50 h-fit top-0 bottom-0 left-0 right-0 m-auto ">
             <h2 className="text-[#ffffff] uppercase text-3xl tracking-widest text-center">
               Make Memories <br /> All over the <br /> world
@@ -20,7 +20,6 @@ const Page = (props: Props) => {
           </div>
           <Carousel
             images={[
-              '/homepage/hero-image-9.png',
               '/homepage/hero-image-1.png',
               '/homepage/hero-image-2.png',
               '/homepage/hero-image-3.png',
@@ -29,6 +28,7 @@ const Page = (props: Props) => {
               '/homepage/hero-image-6.png',
               '/homepage/hero-image-7.png',
               '/homepage/hero-image-8.png',
+              '/homepage/hero-image-9.png',
             ]}
           />
         </div>
