@@ -6,6 +6,7 @@ import { useStateContext } from '@/context/StateContext';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import Link from 'next/link';
+import { PaymentElement } from '@stripe/react-stripe-js';
 
 type Props = {
   setSignInActive: React.Dispatch<React.SetStateAction<boolean>>;
@@ -31,6 +32,7 @@ const SignIn = (props: Props) => {
   }, []);
 
   const handleAuthChange = async (event: any, session: any) => {
+    console.log('session', session);
     if (event === 'SIGNED_IN' && session !== null) {
       console.log('session', event);
       localStorage.setItem('session', JSON.stringify(session));
@@ -44,7 +46,11 @@ const SignIn = (props: Props) => {
       toast.success('Signed in successfully');
 
       props.setSignInActive(false);
-    } else {
+    } else if (event === 'SIGNED_OUT') {
+      console.log('session', event);
+      console.log('SignIn Failed');
+
+      toast.error('Sign in failed');
     }
   };
   return (
@@ -99,6 +105,11 @@ const SignIn = (props: Props) => {
                       background: '#7F8019',
                       borderRadius: '0.375rem',
                       padding: '1rem 0.75rem',
+                    },
+                    message: {
+                      fontSize: '18px',
+                      color: '#ff0f0f',
+                      margin: '0 0 20px 0',
                     },
                   },
                 }}

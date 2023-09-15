@@ -42,7 +42,7 @@ const Page = (props: Props) => {
         </div>
 
         <div className="w-[60%] border-2 flex flex-col align-middle border-[#EB8828] p-8">
-          <div className="my-auto ml-8 max-w-[600px]  flex flex-col gap-5 text-center">
+          <div className="my-auto ml-8 max-w-[600px] text-lg  flex flex-col gap-5 text-center">
             <p className="font-sans">
               Traveling has always been our lifestyle. Swapping homes has become
               our way to do so. We wanted to create a community of trust.
@@ -63,7 +63,7 @@ const Page = (props: Props) => {
         <h2 className="uppercase text-2xl font- mb-10 font-sans tracking-[0.3rem]">
           WHY WE CREATED SWOM
         </h2>
-        <p className="font-sans font-light">
+        <p className="font-sans text-left text-lg md:text-xl font-light">
           We believe in TRUST and we make it our main currency. We celebrate
           other cultures and value cross-cultural understanding. We believe that
           gaining knowledge about other cultures helps us be better informed
@@ -74,7 +74,7 @@ const Page = (props: Props) => {
         </p>
       </div>
 
-      <div className="py-8 px-4 relative md:w-[80%] justify-center m-auto gap-6 flex min-h-[30vh] md:min-h-[40vh]">
+      {/* <div className="py-8 px-4 relative md:w-[80%] justify-center m-auto gap-6 flex min-h-[30vh] md:min-h-[40vh]">
         <div className="relative w-1/3">
           <Image
             fill
@@ -99,7 +99,7 @@ const Page = (props: Props) => {
             alt="hero"
           />
         </div>
-      </div>
+      </div> */}
     </main>
   );
 };
