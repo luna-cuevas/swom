@@ -6,7 +6,6 @@ import { useStateContext } from '@/context/StateContext';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import Link from 'next/link';
-import { PaymentElement } from '@stripe/react-stripe-js';
 
 type Props = {
   setSignInActive: React.Dispatch<React.SetStateAction<boolean>>;
@@ -136,6 +135,9 @@ const SignIn = (props: Props) => {
           <div className="flex w-fit m-auto gap-2">
             <p className="text-[#F7F1EE]">Don&apos;t have an account?</p>
             <Link
+              onClick={() => {
+                props.setSignInActive(false);
+              }}
               className="font-sans text-sm text-blue-gray-300"
               href="/sign-up">
               Sign up
