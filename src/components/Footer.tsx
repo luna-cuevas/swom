@@ -5,6 +5,17 @@ import React from 'react';
 type Props = {};
 
 const Footer = (props: Props) => {
+  const handleSubmission = (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    const email = e.currentTarget.email.value;
+    const language = e.currentTarget.language.value;
+
+    console.log('Email:', email);
+    console.log('Language:', language);
+
+    alert('Message sent!');
+  };
+
   return (
     <div className="md:h-[250px] h-[400px] bg-[#7F8119] md:flex-row flex-col flex justify-center align-middle w-full">
       <div className="md:w-1/2 flex align-middle justify-center gap-4 my-auto  h-1/2">
@@ -28,19 +39,28 @@ const Footer = (props: Props) => {
       </div>
 
       <div className="md:w-1/3 w-3/4  m-auto flex flex-col">
-        <p className="text-[#F4ECE8]">Contact us</p>
-        <input
-          placeholder="Email"
-          className="w-full p-4  rounded-lg my-2 bg-[#F4ECE8]"
-          type="text"
-        />
-        <select
-          className="w-fit p-4 rounded-lg my-1 bg-[#F4ECE8]"
-          name="Language Selection"
-          id="">
-          <option value="English">English</option>
-          <option value="Spanish">Spanish</option>
-        </select>
+        <form
+          onSubmit={(e) => {
+            handleSubmission(e);
+          }}>
+          <p className="text-[#F4ECE8]">Contact us</p>
+          <input
+            name="email"
+            placeholder="Email"
+            className="w-full p-4  rounded-lg my-2 bg-[#F4ECE8]"
+            type="text"
+          />
+          <select
+            name="language"
+            className="w-fit p-4 rounded-lg my-1 bg-[#F4ECE8]"
+            id="">
+            <option value="English">English</option>
+            <option value="Spanish">Spanish</option>
+          </select>
+          <button className="bg-[#F4ECE8] ml-4 w-fit  p-4 rounded-lg my-1">
+            Send
+          </button>
+        </form>
       </div>
     </div>
   );
