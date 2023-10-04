@@ -38,7 +38,7 @@ const Page = (props: Props) => {
         </div>
       </div>
       <p className="mt-14 m-auto ml-[10vw] justify-center flex w-[40%]">
-        SWOM's selection process is rigorous and highly selective. All
+        SWOM&apos;s selection process is rigorous and highly selective. All
         applicants must pass a screening process that verifies their
         trustworthiness, reveals their familiarity with family and friends, and
         assesses how well they fit into the design values of the community. Read
