@@ -10,6 +10,7 @@
   },
   "dependencies": {
     "@material-tailwind/react": "^2.1.0",
+    "@react-google-maps/api": "^2.19.2",
     "@stripe/react-stripe-js": "^2.3.0",
     "@stripe/stripe-js": "^2.1.5",
     "@supabase/auth-ui-react": "^0.4.2",

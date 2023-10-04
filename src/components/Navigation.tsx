@@ -64,7 +64,7 @@ const Navigation = (props: Props) => {
           <Image src="/swom-logo.jpg" alt="logo" fill objectFit="contain" />
         </Link>
       </div>
-      <div className="hidden lg:flex gap-8 align-middle">
+      <div className="hidden xl:flex gap-8 align-middle">
         {activeNavButtons && (
           <>
             <Link className="m-auto" href="/how-it-works">
@@ -85,7 +85,7 @@ const Navigation = (props: Props) => {
           </>
         )}
         <Link href="/about-us">US</Link>
-        <Link href="/">BECOME A MEMEBER</Link>
+        <Link href="/become-member">BECOME A MEMEBER</Link>
 
         {activeNavButtons ? (
           <button
@@ -149,7 +149,7 @@ const Navigation = (props: Props) => {
 
       {signInActive && <SignIn setSignInActive={setSignInActive} />}
 
-      <div className="lg:hidden">
+      <div className="xl:hidden">
         <button onClick={() => setMobileActive(!mobileActive)}>
           <svg
             width="20"
@@ -191,8 +191,10 @@ const Navigation = (props: Props) => {
             </Link>
           </>
         )}
-        <Link href="/about-us">US</Link>
-        <Link className="m-auto" href="/">
+        <Link className="m-auto" href="/about-us">
+          US
+        </Link>
+        <Link className="m-auto" href="/become-member">
           BECOME A MEMEBER
         </Link>
         {activeNavButtons ? (
