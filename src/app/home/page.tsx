@@ -1,6 +1,7 @@
 'use client';
 import Carousel from '@/components/Carousel';
 import Image from 'next/image';
+import Link from 'next/link';
 import React from 'react';
 
 type Props = {};
@@ -20,15 +21,15 @@ const Page = (props: Props) => {
           </div>
           <Carousel
             images={[
-              '/homepage/hero-image-1.png',
-              '/homepage/hero-image-2.png',
-              '/homepage/hero-image-3.png',
-              '/homepage/hero-image-4.png',
-              '/homepage/hero-image-5.png',
-              '/homepage/hero-image-6.png',
-              '/homepage/hero-image-7.png',
-              '/homepage/hero-image-8.png',
-              '/homepage/hero-image-9.png',
+              { src: '/homepage/hero-image-1.png', listingNum: '5201' },
+              { src: '/homepage/hero-image-2.png', listingNum: '103' },
+              { src: '/homepage/hero-image-3.png', listingNum: '5702' },
+              { src: '/homepage/hero-image-4.png', listingNum: '102' },
+              { src: '/homepage/hero-image-5.png', listingNum: '3401' },
+              { src: '/homepage/hero-image-6.png', listingNum: '5704' },
+              { src: '/homepage/hero-image-7.png', listingNum: '35801' },
+              { src: '/homepage/hero-image-8.png', listingNum: '6101' },
+              { src: '/homepage/hero-image-9.png', listingNum: '5202' },
             ]}
           />
         </div>
@@ -47,9 +48,9 @@ const Page = (props: Props) => {
         </div>
       </div>
 
-      <section className="md:h-[50vh] h-fit md:flex-row flex-col  flex px-10 align-middle md:gap-16  md:justify-evenly">
+      <section className="md:h-[50vh] bg-[#F4ECE8] h-fit md:flex-row flex-col  flex px-10 align-middle md:gap-16  md:justify-evenly">
         <div className="md:w-[40%] h-fit md:my-auto my-4">
-          <h2 className="text-4xl tracking-wider">Swom</h2>
+          <h2 className="text-4xl tracking-wider uppercase">Swom</h2>
           <p className="font-thin">(Verb): to swap you home.</p>
           <p className="mt-6 text-xl">
             Get ready to SWOM your way to a whole new address and a suitcase
@@ -86,39 +87,27 @@ const Page = (props: Props) => {
         </div>
       </section>
 
-      <section className="md:h-[45vh] py-6 md:flex-row flex-col justify-evenly flex bg-[#F4ECE8]">
-        <div className="md:w-1/2 flex my-auto rounded-r-3xl bg-[#E88527] ">
-          <div className="relative  w-11/12 h-[30vh]">
+      <section className="md:h-[45vh]  md:flex-row flex-col justify-evenly flex bg-[#F4ECE8]">
+        <div className="md:w-1/2 h-[30vh] md:h-full flex my-auto relative">
+          <div className="w-full relative h-full overflow-hidden">
+            <div className="absolute z-50 top-[10%] -left-4 text-md ">
+              <div className="absolute inset-0 transform skew-x-[-10deg]  bg-[#f4ece7b3]"></div>
+              <div className="relative py-4 px-8 text-[#172544]">
+                <strong>Listing No. xxx</strong>
+              </div>
+            </div>
             <Image
-              src="/homepage/cto-image.jpg"
+              src="/homepage/hero-image-6.png"
               alt="cto image"
-              className="rounded-r-3xl"
               fill
-              objectFit="cover"></Image>
+              objectFit="cover"
+              className="w-full h-full"
+            />
+            <div className="absolute inset-0 gradient-mask"></div>
           </div>
-
-          <svg
-            className="m-auto"
-            fill="#ffffff"
-            height="20px"
-            width="20px"
-            version="1.1"
-            id="Capa_1"
-            xmlns="http://www.w3.org/2000/svg"
-            xmlnsXlink="http://www.w3.org/1999/xlink"
-            viewBox="0 0 492.432 492.432"
-            xmlSpace="preserve">
-            <g id="XMLID_134_">
-              <path
-                id="XMLID_135_"
-                d="M142.238,492.432c-9.79,0-19.588-3.736-27.05-11.209c-14.945-14.934-14.945-39.162,0-54.098l180.9-180.909
-		l-180.9-180.91c-14.945-14.935-14.945-39.163,0-54.098c14.926-14.944,39.172-14.944,54.098,0l207.96,207.958
-		c14.943,14.935,14.943,39.164,0,54.1l-207.96,207.957C161.824,488.697,152.026,492.432,142.238,492.432z"
-              />
-            </g>
-          </svg>
         </div>
-        <div className="md:w-1/3 py-4  m-auto">
+
+        <div className="md:w-1/3 p-4  m-auto">
           <div className="relative justify-center m-auto w-1/2 h-[30px] flex ">
             <Image
               className="m-auto"
@@ -138,7 +127,7 @@ const Page = (props: Props) => {
               </strong>
             </p>
             <button className="bg-[#172544] text-[#EBDECC] px-4 py-2 rounded-3xl">
-              Become a Member
+              <Link href="/become-member">Become a Member</Link>
             </button>
           </div>
         </div>

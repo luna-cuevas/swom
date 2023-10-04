@@ -12,27 +12,30 @@ const Page = (props: Props) => {
         <div className="h-[2px] my-auto w-1/4 border-[1px] border-white" />
       </div>
 
-      <div className="flex h-[50vh] md:w-2/3 m-auto py-4">
-        <div className="md:w-1/3 px-4 m-auto">
-          <h2 className="uppercase tracking-[0.3rem] font-light font-sans pb-4 text-xl">
-            &quot;I&apos;ve got a life to <br /> start living.&quot;{' '}
+      <div className="flex flex-col md:flex-row md:h-[50vh] justify-center m-auto py-4">
+        <div className="w-1/3 px-4 my-auto">
+          <h2 className=" tracking-[0.1rem] font-light font-serif pb-4 text-5xl">
+            &quot;I&apos;ve got a life to <br />{' '}
+            <strong className="italic ">start living.</strong>
+            &quot;{' '}
           </h2>
-          <p className="text-right uppercase tracking-[0.3rem] font-light font-sans pb-4 text-xs">
+          <p className="text-center uppercase tracking-[0.3rem] font-light font-sans pb-4 text-xs">
             - The Holiday (2006)
           </p>
         </div>
-        <div className="relative w-1/2">
+        <div className="relative w-1/3">
           <Image
             fill
             objectFit="cover"
+            className="rounded-2xl"
             src="/about-us/about-1.png"
             alt="hero"
           />
         </div>
       </div>
 
-      <div className="flex h-[50vh] justify-end  m-auto py-4">
-        <div className="relative w-1/2 lg:w-1/3 -rotate-[12deg] h-auto 2xl:-mr-32 -mr-12">
+      <div className="flex h-[50vh] justify-end m-auto py-4">
+        <div className="relative w-1/2 lg:w-1/3 -rotate-[4deg] h-auto -mr-12">
           <Image
             fill
             objectFit="contain"
@@ -41,8 +44,8 @@ const Page = (props: Props) => {
           />
         </div>
 
-        <div className="w-[60%] border-2 flex flex-col align-middle border-[#EB8828] p-8">
-          <div className="my-auto ml-8 max-w-[600px] text-lg  flex flex-col gap-5 text-center">
+        <div className="w-[60%] flex flex-col align-middle  p-8">
+          <div className="my-auto ml-12 max-w-[600px] text-lg  flex flex-col gap-5 text-center">
             <p className="font-sans">
               Traveling has always been our lifestyle. Swapping homes has become
               our way to do so. We wanted to create a community of trust.
@@ -52,26 +55,95 @@ const Page = (props: Props) => {
               Paula is a design lover and Ana is tech oriented. We combined both
               worlds into SWOM.
             </p>
-            <p className="font-sans uppercase tracking-[0.3rem]">
-              ABOVE ALL, WE ARE FRIENDS.
+            <p className="font-serif text-xl tracking-[0.1rem]">
+              Above all, we are friends.
             </p>
           </div>
         </div>
       </div>
 
-      <div className="flex flex-col py-24 md:w-1/2 w-[80%] justify-center align-middle m-auto text-center min-h-[30vh]">
-        <h2 className="uppercase text-2xl font- mb-10 font-sans tracking-[0.3rem]">
-          WHY WE CREATED SWOM
-        </h2>
-        <p className="font-sans text-left text-lg md:text-xl font-light">
-          We believe in TRUST and we make it our main currency. We celebrate
-          other cultures and value cross-cultural understanding. We believe that
-          gaining knowledge about other cultures helps us be better informed
-          citizens of the world and allows us to come together as one human
-          family. We recognize that its important to create meaningful
-          relationships with people from all walks of life, and that traveling
-          is a way to do so. This is what moves us. Traveling is our way.
-        </p>
+      <div className="flex py-16 w-[80%] justify-evenly align-middle m-auto h-full  min-h-[90vh]">
+        <div className="w-1/3">
+          <h2 className=" text-5xl font-  font-serif tracking-[0.1rem]">
+            Why we <br /> created <strong className="italic">SWOM</strong>
+          </h2>
+          <div className="border my-6 border-black w-full" />
+          <p className="font-sans text-left text-lg font-thin">
+            We believe in TRUST and we make it our main currency. We celebrate
+            other cultures and value cross-cultural understanding.
+          </p>
+          <p className="font-sans my-4 text-left text-lg font-light">
+            We believe that gaining knowledge about other cultures helps us be
+            better informed citizens of the world and allows us to come together
+            as one human family. We recognize that its important to create
+            meaningful relationships with people from all walks of life, and
+            that traveling is a way to do so.
+          </p>
+          <p className="font-sans text-left text-lg font-semibold">
+            This is what moves us. Traveling is our way.
+          </p>
+        </div>
+
+        <div className="w-1/2 h-auto grid grid-cols-2 grid-rows-4">
+          <div className="grid mr-2 row-span-3">
+            <div className="relative w-full h-full ">
+              <Image
+                fill
+                className="w-full h-full pb-2 rounded-2xl"
+                objectFit="cover"
+                objectPosition="top"
+                src="/about-us/about-7.png"
+                alt=""
+              />
+            </div>
+
+            <div className="relative w-full h-full  ">
+              <Image
+                fill
+                className="w-full h-full pt-2 rounded-2xl"
+                objectFit="cover"
+                objectPosition="  right"
+                src="/about-us/about-8.png"
+                alt=""
+              />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 ml-2 row-span-3 grid-rows-4">
+            <div className="relative w-full  h-full row-span-3">
+              <Image
+                fill
+                className="w-full h-full pb-2 rounded-2xl"
+                objectFit="cover"
+                objectPosition="top"
+                src="/about-us/about-6.png"
+                alt=""
+              />
+            </div>
+
+            <div className="relative w-full h-full col-span-1 row-span-1">
+              <Image
+                fill
+                className="w-full h-full pt-2 rounded-2xl"
+                objectFit="cover"
+                objectPosition="center"
+                src="/about-us/about-9.png"
+                alt=""
+              />
+            </div>
+          </div>
+
+          <div className="relative w-full col-span-2">
+            <Image
+              fill
+              className="w-full h-full pt-4 rounded-2xl"
+              objectFit="cover"
+              objectPosition="center"
+              src="/about-us/about-10.png"
+              alt=""
+            />
+          </div>
+        </div>
       </div>
 
       {/* <div className="py-8 px-4 relative md:w-[80%] justify-center m-auto gap-6 flex min-h-[30vh] md:min-h-[40vh]">
