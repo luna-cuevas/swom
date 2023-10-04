@@ -93,7 +93,7 @@ const CarouselPage = (props: Props) => {
                   <div className="absolute inset-0 transform skew-x-[10deg]  bg-[#f4ece7b3]"></div>
                   <Link href={`/listings/${image.listingNum}`}>
                     <div className="relative py-4 px-8 text-[#172544]">
-                      Let's meet your new favorite home. <br />
+                      Let&apos;s meet your new favorite home. <br />
                       <strong>Listing No. {image.listingNum}</strong>
                     </div>
                   </Link>
