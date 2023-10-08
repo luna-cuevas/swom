@@ -82,6 +82,9 @@ const Navigation = (props: Props) => {
             <Link className="m-auto" href="/listings">
               LISTINGS
             </Link>
+            <Link className="m-auto" href="/listings/my-listing">
+              MY LISTING
+            </Link>
           </>
         )}
         <Link href="/about-us">US</Link>
@@ -188,6 +191,9 @@ const Navigation = (props: Props) => {
             </Link>
             <Link className="m-auto" href="/listings">
               LISTINGS
+            </Link>
+            <Link className="m-auto" href="/listings/my-listing">
+              MY LISTING
             </Link>
           </>
         )}

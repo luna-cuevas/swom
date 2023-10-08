@@ -9,39 +9,45 @@ type Props = {
     src: string;
     listingNum?: string;
   }[];
+  picturesPerSlide?: number | 1;
 };
 
 const CarouselPage = (props: Props) => {
-  const [currentImage, setCurrentImage] = useState(0);
+  const [currentSlide, setCurrentSlide] = useState(0);
 
-  const prevImage = () => {
-    setCurrentImage((prev) =>
-      prev === 0 ? props.images.length - 1 : prev - 1
+  const prevSlide = () => {
+    setCurrentSlide((prev) =>
+      prev === 0 && props.picturesPerSlide != undefined
+        ? Math.ceil(props.images.length / props.picturesPerSlide) - 1
+        : prev - 1
     );
   };
 
-  const nextImage = () => {
-    setCurrentImage((prev) =>
-      prev === props.images.length - 1 ? 0 : prev + 1
+  const nextSlide = () => {
+    setCurrentSlide((prev) =>
+      props.picturesPerSlide != undefined &&
+      prev === Math.ceil(props.images.length / props.picturesPerSlide) - 1
+        ? 0
+        : prev + 1
     );
   };
 
   useEffect(() => {
     // Automatically change slides every 5 seconds
     const intervalId = setInterval(() => {
-      nextImage();
+      nextSlide();
     }, 8000);
 
     return () => {
       // Clear the interval to prevent memory leaks
       clearInterval(intervalId);
     };
-  }, [currentImage]);
+  }, [currentSlide]);
 
   return (
     <div className="relative h-full">
       <button
-        onClick={prevImage}
+        onClick={prevSlide}
         className="absolute z-50 bg-[#2c2c2c6a] text-white top-2/4 left-4 -translate-y-2/4 p-2 rounded-full">
         <svg
           xmlns="http://www.w3.org/2000/svg"
@@ -58,7 +64,7 @@ const CarouselPage = (props: Props) => {
         </svg>
       </button>
       <button
-        onClick={nextImage}
+        onClick={nextSlide}
         className="absolute z-50 bg-[#2c2c2c6a] text-white top-2/4 right-4 -translate-y-2/4 p-2 rounded-full">
         <svg
           xmlns="http://www.w3.org/2000/svg"
@@ -76,18 +82,24 @@ const CarouselPage = (props: Props) => {
       </button>
 
       <div
-        className={`relative h-full flex w-full ${
+        className={`relative h-full gap-4 flex w-full ${
           props.roundedLeft && 'rounded-l-xl'
         } ${props.roundedRight && 'rounded-r-xl'}`}>
         {props.images.map((image, index) => (
           <div
             key={index}
             className={`h-full w-full relative ${
-              index === currentImage ? 'block' : 'hidden'
+              props.picturesPerSlide != undefined &&
+              Math.floor(index / props.picturesPerSlide) === currentSlide
+                ? 'block'
+                : 'hidden'
             } transition-transform duration-[2s] ease-in-out transform ${
-              index === currentImage ? 'translate-x-0' : 'translate-x-full'
+              props.picturesPerSlide != undefined &&
+              Math.floor(index / props.picturesPerSlide) === currentSlide
+                ? 'translate-x-0'
+                : 'translate-x-full'
             }`}>
-            <div className="w-full h-full m-auto top-0 z-20 absolute bg-[#00000049]">
+            <div className="w-full h-full m-auto top-0 z-20 absolute ">
               {image.listingNum && (
                 <div className="absolute z-50 top-[10%] -right-4 text-md ">
                   <div className="absolute inset-0 transform skew-x-[10deg]  bg-[#f4ece7b3]"></div>
@@ -100,7 +112,13 @@ const CarouselPage = (props: Props) => {
                 </div>
               )}
             </div>
-            <Image src={image.src} alt="image" fill objectFit="cover" />
+            <Image
+              className="rounded-xl"
+              src={image.src}
+              alt="image"
+              fill
+              objectFit="cover"
+            />
           </div>
         ))}
       </div>
