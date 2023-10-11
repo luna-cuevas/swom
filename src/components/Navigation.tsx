@@ -174,7 +174,7 @@ const Navigation = (props: Props) => {
           borderTop: mobileActive ? '1px solid #a9a9a9' : 'none',
           padding: mobileActive ? '20px 0' : '0',
         }}
-        className={`lg:hidden z-[10000] align-middle gap-4  box-border top-full flex flex-col justify-center text-center transition-all duration-300 ease-in-out overflow-hidden max-h-[100vh] left-0 bg-white w-full absolute`}>
+        className={`xl:hidden z-[20000] align-middle gap-4  box-border top-full flex flex-col justify-center text-center transition-all duration-300 ease-in-out overflow-hidden max-h-[100vh] left-0 bg-white w-full absolute`}>
         {activeNavButtons && (
           <>
             <Link className="m-auto" href="/how-it-works">
@@ -248,12 +248,6 @@ const Navigation = (props: Props) => {
             <MenuItem>Menu Item 3</MenuItem>
           </MenuList>
         </Menu>
-        {/* <Image
-            alt="search"
-            width={20}
-            height={20}
-            src="/search-icon.svg"></Image> */}
-        {/* </button> */}
       </div>
     </nav>
   );
