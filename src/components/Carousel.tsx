@@ -85,6 +85,8 @@ const CarouselPage = (props: Props) => {
         className={`relative h-full gap-4 flex w-full ${
           props.roundedLeft && 'rounded-l-xl'
         } ${props.roundedRight && 'rounded-r-xl'}`}>
+        <div className="w-full absolute top-0 left-0 right-0 bottom-0 h-full bg-[#ffffff80]" />
+
         {props.images.map((image, index) => (
           <div
             key={index}
@@ -102,7 +104,7 @@ const CarouselPage = (props: Props) => {
             <div className="w-full h-full m-auto top-0 z-20 absolute ">
               {image.listingNum && (
                 <div className="absolute z-50 top-[10%] -right-4 text-md ">
-                  <div className="absolute inset-0 transform skew-x-[10deg]  bg-[#f4ece7b3]"></div>
+                  <div className="absolute inset-0 transform skew-x-[10deg]  bg-[#f4ece7b3]" />
                   <Link href={`/listings/${image.listingNum}`}>
                     <div className="relative py-4 px-8 text-[#172544]">
                       Let&apos;s meet your new favorite home. <br />
@@ -114,6 +116,7 @@ const CarouselPage = (props: Props) => {
             </div>
             <Image
               className="rounded-xl"
+              priority
               src={image.src}
               alt="image"
               fill

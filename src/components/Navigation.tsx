@@ -79,9 +79,9 @@ const Navigation = (props: Props) => {
             <Link className="m-auto" href="/membership">
               MEMBERSHIP
             </Link>
-            <Link className="m-auto" href="/listings">
+            {/* <Link className="m-auto" href="/listings">
               LISTINGS
-            </Link>
+            </Link> */}
             <Link className="m-auto" href="/listings/my-listing">
               MY LISTING
             </Link>
@@ -189,9 +189,9 @@ const Navigation = (props: Props) => {
             <Link className="m-auto" href="/membership">
               MEMBERSHIP
             </Link>
-            <Link className="m-auto" href="/listings">
+            {/* <Link className="m-auto" href="/listings">
               LISTINGS
-            </Link>
+            </Link> */}
             <Link className="m-auto" href="/listings/my-listing">
               MY LISTING
             </Link>

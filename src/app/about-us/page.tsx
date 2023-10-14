@@ -12,9 +12,9 @@ const Page = (props: Props) => {
         <div className="h-[2px] my-auto w-1/4 border-[1px] border-white" />
       </div>
 
-      <div className="flex flex-col md:flex-row md:h-[50vh] justify-center m-auto py-4">
-        <div className="w-1/3 px-4 my-auto">
-          <h2 className=" tracking-[0.1rem] font-light font-serif pb-4 text-5xl">
+      <div className="flex px-8  flex-col md:flex-row h-[50vh] justify-center m-auto py-4">
+        <div className="md:w-1/3 px-4 my-auto">
+          <h2 className=" tracking-[0.1rem] text-center md:text-left font-light font-serif pb-4 text-4xl md:text-5xl">
             &quot;I&apos;ve got a life to <br />{' '}
             <strong className="italic ">start living.</strong>
             &quot;{' '}
@@ -23,7 +23,7 @@ const Page = (props: Props) => {
             - The Holiday (2006)
           </p>
         </div>
-        <div className="relative w-1/3">
+        <div className="relative w-full h-full md:w-1/3">
           <Image
             fill
             objectFit="cover"
@@ -34,8 +34,8 @@ const Page = (props: Props) => {
         </div>
       </div>
 
-      <div className="flex h-[50vh] justify-end m-auto py-4">
-        <div className="relative w-1/2 lg:w-1/3 -rotate-[4deg] h-auto -mr-12">
+      <div className="flex flex-col md:flex-row h-[70vh] md:h-[50vh] justify-center md:justify-end m-auto py-4">
+        <div className="relative order-2  md:w-1/2 lg:w-1/3 -rotate-[4deg] h-full md:-mr-12">
           <Image
             fill
             objectFit="contain"
@@ -44,8 +44,8 @@ const Page = (props: Props) => {
           />
         </div>
 
-        <div className="w-[60%] flex flex-col align-middle  p-8">
-          <div className="my-auto ml-12 max-w-[600px] text-lg  flex flex-col gap-5 text-center">
+        <div className="md:w-[60%] md:order-2 flex flex-col align-middle  p-8">
+          <div className="my-auto md:ml-12 max-w-[600px] text-lg  flex flex-col gap-5 text-center">
             <p className="font-sans">
               Traveling has always been our lifestyle. Swapping homes has become
               our way to do so. We wanted to create a community of trust.
@@ -62,8 +62,8 @@ const Page = (props: Props) => {
         </div>
       </div>
 
-      <div className="flex py-16 w-[80%] justify-evenly align-middle m-auto h-full  min-h-[90vh]">
-        <div className="w-1/3">
+      <div className="flex flex-col md:flex-row py-16 w-[80%] justify-evenly align-middle m-auto h-[120vh] md:h-[100vh]">
+        <div className="md:w-1/3">
           <h2 className=" text-5xl font-  font-serif tracking-[0.1rem]">
             Why we <br /> created <strong className="italic">SWOM</strong>
           </h2>
@@ -84,7 +84,7 @@ const Page = (props: Props) => {
           </p>
         </div>
 
-        <div className="w-1/2 h-auto grid grid-cols-2 grid-rows-4">
+        <div className="md:w-1/2 w-full h-full grid grid-cols-2 grid-rows-4">
           <div className="grid mr-2 row-span-3">
             <div className="relative w-full h-full ">
               <Image
@@ -145,33 +145,6 @@ const Page = (props: Props) => {
           </div>
         </div>
       </div>
-
-      {/* <div className="py-8 px-4 relative md:w-[80%] justify-center m-auto gap-6 flex min-h-[30vh] md:min-h-[40vh]">
-        <div className="relative w-1/3">
-          <Image
-            fill
-            objectFit="cover"
-            src="/about-us/about-3.png"
-            alt="hero"
-          />
-        </div>
-        <div className="relative w-1/3">
-          <Image
-            fill
-            objectFit="cover"
-            src="/about-us/about-4.png"
-            alt="hero"
-          />
-        </div>
-        <div className="relative w-1/3">
-          <Image
-            fill
-            objectFit="cover"
-            src="/about-us/about-5.png"
-            alt="hero"
-          />
-        </div>
-      </div> */}
     </main>
   );
 };
