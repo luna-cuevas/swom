@@ -35,17 +35,17 @@ const Page = (props: Props) => {
           />
         </div>
         <div className="flex bg-[#7F8119] flex-wrap   md:flex-row py-5  tracking-widest justify-center text-xl gap-2 md:gap-5">
-          <p className="!text-[#EBDECC] font-sans">LONDON</p>
-          <p className="!text-[#EBDECC] font-sans">•</p>
-          <p className="!text-[#EBDECC] font-sans">PARIS</p>
-          <p className="!text-[#EBDECC] font-sans">•</p>
-          <p className="!text-[#EBDECC] font-sans">NEW YORK</p>
-          <p className="!text-[#EBDECC] font-sans">•</p>
-          <p className="!text-[#EBDECC] font-sans">VIETNAM</p>
-          <p className="!text-[#EBDECC] font-sans">•</p>
-          <p className="!text-[#EBDECC] font-sans">COLOMBIA</p>
-          <p className="!text-[#EBDECC] font-sans">•</p>
-          <p className="!text-[#EBDECC] font-sans">SWITZERLAND</p>
+          <p className="!text-[#fff] font-sans">LONDON</p>
+          <p className="!text-[#fff] font-sans">•</p>
+          <p className="!text-[#fff] font-sans">PARIS</p>
+          <p className="!text-[#fff] font-sans">•</p>
+          <p className="!text-[#fff] font-sans">NEW YORK</p>
+          <p className="!text-[#fff] font-sans">•</p>
+          <p className="!text-[#fff] font-sans">VIETNAM</p>
+          <p className="!text-[#fff] font-sans">•</p>
+          <p className="!text-[#fff] font-sans">COLOMBIA</p>
+          <p className="!text-[#fff] font-sans">•</p>
+          <p className="!text-[#fff] font-sans">SWITZERLAND</p>
         </div>
       </div>
 

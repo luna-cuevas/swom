@@ -33,7 +33,7 @@ const Page = (props: Props) => {
         </div>
       </div>
 
-      <div className="md:w-2/3 max-w-[1000px] w-11/12 z-20 m-auto top-6 md:top-0 md:bottom-0 md:pl-8 p-2 md:px-0  py-4 left-0 right-0 rounded-2xl h-fit overflow-scroll max-h-[70vh] absolute bg-[#F4ECE8]">
+      <div className="md:w-2/3 max-w-[1000px] w-11/12 z-20 m-auto top-6 md:top-0 md:bottom-0 md:pl-8 p-2 md:px-0  py-4 left-0 right-0 rounded-2xl h-fit scroll-shadows overflow-y-scroll max-h-[70vh] absolute bg-[#F4ECE8]">
         <div className="w-full text-center md:text-left h-fit pb-2 mb-4 border-b-2 border-gray-400">
           <div className="relative w-[250px] h-[80px]">
             <Image src="/swom-logo.jpg" alt="logo" fill objectFit="contain" />

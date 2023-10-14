@@ -9,8 +9,8 @@ type Props = {};
 const Page = (props: Props) => {
   return (
     <main className="bg-[#F7F1EE]">
-      <div className="py-8 px-16 flex justify-center">
-        <div className="w-1/4 flex justify-center text-center flex-col">
+      <div className="py-8 px-8 md:px-16 flex-col md:flex-row flex justify-center">
+        <div className="md:w-1/4 my-4 flex justify-center text-center flex-col">
           <div className="relative w-[80px] my-4 mx-auto h-[80px]">
             <Image
               src="/profile/profile-pic-placeholder.png"
@@ -36,7 +36,7 @@ const Page = (props: Props) => {
           </p>
           <p className="font-sans  uppercase">Age</p>
         </div>
-        <div className="w-3/4">
+        <div className="md:w-3/4">
           <div className="grid py-2 text-center grid-cols-5 border-b border-[#172544]">
             <h3>First Name</h3>
             <h3>Last Name</h3>
@@ -73,12 +73,12 @@ const Page = (props: Props) => {
             ullamcorper suscipit lobortis.
           </p>
 
-          <div className="flex justify-between py-4 border-y border-[#172544]">
+          <div className="flex flex-col md:flex-row md:justify-between py-4 border-y border-[#172544]">
             <h4 className="text-2xl font-serif italic">
               Where would you like to go?
             </h4>
             <input
-              className="bg-transparent rounded-xl border w-1/2 border-[#172544]"
+              className="bg-transparent  rounded-xl border w-1/2 border-[#172544]"
               type="text"
             />
           </div>
@@ -108,10 +108,10 @@ const Page = (props: Props) => {
         </div>
       </div>
 
-      <div className="w-full flex flex-col px-16 m-auto">
-        <div className="flex my-4  border-y border-[#172544] py-4 justify-between">
+      <div className="w-full flex flex-col px-8 md:px-16 m-auto">
+        <div className="flex my-4 flex-col md:flex-row border-y border-[#172544] py-4 justify-between">
           <h2 className="text-xl">Cartagena, Colombia</h2>
-          <div className="flex w-1/4 justify-evenly">
+          <div className="flex gap-2 justify-evenly">
             <div className="relative w-[20px] my-auto h-[20px]">
               <Image
                 fill
@@ -201,8 +201,8 @@ const Page = (props: Props) => {
           tincidunt ut laoreet dolore magna aliquam erat volutpat.
         </p>
 
-        <div className="px-8 py-4 flex border rounded-xl my-8 border-[#172544]">
-          <div className="flex flex-col text-center justify-center h-full w-1/3 border-r border-[#172544]">
+        <div className="px-8 py-4 flex flex-col md:flex-row border rounded-xl my-8 border-[#172544]">
+          <div className="flex flex-col text-center justify-center py-2 md:py-0 h-full md:w-1/3 border-b md:border-b-0 md:border-r border-[#172544]">
             <label className="font-bold" htmlFor="property">
               Type of property*
             </label>
@@ -217,7 +217,7 @@ const Page = (props: Props) => {
             </select>
           </div>
 
-          <div className="flex flex-col text-center justify-center h-full w-1/3 border-r border-[#172544]">
+          <div className="flex flex-col text-center justify-center h-full py-2 md:py-0 md:w-1/3 border-b md:border-b-0 md:border-r border-[#172544]">
             <label className="font-bold" htmlFor="bedrooms">
               Bedrooms
             </label>
@@ -232,7 +232,7 @@ const Page = (props: Props) => {
             </select>
           </div>
 
-          <div className="flex flex-col text-center justify-center h-full w-1/3 ">
+          <div className="flex flex-col text-center justify-center h-full border-b  py-2 md:py-0 md:w-1/3 ">
             <label className="font-bold" htmlFor="locatedIn">
               Property located in
             </label>
@@ -248,8 +248,8 @@ const Page = (props: Props) => {
           </div>
         </div>
 
-        <div className="px-8 py-4 flex border rounded-xl my-8 border-[#172544]">
-          <div className="flex flex-col text-center justify-center h-full w-1/3 border-r border-[#172544]">
+        <div className="px-8 py-4 flex flex-col md:flex-row border rounded-xl my-8 border-[#172544]">
+          <div className="flex flex-col py-2 md:py-0 text-center justify-center h-full md:w-1/3 border-b md:border-b-0 md:border-r border-[#172544]">
             <label className="font-bold" htmlFor="kindOfProperty">
               Kind of property
             </label>
@@ -263,7 +263,7 @@ const Page = (props: Props) => {
             </select>
           </div>
 
-          <div className="flex flex-col text-center justify-center h-full w-1/3 border-r border-[#172544]">
+          <div className="flex flex-col text-center py-2 md:py-0 justify-center h-full border-b md:w-1/3 md:border-b-0 md:border-r border-[#172544]">
             <label className="font-bold" htmlFor="bathrooms">
               Bathrooms
             </label>
@@ -278,7 +278,7 @@ const Page = (props: Props) => {
             </select>
           </div>
 
-          <div className="flex flex-col text-center justify-center h-full w-1/3 ">
+          <div className="flex flex-col py-2 md:py-0 text-center justify-center h-full md:w-1/3 ">
             <label className="font-bold" htmlFor="area">
               Area
             </label>
@@ -314,8 +314,8 @@ const Page = (props: Props) => {
           <h2 className="text-xl  font-serif">Amenities and advantages</h2>
         </div>
 
-        <div className="flex pb-8">
-          <div className="w-1/5 gap-2 flex flex-col">
+        <div className="flex flex-wrap pb-8">
+          <div className="md:w-1/5 w-1/2 gap-2 flex flex-col">
             <div className="flex gap-2">
               <input
                 className="bg-transparent appearance-none border border-[#172544] rounded-xl p-[6px] my-auto"
@@ -388,7 +388,7 @@ const Page = (props: Props) => {
             </div>
           </div>
 
-          <div className="w-1/5 gap-2 flex flex-col">
+          <div className="md:w-1/5 w-1/2 gap-2 flex flex-col">
             <div className="gap-2 flex">
               <input
                 className="bg-transparent appearance-none border border-[#172544] rounded-xl p-[6px] my-auto"
@@ -461,7 +461,7 @@ const Page = (props: Props) => {
             </div>
           </div>
 
-          <div className="w-1/5 gap-2 flex flex-col">
+          <div className="md:w-1/5 w-1/2 gap-2 flex flex-col">
             <div className="flex gap-2">
               <input
                 className="bg-transparent appearance-none border border-[#172544] rounded-xl p-[6px] my-auto"
@@ -534,7 +534,7 @@ const Page = (props: Props) => {
             </div>
           </div>
 
-          <div className="w-1/5 gap-2 flex flex-col">
+          <div className="md:w-1/5 w-1/2 gap-2 flex flex-col">
             <div className="flex gap-2">
               <input
                 className="bg-transparent appearance-none border border-[#172544] rounded-xl p-[6px] my-auto"
@@ -607,7 +607,7 @@ const Page = (props: Props) => {
             </div>
           </div>
 
-          <div className="w-1/5 gap-2 flex flex-col">
+          <div className="md:w-1/5 w-1/2 gap-2 flex flex-col">
             <div className="flex gap-2">
               <input
                 className="bg-transparent appearance-none border border-[#172544] rounded-xl p-[6px] my-auto"
