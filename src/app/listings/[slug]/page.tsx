@@ -86,6 +86,7 @@ const Page = (props: Props) => {
                 { src: '/homepage/hero-image-2.png' },
                 { src: '/homepage/hero-image-3.png' },
               ]}
+              picturesPerSlide={1}
             />
           </div>
 

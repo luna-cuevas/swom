@@ -33,6 +33,8 @@ const Footer = (props: Props) => {
             <Link href="/">Become a member</Link>
             <Link href="/">How it works</Link>
             <Link href="/">About us</Link>
+            <Link href="/terms-conditions">Terms & Conditions</Link>
+            <Link href="/privacy-policy">Privacy Policy</Link>
           </ul>
           <div>{/* media icons */}</div>
         </div>

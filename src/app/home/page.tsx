@@ -94,7 +94,7 @@ const Page = (props: Props) => {
             <div className="absolute z-50 top-[10%] -left-4 text-md ">
               <div className="absolute inset-0 transform skew-x-[-10deg]  bg-[#f4ece7b3]"></div>
               <div className="relative py-4 px-8 text-[#172544]">
-                <strong>Listing No. xxx</strong>
+                <strong>Listing No. 5704</strong>
               </div>
             </div>
             <Image

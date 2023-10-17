@@ -1,4 +1,5 @@
 import Image from 'next/image';
+import Link from 'next/link';
 import React from 'react';
 
 type Props = {};
@@ -32,7 +33,9 @@ const Page = (props: Props) => {
               you.
             </p>
             <button className="bg-[#E78426] hover:bg-[#e78326d8] text-[#fff] font-bold px-4 py-2 rounded-3xl">
-              Apply now
+              <Link href={'https://apgjbta7yny.typeform.com/to/q2iGGNzh'}>
+                Apply now
+              </Link>
             </button>
           </div>
         </div>

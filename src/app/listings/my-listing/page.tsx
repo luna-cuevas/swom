@@ -178,13 +178,14 @@ const Page = (props: Props) => {
           </div>
         </div>
         <p className="font-sans text-sm my-6">
-          Cartagena is dolor sit amet, consectetuer adipiscing elit, sed diam
-          nonummy nibh euismod tincidunt ut laoreet dolore magna aliquam erat
-          volutpat. Ut wisi enim ad minim veniam, quis nostrud exerci tation
-          ullamcorper suscipit lobortis nisl ut aliquip ex ea commodo consequat.
-          Duis autem vel eum iriure dolor in hen. Lorem ipsum dolor sit amet,
-          consec- tetuer adipiscing elit, sed diam nonummy nibh euismod
-          tincidunt ut laoreet dolore magna aliquam erat volutpat.
+          Cartagena, Colombia, is a vibrant coastal city on the northern
+          Caribbean coast. Known for its rich history, colonial architecture,
+          and stunning beaches, it's a popular tourist destination. The city's
+          walled Old Town, a UNESCO World Heritage site, is a maze of colorful
+          buildings, cobbled streets, and charming squares. Visitors can explore
+          historic forts like Castillo San Felipe de Barajas, enjoy local
+          cuisine, and soak up the lively atmosphere. Cartagena offers a unique
+          blend of history, culture, and natural beauty.
         </p>
 
         <div className="flex my-4  border-y border-[#172544] py-4 justify-between">
