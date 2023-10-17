@@ -1,6 +1,8 @@
 import Image from 'next/image';
 import Link from 'next/link';
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, use } from 'react';
+import { supabaseClient } from '@/utils/supabaseClient';
+import { useStateContext } from '@/context/StateContext';
 
 type Props = {
   roundedLeft?: boolean;
@@ -14,6 +16,21 @@ type Props = {
 
 const CarouselPage = (props: Props) => {
   const [currentSlide, setCurrentSlide] = useState(0);
+  const [user, setUser] = useState(null);
+  const supabase = supabaseClient();
+  const { state, setState } = useStateContext();
+  const stateSession = state.session;
+
+  useEffect(() => {
+    const session = localStorage.getItem('session');
+    const user = localStorage.getItem('user');
+    if (session && user && stateSession) {
+      setUser(JSON.parse(user));
+    } else {
+      setUser(null);
+    }
+    console.log('user', user);
+  }, [stateSession]);
 
   const prevSlide = () => {
     setCurrentSlide((prev) =>
@@ -85,8 +102,6 @@ const CarouselPage = (props: Props) => {
         className={`relative h-full gap-4 flex w-full ${
           props.roundedLeft && 'rounded-l-xl'
         } ${props.roundedRight && 'rounded-r-xl'}`}>
-        <div className="w-full absolute top-0 left-0 right-0 bottom-0 h-full bg-[#ffffff80]" />
-
         {props.images.map((image, index) => (
           <div
             key={index}
@@ -95,27 +110,36 @@ const CarouselPage = (props: Props) => {
               Math.floor(index / props.picturesPerSlide) === currentSlide
                 ? 'block'
                 : 'hidden'
-            } transition-transform duration-[2s] ease-in-out transform ${
+            } transition-transform z-0 duration-[2s] ease-in-out transform ${
               props.picturesPerSlide != undefined &&
               Math.floor(index / props.picturesPerSlide) === currentSlide
                 ? 'translate-x-0'
                 : 'translate-x-full'
             }`}>
-            <div className="w-full h-full m-auto top-0 z-20 absolute ">
+            <div className="w-full h-full z-[50] m-auto top-0  absolute ">
               {image.listingNum && (
-                <div className="absolute z-50 top-[10%] -right-4 text-md ">
-                  <div className="absolute inset-0 transform skew-x-[10deg]  bg-[#f4ece7b3]" />
-                  <Link href={`/listings/${image.listingNum}`}>
-                    <div className="relative py-4 px-8 text-[#172544]">
+                <div className="absolute  top-[10%] -right-4 text-md ">
+                  <div className="absolute  inset-0 transform skew-x-[10deg]  bg-[#f4ece7b3]" />
+                  {user == null ? (
+                    <div className="relative  py-4 px-8 text-[#172544]">
                       Let&apos;s meet your new favorite home. <br />
                       <strong>Listing No. {image.listingNum}</strong>
                     </div>
-                  </Link>
+                  ) : (
+                    <Link href={`/listings/${image.listingNum}`}>
+                      <div className="relative  py-4 px-8 text-[#172544]">
+                        Let&apos;s meet your new favorite home. <br />
+                        <strong>Listing No. {image.listingNum}</strong>
+                      </div>
+                    </Link>
+                  )}
                 </div>
               )}
             </div>
+            <div className="w-full z-10 absolute top-0 left-0 right-0 bottom-0 h-full bg-[#00000052]" />
+
             <Image
-              className="rounded-xl"
+              className="rounded-xl z-0"
               priority
               src={image.src}
               alt="image"

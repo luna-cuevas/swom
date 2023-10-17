@@ -5,7 +5,7 @@ import Navigation from '@/components/Navigation';
 import Footer from '@/components/Footer';
 import Script from 'next/script';
 import { StateProvider } from '@/context/StateContext';
-
+import CookieConsent from 'react-cookie-consent';
 import { Elements } from '@stripe/react-stripe-js';
 import { loadStripe } from '@stripe/stripe-js';
 
@@ -31,6 +31,41 @@ export default function RootLayout({
   return (
     <html lang="en">
       <StateProvider>
+        <CookieConsent
+          location="none"
+          buttonText="Accept"
+          cookieName="myAwesomeCookieName2"
+          style={{
+            background: '#7F8119',
+            color: '#fff !important',
+            fontSize: '20px',
+            display: 'flex',
+            // flexDirection: 'column',
+            width: '60%',
+            bottom: '10px',
+            left: 'auto',
+            right: '5%',
+            height: 'fit-content',
+            zIndex: 10000000,
+            justifyContent: 'center',
+          }}
+          buttonStyle={{
+            color: '#4e503b',
+            fontSize: '20px',
+            alignContent: 'center',
+            display: 'flex',
+            margin: 'auto',
+          }}
+          expires={150}>
+          <div className="m-auto w-full text-white text-center h-fit flex-none">
+            We value your privacy <br />
+            <span
+              style={{ fontSize: '16px', textAlign: 'left', color: 'white' }}>
+              We use cookies to enhance your experience on our website. By
+              continuing to use our website, you consent to the use of cookies.
+            </span>
+          </div>
+        </CookieConsent>
         <Elements
           stripe={stripePromise}
           // options={options}
