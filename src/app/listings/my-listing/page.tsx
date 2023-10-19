@@ -2,13 +2,79 @@
 import CarouselPage from '@/components/Carousel';
 import GoogleMapComponent from '@/components/GoogleMapComponent';
 import Image from 'next/image';
-import React from 'react';
+import React, { useState } from 'react';
+import { useForm } from 'react-hook-form';
 
 type Props = {};
 
 const Page = (props: Props) => {
+  const [editUserInfo, setEditUserInfo] = useState(false);
+  const [userName, setUserName] = useState('');
+  const [profession, setProfession] = useState('');
+  const [age, setAge] = useState('');
+
+  const {
+    register,
+    handleSubmit,
+    reset,
+    control,
+    setValue,
+    formState: { errors },
+  } = useForm({
+    defaultValues: {
+      location: '',
+      city: '',
+      otherDestinations: false,
+      property: '',
+      bedrooms: '',
+      locatedIn: '',
+      kindOfProperty: '',
+      bathrooms: '',
+      area: '',
+      amenities: {
+        bike: false, // Default value for the "bike" radio button
+        car: false, // Default value for the "car" radio button
+        tv: false, // Default value for the "tv" radio button
+        dishwasher: false, // Default value for the "dishwasher" radio button
+        pingpong: false, // Default value for the "pingpong" radio button
+        billiards: false, // Default value for the "billiards" radio button
+        washer: false, // Default value for the "washer" radio button
+        dryer: false, // Default value for the "dryer" radio button
+        wifi: false, // Default value for the "wifi" radio button
+        elevator: false, // Default value for the "elevator" radio button
+        terrace: false, // Default value for the "terrace" radio button
+        scooter: false, // Default value for the "scooter" radio button
+        bbq: false, // Default value for the "bbq" radio button
+        computer: false, // Default value for the "computer" radio button
+        piano: false, // Default value for the "piano" radio button
+        pool: false, // Default value for the "pool" radio button
+        playground: false, // Default value for the "playground" radio button
+        babyGear: false, // Default value for the "babyGear" radio button
+        ac: false, // Default value for the "ac" radio button
+        fireplace: false, // Default value for the "fireplace" radio button
+        parking: false, // Default value for the "parking" radio button
+        hotTub: false, // Default value for the "hotTub" radio button
+        sauna: false, // Default value for the "sauna" radio button
+        other: false, // Default value for the "other" radio button
+        doorman: false, // Default value for the "doorman" radio button
+        cleaningService: false, // Default value for the "cleaningService" radio button
+        videoGames: false, // Default value for the "videoGames" radio button
+        tennisCourt: false, // Default value for the "tennisCourt" radio button
+        gym: false,
+      },
+    },
+  });
+
+  const onSubmit = (data: any) => {
+    console.log(data);
+  };
+
+  const onError = (errors: any, e: any) => {
+    console.log(errors, e);
+  };
+
   return (
-    <main className="bg-[#F7F1EE]">
+    <form onSubmit={handleSubmit(onSubmit, onError)} className="bg-[#F7F1EE]">
       <div className="py-8 px-8 md:px-16 flex-col md:flex-row flex justify-center">
         <div className="md:w-1/4 my-4 flex justify-center text-center flex-col">
           <div className="relative w-[80px] my-4 mx-auto h-[80px]">
@@ -20,21 +86,54 @@ const Page = (props: Props) => {
               objectFit="cover"
             />
             <div className="absolute bg-[#F87C1B] rounded-full w-[30px] -right-2 align-middle my-auto flex h-[30px]">
-              <Image
-                fill
-                objectFit="contain"
-                // make the pencil white
-                className="m-auto filter-invert"
-                src="https://img.icons8.com/ios/50/000000/pencil-tip.png"
-                alt=""
-              />
+              <button
+                onClick={() => {
+                  setEditUserInfo(!editUserInfo);
+                }}>
+                <Image
+                  fill
+                  objectFit="contain"
+                  // make the pencil white
+                  className="m-auto filter-invert"
+                  src="https://img.icons8.com/ios/50/000000/pencil-tip.png"
+                  alt=""
+                />
+              </button>
             </div>
           </div>
-          <h2 className="font-serif text-4xl ">User Name</h2>
-          <p className="font-sans my-1 font-bold uppercase tracking-[0.1rem]">
-            Profession
-          </p>
-          <p className="font-sans  uppercase">Age</p>
+
+          {editUserInfo ? (
+            <div className="px-4 flex flex-col">
+              <input
+                className="bg-transparent border-b border-[#172544] focus:outline-none"
+                placeholder="name"
+                onChange={(e) => setUserName(e.target.value)}
+              />
+              <input
+                placeholder="profession"
+                onChange={(e) => setProfession(e.target.value)}
+              />
+              <input
+                placeholder="age"
+                onChange={(e) => setAge(e.target.value)}
+              />
+              {/* save button */}
+              <button
+                onClick={() => {
+                  setEditUserInfo(!editUserInfo);
+                }}>
+                Close
+              </button>
+            </div>
+          ) : (
+            <>
+              <h2 className="font-serif text-4xl ">{userName}</h2>
+              <p className="font-sans my-1 font-bold uppercase tracking-[0.1rem]">
+                Profession
+              </p>
+              <p className="font-sans  uppercase">Age</p>
+            </>
+          )}
         </div>
         <div className="md:w-3/4">
           <div className="grid py-2 text-center grid-cols-5 border-b border-[#172544]">
@@ -73,14 +172,30 @@ const Page = (props: Props) => {
             ullamcorper suscipit lobortis.
           </p>
 
-          <div className="flex flex-col md:flex-row md:justify-between py-4 border-y border-[#172544]">
+          <div className="flex flex-col md:flex-row gap-8 py-4 border-y border-[#172544]">
             <h4 className="text-2xl font-serif italic">
               Where would you like to go?
             </h4>
-            <input
-              className="bg-transparent  rounded-xl border w-1/2 border-[#172544]"
-              type="text"
-            />
+
+            <select
+              {...register('location')}
+              className="bg-transparent focus:outline-none  rounded-xl border w-1/3 border-[#172544]">
+              <option value="bogota">Bogota, Colombia</option>
+              <option value="paris">Paris, France</option>
+              <option value="london">London, England</option>
+              <option value="newYork">New York, USA</option>
+              <option value="tokyo">Tokyo, Japan</option>
+              <option value="sydney">Sydney, Australia</option>
+              <option value="dubai">Dubai, UAE</option>
+              <option value="rome">Rome, Italy</option>
+              <option value="barcelona">Barcelona, Spain</option>
+              <option value="berlin">Berlin, Germany</option>
+              <option value="amsterdam">Amsterdam, Netherlands</option>
+              <option value="madrid">Madrid, Spain</option>
+              <option value="miami">Miami, USA</option>
+              <option value="istanbul">Istanbul, Turkey</option>
+              <option value="singapore">Singapore, Singapore</option>
+            </select>
           </div>
 
           <div className="flex flex-col justify-between py-4 ">
@@ -92,7 +207,7 @@ const Page = (props: Props) => {
                 className="appearance-none h-fit my-auto bg-transparent checked:bg-[#7F8119] rounded-full border border-[#172544] p-2 mx-2"
                 type="radio"
                 id="yesRadio"
-                name="choice"
+                {...register('otherDestinations')}
               />
               <label htmlFor="yesRadio">Yes</label>
 
@@ -100,7 +215,7 @@ const Page = (props: Props) => {
                 className="appearance-none ml-4 h-fit my-auto bg-transparent checked:bg-[#7F8119] rounded-full border border-[#172544] p-2 mx-2"
                 type="radio"
                 id="noRadio"
-                name="choice"
+                {...register('otherDestinations')}
               />
               <label htmlFor="noRadio">No</label>
             </div>
@@ -169,6 +284,7 @@ const Page = (props: Props) => {
               className=" bg-transparent w-full outline-none"
               type="text"
               placeholder="What's the city?"
+              {...register('city')}
             />
             <img
               className="w-[20px] my-auto h-[20px]"
@@ -180,12 +296,12 @@ const Page = (props: Props) => {
         <p className="font-sans text-sm my-6">
           Cartagena, Colombia, is a vibrant coastal city on the northern
           Caribbean coast. Known for its rich history, colonial architecture,
-          and stunning beaches, it's a popular tourist destination. The city's
-          walled Old Town, a UNESCO World Heritage site, is a maze of colorful
-          buildings, cobbled streets, and charming squares. Visitors can explore
-          historic forts like Castillo San Felipe de Barajas, enjoy local
-          cuisine, and soak up the lively atmosphere. Cartagena offers a unique
-          blend of history, culture, and natural beauty.
+          and stunning beaches, it&apos;s a popular tourist destination. The
+          city&apos;s walled Old Town, a UNESCO World Heritage site, is a maze
+          of colorful buildings, cobbled streets, and charming squares. Visitors
+          can explore historic forts like Castillo San Felipe de Barajas, enjoy
+          local cuisine, and soak up the lively atmosphere. Cartagena offers a
+          unique blend of history, culture, and natural beauty.
         </p>
 
         <div className="flex my-4  border-y border-[#172544] py-4 justify-between">
@@ -209,7 +325,7 @@ const Page = (props: Props) => {
             </label>
             <select
               className="w-fit m-auto bg-transparent outline-none p-2 my-2 rounded-lg border-[#172544] border"
-              name="property"
+              {...register('property')}
               id="property">
               <option value="">House</option>
               <option value="">Apartment</option>
@@ -224,7 +340,7 @@ const Page = (props: Props) => {
             </label>
             <select
               className="w-fit m-auto bg-transparent outline-none p-2 my-2 rounded-lg border-[#172544] border"
-              name="bedrooms"
+              {...register('bedrooms')}
               id="bedrooms">
               <option value="">1</option>
               <option value="">2</option>
@@ -239,7 +355,7 @@ const Page = (props: Props) => {
             </label>
             <select
               className="w-fit m-auto bg-transparent outline-none p-2 my-2 rounded-lg border-[#172544] border"
-              name="locatedIn"
+              {...register('locatedIn')}
               id="locatedIn">
               <option value="">a condiminium</option>
               <option value="">a gated community</option>
@@ -256,7 +372,7 @@ const Page = (props: Props) => {
             </label>
             <select
               className="w-fit m-auto bg-transparent outline-none p-2 my-2 rounded-lg border-[#172544] border"
-              name="kindOfProperty"
+              {...register('kindOfProperty')}
               id="kindOfProperty">
               <option value="">Main property </option>
               <option value="">Second property</option>
@@ -270,7 +386,7 @@ const Page = (props: Props) => {
             </label>
             <select
               className="w-fit m-auto bg-transparent outline-none p-2 my-2 rounded-lg border-[#172544] border"
-              name="bathrooms"
+              {...register('bathrooms')}
               id="bathrooms">
               <option value="">1</option>
               <option value="">2</option>
@@ -285,7 +401,7 @@ const Page = (props: Props) => {
             </label>
             <select
               className="w-fit m-auto bg-transparent outline-none p-2 my-2 rounded-lg border-[#172544] border"
-              name="area"
+              {...register('area')}
               id="area">
               <option value="">60 - 100 m2</option>
               <option value="">100 - 150 m2</option>
@@ -319,9 +435,9 @@ const Page = (props: Props) => {
           <div className="md:w-1/5 w-1/2 gap-2 flex flex-col">
             <div className="flex gap-2">
               <input
-                className="bg-transparent appearance-none border border-[#172544] rounded-xl p-[6px] my-auto"
-                type="radio"
-                name="bike"
+                className="bg-transparent checked:bg-green-400 appearance-none border border-[#172544] rounded-xl p-[6px] my-auto"
+                type="checkbox"
+                {...register('amenities.bike')}
                 id="bike"
               />
               <label className="" htmlFor="bike">
@@ -331,8 +447,8 @@ const Page = (props: Props) => {
             <div className="flex gap-2">
               <input
                 className="bg-transparent appearance-none border border-[#172544] rounded-xl p-[6px] my-auto"
-                type="radio"
-                name="car"
+                type="checkbox"
+                {...register('amenities.car')}
                 id="car"
               />
               <label className="" htmlFor="car">
@@ -344,7 +460,7 @@ const Page = (props: Props) => {
               <input
                 className="bg-transparent appearance-none border border-[#172544] rounded-xl p-[6px] my-auto"
                 type="radio"
-                name="tv"
+                {...register('amenities.tv')}
                 id="tv"
               />
               <label className="" htmlFor="tv">
@@ -356,7 +472,7 @@ const Page = (props: Props) => {
               <input
                 className="bg-transparent appearance-none border border-[#172544] rounded-xl p-[6px] my-auto"
                 type="radio"
-                name="dishwasher"
+                {...register('amenities.dishwasher')}
                 id="dishwasher"
               />
               <label className="" htmlFor="dishwasher">
@@ -368,7 +484,7 @@ const Page = (props: Props) => {
               <input
                 className="bg-transparent appearance-none border border-[#172544] rounded-xl p-[6px] my-auto"
                 type="radio"
-                name="pingpong"
+                {...register('amenities.pingpong')}
                 id="pingpong"
               />
               <label className="" htmlFor="pinpong">
@@ -380,7 +496,7 @@ const Page = (props: Props) => {
               <input
                 className="bg-transparent appearance-none border border-[#172544] rounded-xl p-[6px] my-auto"
                 type="radio"
-                name="billiards"
+                {...register('amenities.billiards')}
                 id="billiards"
               />
               <label className="" htmlFor="billiards">
@@ -394,7 +510,7 @@ const Page = (props: Props) => {
               <input
                 className="bg-transparent appearance-none border border-[#172544] rounded-xl p-[6px] my-auto"
                 type="radio"
-                name="washer"
+                {...register('amenities.washer')}
                 id="washer"
               />
               <label className="" htmlFor="washer">
@@ -405,7 +521,7 @@ const Page = (props: Props) => {
               <input
                 className="bg-transparent appearance-none border border-[#172544] rounded-xl p-[6px] my-auto"
                 type="radio"
-                name="dryer"
+                {...register('amenities.dryer')}
                 id="dryer"
               />
               <label className="" htmlFor="dryer">
@@ -417,7 +533,7 @@ const Page = (props: Props) => {
               <input
                 className="bg-transparent appearance-none border border-[#172544] rounded-xl p-[6px] my-auto"
                 type="radio"
-                name="wifi"
+                {...register('amenities.wifi')}
                 id="wifi"
               />
               <label className="" htmlFor="wifi">
@@ -429,7 +545,7 @@ const Page = (props: Props) => {
               <input
                 className="bg-transparent appearance-none border border-[#172544] rounded-xl p-[6px] my-auto"
                 type="radio"
-                name="elevator"
+                {...register('amenities.elevator')}
                 id="elevator"
               />
               <label className="" htmlFor="elevator">
@@ -441,7 +557,7 @@ const Page = (props: Props) => {
               <input
                 className="bg-transparent appearance-none border border-[#172544] rounded-xl p-[6px] my-auto"
                 type="radio"
-                name="terrace"
+                {...register('amenities.terrace')}
                 id="terrace"
               />
               <label className="" htmlFor="terrace">
@@ -453,7 +569,7 @@ const Page = (props: Props) => {
               <input
                 className="bg-transparent appearance-none border border-[#172544] rounded-xl p-[6px] my-auto"
                 type="radio"
-                name="scooter"
+                {...register('amenities.scooter')}
                 id="scooter"
               />
               <label className="" htmlFor="scooter">
@@ -467,7 +583,7 @@ const Page = (props: Props) => {
               <input
                 className="bg-transparent appearance-none border border-[#172544] rounded-xl p-[6px] my-auto"
                 type="radio"
-                name="bbq"
+                {...register('amenities.bbq')}
                 id="bbq"
               />
               <label className="" htmlFor="bbq">
@@ -478,7 +594,7 @@ const Page = (props: Props) => {
               <input
                 className="bg-transparent appearance-none border border-[#172544] rounded-xl p-[6px] my-auto"
                 type="radio"
-                name="computer"
+                {...register('amenities.computer')}
                 id="computer"
               />
               <label className="" htmlFor="computer">
@@ -489,8 +605,8 @@ const Page = (props: Props) => {
             <div className="flex gap-2">
               <input
                 className="bg-transparent appearance-none border border-[#172544] rounded-xl p-[6px] my-auto"
+                {...register('amenities.piano')}
                 type="radio"
-                name="wc"
                 id="wc"
               />
               <label className="" htmlFor="wc">
@@ -502,7 +618,7 @@ const Page = (props: Props) => {
               <input
                 className="bg-transparent appearance-none border border-[#172544] rounded-xl p-[6px] my-auto"
                 type="radio"
-                name="pool"
+                {...register('amenities.pool')}
                 id="pool"
               />
               <label className="" htmlFor="pool">
@@ -514,7 +630,7 @@ const Page = (props: Props) => {
               <input
                 className="bg-transparent appearance-none border border-[#172544] rounded-xl p-[6px] my-auto"
                 type="radio"
-                name="playground"
+                {...register('amenities.playground')}
                 id="playground"
               />
               <label className="" htmlFor="playground">
@@ -526,7 +642,7 @@ const Page = (props: Props) => {
               <input
                 className="bg-transparent appearance-none border border-[#172544] rounded-xl p-[6px] my-auto"
                 type="radio"
-                name="babyGear"
+                {...register('amenities.babyGear')}
                 id="babyGear"
               />
               <label className="" htmlFor="babyGear">
@@ -540,7 +656,7 @@ const Page = (props: Props) => {
               <input
                 className="bg-transparent appearance-none border border-[#172544] rounded-xl p-[6px] my-auto"
                 type="radio"
-                name="ac"
+                {...register('amenities.ac')}
                 id="ac"
               />
               <label className="" htmlFor="ac">
@@ -551,7 +667,7 @@ const Page = (props: Props) => {
               <input
                 className="bg-transparent appearance-none border border-[#172544] rounded-xl p-[6px] my-auto"
                 type="radio"
-                name="fireplace"
+                {...register('amenities.fireplace')}
                 id="fireplace"
               />
               <label className="" htmlFor="fireplace">
@@ -563,7 +679,7 @@ const Page = (props: Props) => {
               <input
                 className="bg-transparent appearance-none border border-[#172544] rounded-xl p-[6px] my-auto"
                 type="radio"
-                name="parking"
+                {...register('amenities.parking')}
                 id="parking"
               />
               <label className="" htmlFor="parking">
@@ -575,7 +691,7 @@ const Page = (props: Props) => {
               <input
                 className="bg-transparent appearance-none border border-[#172544] rounded-xl p-[6px] my-auto"
                 type="radio"
-                name="hotTub"
+                {...register('amenities.hotTub')}
                 id="hotTub"
               />
               <label className="" htmlFor="hotTub">
@@ -587,7 +703,7 @@ const Page = (props: Props) => {
               <input
                 className="bg-transparent appearance-none border border-[#172544] rounded-xl p-[6px] my-auto"
                 type="radio"
-                name="sauna"
+                {...register('amenities.sauna')}
                 id="sauna"
               />
               <label className="" htmlFor="sauna">
@@ -599,7 +715,7 @@ const Page = (props: Props) => {
               <input
                 className="bg-transparent appearance-none border border-[#172544] rounded-xl p-[6px] my-auto"
                 type="radio"
-                name="other"
+                {...register('amenities.other')}
                 id="other"
               />
               <label className="" htmlFor="other">
@@ -613,7 +729,7 @@ const Page = (props: Props) => {
               <input
                 className="bg-transparent appearance-none border border-[#172544] rounded-xl p-[6px] my-auto"
                 type="radio"
-                name="doorman"
+                {...register('amenities.doorman')}
                 id="doorman"
               />
               <label className="" htmlFor="doorman">
@@ -624,7 +740,7 @@ const Page = (props: Props) => {
               <input
                 className="bg-transparent appearance-none border border-[#172544] rounded-xl p-[6px] my-auto"
                 type="radio"
-                name="cleaningService"
+                {...register('amenities.cleaningService')}
                 id="cleaningService"
               />
               <label className="" htmlFor="cleaningService">
@@ -636,7 +752,7 @@ const Page = (props: Props) => {
               <input
                 className="bg-transparent appearance-none border border-[#172544] rounded-xl p-[6px] my-auto"
                 type="radio"
-                name="videoGames"
+                {...register('amenities.videoGames')}
                 id="videoGames"
               />
               <label className="" htmlFor="videoGames">
@@ -648,7 +764,7 @@ const Page = (props: Props) => {
               <input
                 className="bg-transparent appearance-none border border-[#172544] rounded-xl p-[6px] my-auto"
                 type="radio"
-                name="tennisCourt"
+                {...register('amenities.tennisCourt')}
                 id="tennisCourt"
               />
               <label className="" htmlFor="tennisCourt">
@@ -660,7 +776,7 @@ const Page = (props: Props) => {
               <input
                 className="bg-transparent appearance-none border border-[#172544] rounded-xl p-[6px] my-auto"
                 type="radio"
-                name="gym"
+                {...register('amenities.gym')}
                 id="gym"
               />
               <label className="" htmlFor="gym">
@@ -674,7 +790,7 @@ const Page = (props: Props) => {
           Save Changes
         </button>
       </div>
-    </main>
+    </form>
   );
 };
 
