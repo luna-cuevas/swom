@@ -1,5 +1,5 @@
 'use client';
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { set, useController, useForm } from 'react-hook-form';
 import { supabaseClient } from '@/utils/supabaseClient';
 import { CheckoutSubscriptionBody } from '@/app/api/subscription/route';
@@ -21,6 +21,7 @@ const SignUpForm = (props: Props) => {
     planDescription: 'Subscribe for $20 per month',
   });
   const { state, setState } = useStateContext();
+  const [stripe, setStripe] = useState<Stripe | null>(null);
 
   const {
     register,
@@ -30,6 +31,16 @@ const SignUpForm = (props: Props) => {
     setValue,
     formState: { errors },
   } = useForm({});
+
+  useEffect(() => {
+    const fetchStripe = async () => {
+      const stripe = await loadStripe(
+        process.env.NEXT_PUBLIC_STRIPE_PUBLIC_KEY!
+      );
+      setStripe(stripe as Stripe | null); // Use type assertion
+    };
+    fetchStripe();
+  }, []);
 
   const onSubmit = (data: any) => {
     const fullName = data.firstName + ' ' + data.lastName;
@@ -47,30 +58,29 @@ const SignUpForm = (props: Props) => {
   };
 
   const handleSubscription = async () => {
-    const STRIPE_PK = process.env.NEXT_PUBLIC_STRIPE_PUBLIC_KEY!;
-    const stripe = await loadStripe(STRIPE_PK);
+    if (stripe) {
+      // step 2: define the data for monthly subscription
+      const body: CheckoutSubscriptionBody = {
+        interval: selectedPlan.interval as 'month' | 'year',
+        amount: selectedPlan.amount,
+        plan: selectedPlan.plan,
+        planDescription: selectedPlan.planDescription,
+      };
 
-    // step 2: define the data for monthly subscription
-    const body: CheckoutSubscriptionBody = {
-      interval: selectedPlan.interval as 'month' | 'year',
-      amount: selectedPlan.amount,
-      plan: selectedPlan.plan,
-      planDescription: selectedPlan.planDescription,
-    };
+      // step 3: make a post fetch api call to /checkout-session handler
+      const result = await fetch('/api/subscription', {
+        method: 'post',
+        body: JSON.stringify(body, null),
+        headers: {
+          'content-type': 'application/json',
+        },
+      });
 
-    // step 3: make a post fetch api call to /checkout-session handler
-    const result = await fetch('/api/subscription', {
-      method: 'post',
-      body: JSON.stringify(body, null),
-      headers: {
-        'content-type': 'application/json',
-      },
-    });
-
-    // step 4: get the data and redirect to checkout using the sessionId
-    const data = (await result.json()) as Stripe.Checkout.Session;
-    const sessionId = data.id!;
-    stripe?.redirectToCheckout({ sessionId });
+      // step 4: get the data and redirect to checkout using the sessionId
+      const data = (await result.json()) as Stripe.Checkout.Session;
+      const sessionId = data.id!;
+      (stripe as any).redirectToCheckout({ sessionId }); // add type assertion
+    }
   };
 
   const handleSignUp = async (

@@ -12,6 +12,10 @@ type Props = {
     listingNum?: string;
   }[];
   picturesPerSlide?: number | 1;
+  overlay?: boolean;
+  contain?: boolean;
+  selectedImage?: number;
+  setSelectedImage?: React.Dispatch<React.SetStateAction<number>>;
 };
 
 const CarouselPage = (props: Props) => {
@@ -19,6 +23,7 @@ const CarouselPage = (props: Props) => {
   const [user, setUser] = useState(null);
   const supabase = supabaseClient();
   const { state, setState } = useStateContext();
+
   const stateSession = state.session;
 
   useEffect(() => {
@@ -41,19 +46,24 @@ const CarouselPage = (props: Props) => {
   };
 
   const nextSlide = () => {
-    setCurrentSlide((prev) =>
-      props.picturesPerSlide != undefined &&
-      prev === Math.ceil(props.images.length / props.picturesPerSlide) - 1
-        ? 0
-        : prev + 1
-    );
+    setCurrentSlide((prev) => {
+      const totalSlides = Math.ceil(
+        props.images.length / (props.picturesPerSlide ?? 1)
+      );
+
+      if (props.picturesPerSlide !== undefined && prev < totalSlides - 1) {
+        return prev + 1;
+      }
+
+      return 0;
+    });
   };
 
   useEffect(() => {
     // Automatically change slides every 5 seconds
     const intervalId = setInterval(() => {
       nextSlide();
-    }, 8000);
+    }, 10000);
 
     return () => {
       // Clear the interval to prevent memory leaks
@@ -61,11 +71,19 @@ const CarouselPage = (props: Props) => {
     };
   }, [currentSlide]);
 
+  // Function to handle image selection
+  const handleImageSelection = (index: any) => {
+    if (props.setSelectedImage) {
+      props.setSelectedImage(index);
+    }
+  };
+
   return (
     <div className="relative h-full">
       <button
-        onClick={prevSlide}
-        className="absolute z-50 bg-[#2c2c2c6a] text-white top-2/4 left-4 -translate-y-2/4 p-2 rounded-full">
+        type="button"
+        onClick={() => prevSlide()}
+        className="absolute z-[200] bg-[#2c2c2c6a] text-white top-2/4 left-4 -translate-y-2/4 p-2 rounded-full">
         <svg
           xmlns="http://www.w3.org/2000/svg"
           className="h-6 w-6"
@@ -81,8 +99,9 @@ const CarouselPage = (props: Props) => {
         </svg>
       </button>
       <button
-        onClick={nextSlide}
-        className="absolute z-50 bg-[#2c2c2c6a] text-white top-2/4 right-4 -translate-y-2/4 p-2 rounded-full">
+        type="button"
+        onClick={() => nextSlide()}
+        className="absolute z-[200] bg-[#2c2c2c6a] text-white top-2/4 right-4 -translate-y-2/4 p-2 rounded-full">
         <svg
           xmlns="http://www.w3.org/2000/svg"
           className="h-6 w-6 rotate-180"
@@ -99,12 +118,13 @@ const CarouselPage = (props: Props) => {
       </button>
 
       <div
-        className={`relative h-full gap-4 flex w-full ${
+        className={`relative h-full gap-8 flex w-full ${
           props.roundedLeft && 'rounded-l-xl'
         } ${props.roundedRight && 'rounded-r-xl'}`}>
         {props.images.map((image, index) => (
           <div
             key={index}
+            onClick={() => handleImageSelection(index)} // Add click handler
             className={`h-full w-full relative ${
               props.picturesPerSlide != undefined &&
               Math.floor(index / props.picturesPerSlide) === currentSlide
@@ -115,6 +135,8 @@ const CarouselPage = (props: Props) => {
               Math.floor(index / props.picturesPerSlide) === currentSlide
                 ? 'translate-x-0'
                 : 'translate-x-full'
+            }${
+              props.selectedImage === index ? ' border-2 border-blue-500' : ''
             }`}>
             <div className="w-full h-full z-[50] m-auto top-0  absolute ">
               {image.listingNum && (
@@ -136,15 +158,18 @@ const CarouselPage = (props: Props) => {
                 </div>
               )}
             </div>
-            <div className="w-full z-10 absolute top-0 left-0 right-0 bottom-0 h-full bg-[#00000052]" />
+
+            {props.overlay && (
+              <div className="w-full z-10 absolute top-0 left-0 right-0 bottom-0 h-full bg-[#00000052]" />
+            )}
 
             <Image
-              className="rounded-xl z-0"
-              priority
+              className={`rounded-xl z-0 ${
+                props.contain ? 'object-contain' : 'object-cover'
+              } `}
               src={image.src}
               alt="image"
               fill
-              objectFit="cover"
             />
           </div>
         ))}

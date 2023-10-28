@@ -32,6 +32,7 @@ const Page = (props: Props) => {
               { src: '/homepage/hero-image-9.png', listingNum: '5202' },
             ]}
             picturesPerSlide={1}
+            overlay={true}
           />
         </div>
         <div className="flex bg-[#7F8119] flex-wrap   md:flex-row py-5  tracking-widest justify-center text-xl gap-2 md:gap-5">

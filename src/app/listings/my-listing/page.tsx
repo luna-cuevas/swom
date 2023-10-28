@@ -1,9 +1,13 @@
 'use client';
 import CarouselPage from '@/components/Carousel';
+import DropZone from '@/components/DropZone';
 import GoogleMapComponent from '@/components/GoogleMapComponent';
+import { useStateContext } from '@/context/StateContext';
 import Image from 'next/image';
-import React, { useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { useForm } from 'react-hook-form';
+import { supabaseClient } from '@/utils/supabaseClient';
+import ProfilePicDropZone from '@/components/ProfilePicDropZone';
 
 type Props = {};
 
@@ -12,16 +16,26 @@ const Page = (props: Props) => {
   const [userName, setUserName] = useState('');
   const [profession, setProfession] = useState('');
   const [age, setAge] = useState('');
+  const [aboutYou, setAboutYou] = useState('');
+  const { state, setState } = useStateContext();
+  const [profileImage, setProfileImage] = useState<File[]>([]);
+
+  const [imageFiles, setImageFiles] = useState<File[]>([]);
+  const supabase = supabaseClient();
+  const [selectedImage, setSelectedImage] = useState(0); // Track selected image
+  const aboutYourHomeRef = useRef<HTMLTextAreaElement | null>(null);
 
   const {
     register,
     handleSubmit,
-    reset,
-    control,
-    setValue,
+    getValues,
+    watch,
     formState: { errors },
   } = useForm({
     defaultValues: {
+      name: '',
+      age: '',
+      profession: '',
       location: '',
       city: '',
       otherDestinations: false,
@@ -31,6 +45,8 @@ const Page = (props: Props) => {
       kindOfProperty: '',
       bathrooms: '',
       area: '',
+      aboutYou: '',
+      aboutYourHome: '',
       amenities: {
         bike: false, // Default value for the "bike" radio button
         car: false, // Default value for the "car" radio button
@@ -65,8 +81,45 @@ const Page = (props: Props) => {
     },
   });
 
-  const onSubmit = (data: any) => {
+  const { ref, ...rest } = register('aboutYourHome');
+
+  useEffect(() => {
+    const textarea = aboutYourHomeRef.current;
+
+    // Adjust the textarea's height based on its scrollHeight
+    if (textarea) {
+      textarea.style.height = 'auto'; // Set the starting height
+      textarea.style.height = textarea.scrollHeight + 'px';
+
+      // Set a maximum height of 300px
+      if (textarea.scrollHeight > 300) {
+        textarea.style.height = '300px';
+        textarea.style.overflowY = 'auto';
+      } else {
+        textarea.style.overflowY = 'hidden';
+      }
+    }
+  }, [watch('aboutYourHome')]);
+
+  const onSubmit = async (data: any) => {
     console.log(data);
+
+    // const { data: fileData, error: fileError } = await supabase.storage
+    //   .from('listingImages')
+    //   .upload(filePath, formData);
+
+    // if (fileError) {
+    //   console.log('file error', fileError);
+    // }
+
+    // if (fileError?.message == 'The resource already exists') {
+    //   const { data: fileData, error: fileError } = await supabase.storage
+    //     .from('listingImages')
+    //     .update(filePath, formData);
+    //   console.log('file updated', fileData);
+    // } else {
+    //   console.log('file data', fileData);
+    // }
   };
 
   const onError = (errors: any, e: any) => {
@@ -74,64 +127,80 @@ const Page = (props: Props) => {
   };
 
   return (
-    <form onSubmit={handleSubmit(onSubmit, onError)} className="bg-[#F7F1EE]">
+    <form
+      onSubmit={handleSubmit(onSubmit, onError)}
+      className="bg-[#F7F1EE] relative">
       <div className="py-8 px-8 md:px-16 flex-col md:flex-row flex justify-center">
         <div className="md:w-1/4 my-4 flex justify-center text-center flex-col">
-          <div className="relative w-[80px] my-4 mx-auto h-[80px]">
-            <Image
-              src="/profile/profile-pic-placeholder.png"
-              alt="hero"
-              fill
-              objectPosition="bottom"
-              objectFit="cover"
-            />
-            <div className="absolute bg-[#F87C1B] rounded-full w-[30px] -right-2 align-middle my-auto flex h-[30px]">
-              <button
-                onClick={() => {
-                  setEditUserInfo(!editUserInfo);
-                }}>
-                <Image
-                  fill
-                  objectFit="contain"
-                  // make the pencil white
-                  className="m-auto filter-invert"
-                  src="https://img.icons8.com/ios/50/000000/pencil-tip.png"
-                  alt=""
-                />
-              </button>
-            </div>
-          </div>
-
           {editUserInfo ? (
-            <div className="px-4 flex flex-col">
-              <input
-                className="bg-transparent border-b border-[#172544] focus:outline-none"
-                placeholder="name"
-                onChange={(e) => setUserName(e.target.value)}
-              />
-              <input
-                placeholder="profession"
-                onChange={(e) => setProfession(e.target.value)}
-              />
-              <input
-                placeholder="age"
-                onChange={(e) => setAge(e.target.value)}
-              />
-              {/* save button */}
-              <button
-                onClick={() => {
-                  setEditUserInfo(!editUserInfo);
-                }}>
-                Close
-              </button>
-            </div>
+            <>
+              <ProfilePicDropZone setProfileImage={setProfileImage} />
+              <div className="px-4 flex gap-2 flex-col">
+                <input
+                  className="bg-transparent border-b border-[#172544] focus:outline-none"
+                  placeholder="Name"
+                  {...register('name')}
+                  onChange={(e) => setUserName(e.target.value)}
+                />
+                <input
+                  className="bg-transparent border-b border-[#172544] focus:outline-none"
+                  placeholder="Profession"
+                  {...register('profession')}
+                  onChange={(e) => setProfession(e.target.value)}
+                />
+                <input
+                  className="bg-transparent border-b border-[#172544] focus:outline-none"
+                  placeholder="Age"
+                  {...register('age')}
+                  onChange={(e) => setAge(e.target.value)}
+                />
+                {/* save button */}
+                <button
+                  onClick={() => {
+                    setEditUserInfo(!editUserInfo);
+                  }}>
+                  Close
+                </button>
+              </div>
+            </>
           ) : (
             <>
-              <h2 className="font-serif text-4xl ">{userName}</h2>
+              <div className="relative w-[80px] my-4 mx-auto h-[80px]">
+                <Image
+                  src={
+                    profileImage.length > 0
+                      ? URL.createObjectURL(profileImage[0])
+                      : '/placeholder.png'
+                  }
+                  alt="hero"
+                  fill
+                  objectPosition="center"
+                  // objectFit="cover"
+                  className="object-cover rounded-full"
+                />
+                <div className="absolute bg-[#F87C1B] rounded-full w-[30px] -right-2 align-middle my-auto flex h-[30px]">
+                  <button
+                    onClick={() => {
+                      setEditUserInfo(!editUserInfo);
+                    }}>
+                    <Image
+                      fill
+                      // objectFit="contain"
+                      className="m-auto filter-invert object-contain"
+                      src="https://img.icons8.com/ios/50/000000/pencil-tip.png"
+                      alt=""
+                    />
+                  </button>
+                </div>
+              </div>
+
+              <h2 className="font-serif text-4xl ">
+                {userName ? userName : 'Name'}
+              </h2>
               <p className="font-sans my-1 font-bold uppercase tracking-[0.1rem]">
-                Profession
+                {profession ? profession : 'Profession'}
               </p>
-              <p className="font-sans  uppercase">Age</p>
+              <p className="font-sans  uppercase">{age ? age : 'Age'}</p>
             </>
           )}
         </div>
@@ -144,33 +213,45 @@ const Page = (props: Props) => {
             <h3>Profession</h3>
           </div>
           <div className="grid py-2 text-center grid-cols-5 border-b border-[#172544]">
+            <h3>{userName ? userName.split(' ')[0] : 'First Name'}</h3>
+            <h3>{userName ? userName.split(' ')[1] : 'Last Name'}</h3>
             <h3>XX</h3>
-            <h3>XX</h3>
-            <h3>XX</h3>
-            <h3>XX</h3>
-            <h3>XX</h3>
+            <h3>
+              {age ? age : 'Age'} {age ? 'years' : ''}
+            </h3>
+            <h3>{profession ? profession : 'Profession'}</h3>
           </div>
           <div className="flex justify-between py-2 border-b border-[#172544]">
             <h2>About you</h2>
 
-            <button>
+            <button
+              type="button"
+              onClick={() => {
+                setState({ ...state, aboutYou: !state.aboutYou });
+              }}>
               <div className="relative w-[30px] align-middle my-auto flex h-[30px]">
                 <Image
                   fill
-                  objectFit="contain"
-                  className="m-auto"
+                  // objectFit="contain"
+                  className="m-auto object-contain"
                   src="https://img.icons8.com/ios/50/000000/pencil-tip.png"
                   alt=""
                 />
               </div>
             </button>
           </div>
-          <p className="my-4">
-            I’m xxx, dolor sit amet, consectetuer adipiscing elit, sed diam
-            nonummy nibh euismod tincidunt ut laoreet dolore magna aliquam erat
-            volutpat. Ut wisi enim ad minim veniam, quis nostrud exerci tation
-            ullamcorper suscipit lobortis.
-          </p>
+          {state.aboutYou ? (
+            <textarea
+              {...register('aboutYou')}
+              onChange={(e) => setAboutYou(e.target.value)}
+              placeholder="Tell us more about you."
+              className="bg-transparent w-full my-4 p-2 outline-none border-b border-[#c5c5c5]"
+            />
+          ) : (
+            <p className="my-4">
+              {aboutYou ? aboutYou : 'Tell us more about you.'}
+            </p>
+          )}
 
           <div className="flex flex-col md:flex-row gap-8 py-4 border-y border-[#172544]">
             <h4 className="text-2xl font-serif italic">
@@ -230,8 +311,8 @@ const Page = (props: Props) => {
             <div className="relative w-[20px] my-auto h-[20px]">
               <Image
                 fill
-                objectFit="contain"
-                className="h-full"
+                // objectFit="contain"
+                className="h-full object-contain"
                 src="/logo-icons.png"
                 alt=""
               />
@@ -242,38 +323,48 @@ const Page = (props: Props) => {
             <button
               className="ml-4 bg-[#FE8217] my-auto py-2 px-4 text-white rounded-xl"
               onClick={() => {
-                console.log('click');
+                setState({ ...state, imgUploadPopUp: !state.imgUploadPopUp });
               }}
               type="button">
-              Upload
+              Upload Photos
             </button>
+
+            {state.imgUploadPopUp && (
+              <DropZone imageFiles={imageFiles} setImageFiles={setImageFiles} />
+            )}
           </div>
         </div>
         <div>
-          <div className="relative mt-8 mb-6 w-[95%] mx-auto h-[50vh]">
-            <Image
-              src="/homepage/hero-image-1.png"
-              alt=""
-              className="rounded-3xl"
-              fill
-              objectPosition="bottom"
-              objectFit="cover"
-            />
-          </div>
+          {imageFiles.length > 0 && (
+            <>
+              <div className="relative mt-8 mb-6 w-[95%] mx-auto h-[50vh]">
+                <Image
+                  src={
+                    imageFiles[selectedImage]
+                      ? URL.createObjectURL(imageFiles[selectedImage])
+                      : '/placeholder.png'
+                  }
+                  alt=""
+                  className="rounded-3xl object-contain"
+                  fill
+                  objectPosition="center"
+                />
+              </div>
 
-          <div className="relative w-[95%] mx-auto h-[20vh]">
-            <CarouselPage
-              picturesPerSlide={3}
-              images={[
-                { src: '/homepage/hero-image-1.png' },
-                { src: '/homepage/hero-image-2.png' },
-                { src: '/homepage/hero-image-3.png' },
-                { src: '/homepage/hero-image-3.png' },
-                { src: '/homepage/hero-image-2.png' },
-                { src: '/homepage/hero-image-1.png' },
-              ]}
-            />
-          </div>
+              <div className="relative w-[95%] mx-auto h-[30vh]">
+                <CarouselPage
+                  picturesPerSlide={3}
+                  selectedImage={selectedImage}
+                  setSelectedImage={setSelectedImage}
+                  overlay={false}
+                  contain={true}
+                  images={imageFiles.map((file) => ({
+                    src: URL.createObjectURL(file),
+                  }))}
+                />
+              </div>
+            </>
+          )}
 
           <div className="flex my-4  border-b border-[#172544] py-4 justify-between">
             <h2 className="text-xl italic font-serif">Name of the city</h2>
@@ -308,15 +399,22 @@ const Page = (props: Props) => {
           <h2 className="text-xl italic font-serif">Tell us about your home</h2>
         </div>
 
-        <p className="font-sans text-sm my-6">
-          Villa linda is dolor sit amet, consectetuer adipiscing elit, sed diam
+        <textarea
+          {...rest}
+          name="aboutYourHome"
+          ref={(e) => {
+            ref(e);
+            aboutYourHomeRef.current = e;
+          }}
+          // i want the rows to only be present when no input is present in the textarea and no rows when there is input
+          className="w-full h-fit max-h-[300px] my-4 p-2 bg-transparent outline-none border-b border-[#c5c5c5] resize-none"
+          placeholder="Villa linda is dolor sit amet, consectetuer adipiscing elit, sed diam
           nonummy nibh euismod tincidunt ut laoreet dolore magna aliquam erat
           volutpat. Ut wisi enim ad minim veniam, quis nostrud exerci tation
           ullamcorper suscipit lobortis nisl ut aliquip ex ea commodo consequat.
           Duis autem vel eum iriure dolor in hen. Lorem ipsum dolor sit amet,
           consec- tetuer adipiscing elit, sed diam nonummy nibh euismod
-          tincidunt ut laoreet dolore magna aliquam erat volutpat.
-        </p>
+          tincidunt ut laoreet dolore magna aliquam erat volutpat."></textarea>
 
         <div className="px-8 py-4 flex flex-col md:flex-row border rounded-xl my-8 border-[#172544]">
           <div className="flex flex-col text-center justify-center py-2 md:py-0 h-full md:w-1/3 border-b md:border-b-0 md:border-r border-[#172544]">
@@ -435,7 +533,7 @@ const Page = (props: Props) => {
           <div className="md:w-1/5 w-1/2 gap-2 flex flex-col">
             <div className="flex gap-2">
               <input
-                className="bg-transparent checked:bg-green-400 appearance-none border border-[#172544] rounded-xl p-[6px] my-auto"
+                className="bg-transparent checked:bg-[#7F8119] appearance-none border border-[#172544] rounded-xl p-[6px] my-auto"
                 type="checkbox"
                 {...register('amenities.bike')}
                 id="bike"
@@ -446,7 +544,7 @@ const Page = (props: Props) => {
             </div>
             <div className="flex gap-2">
               <input
-                className="bg-transparent appearance-none border border-[#172544] rounded-xl p-[6px] my-auto"
+                className="bg-transparent checked:bg-[#7F8119] appearance-none border border-[#172544] rounded-xl p-[6px] my-auto"
                 type="checkbox"
                 {...register('amenities.car')}
                 id="car"
@@ -458,8 +556,8 @@ const Page = (props: Props) => {
 
             <div className="flex gap-2">
               <input
-                className="bg-transparent appearance-none border border-[#172544] rounded-xl p-[6px] my-auto"
-                type="radio"
+                className="bg-transparent checked:bg-[#7F8119] appearance-none border border-[#172544] rounded-xl p-[6px] my-auto"
+                type="checkbox"
                 {...register('amenities.tv')}
                 id="tv"
               />
@@ -470,8 +568,8 @@ const Page = (props: Props) => {
 
             <div className="flex gap-2">
               <input
-                className="bg-transparent appearance-none border border-[#172544] rounded-xl p-[6px] my-auto"
-                type="radio"
+                className="bg-transparent checked:bg-[#7F8119] appearance-none border border-[#172544] rounded-xl p-[6px] my-auto"
+                type="checkbox"
                 {...register('amenities.dishwasher')}
                 id="dishwasher"
               />
@@ -482,8 +580,8 @@ const Page = (props: Props) => {
 
             <div className="flex gap-2">
               <input
-                className="bg-transparent appearance-none border border-[#172544] rounded-xl p-[6px] my-auto"
-                type="radio"
+                className="bg-transparent checked:bg-[#7F8119] appearance-none border border-[#172544] rounded-xl p-[6px] my-auto"
+                type="checkbox"
                 {...register('amenities.pingpong')}
                 id="pingpong"
               />
@@ -494,8 +592,8 @@ const Page = (props: Props) => {
 
             <div className="flex gap-2">
               <input
-                className="bg-transparent appearance-none border border-[#172544] rounded-xl p-[6px] my-auto"
-                type="radio"
+                className="bg-transparent checked:bg-[#7F8119] appearance-none border border-[#172544] rounded-xl p-[6px] my-auto"
+                type="checkbox"
                 {...register('amenities.billiards')}
                 id="billiards"
               />
@@ -508,8 +606,8 @@ const Page = (props: Props) => {
           <div className="md:w-1/5 w-1/2 gap-2 flex flex-col">
             <div className="gap-2 flex">
               <input
-                className="bg-transparent appearance-none border border-[#172544] rounded-xl p-[6px] my-auto"
-                type="radio"
+                className="bg-transparent checked:bg-[#7F8119] appearance-none border border-[#172544] rounded-xl p-[6px] my-auto"
+                type="checkbox"
                 {...register('amenities.washer')}
                 id="washer"
               />
@@ -519,8 +617,8 @@ const Page = (props: Props) => {
             </div>
             <div className="flex gap-2">
               <input
-                className="bg-transparent appearance-none border border-[#172544] rounded-xl p-[6px] my-auto"
-                type="radio"
+                className="bg-transparent checked:bg-[#7F8119] appearance-none border border-[#172544] rounded-xl p-[6px] my-auto"
+                type="checkbox"
                 {...register('amenities.dryer')}
                 id="dryer"
               />
@@ -531,8 +629,8 @@ const Page = (props: Props) => {
 
             <div className="flex gap-2">
               <input
-                className="bg-transparent appearance-none border border-[#172544] rounded-xl p-[6px] my-auto"
-                type="radio"
+                className="bg-transparent checked:bg-[#7F8119] appearance-none border border-[#172544] rounded-xl p-[6px] my-auto"
+                type="checkbox"
                 {...register('amenities.wifi')}
                 id="wifi"
               />
@@ -543,8 +641,8 @@ const Page = (props: Props) => {
 
             <div className="flex gap-2">
               <input
-                className="bg-transparent appearance-none border border-[#172544] rounded-xl p-[6px] my-auto"
-                type="radio"
+                className="bg-transparent checked:bg-[#7F8119] appearance-none border border-[#172544] rounded-xl p-[6px] my-auto"
+                type="checkbox"
                 {...register('amenities.elevator')}
                 id="elevator"
               />
@@ -555,8 +653,8 @@ const Page = (props: Props) => {
 
             <div className="flex gap-2">
               <input
-                className="bg-transparent appearance-none border border-[#172544] rounded-xl p-[6px] my-auto"
-                type="radio"
+                className="bg-transparent checked:bg-[#7F8119] appearance-none border border-[#172544] rounded-xl p-[6px] my-auto"
+                type="checkbox"
                 {...register('amenities.terrace')}
                 id="terrace"
               />
@@ -567,8 +665,8 @@ const Page = (props: Props) => {
 
             <div className="flex gap-2">
               <input
-                className="bg-transparent appearance-none border border-[#172544] rounded-xl p-[6px] my-auto"
-                type="radio"
+                className="bg-transparent checked:bg-[#7F8119] appearance-none border border-[#172544] rounded-xl p-[6px] my-auto"
+                type="checkbox"
                 {...register('amenities.scooter')}
                 id="scooter"
               />
@@ -581,8 +679,8 @@ const Page = (props: Props) => {
           <div className="md:w-1/5 w-1/2 gap-2 flex flex-col">
             <div className="flex gap-2">
               <input
-                className="bg-transparent appearance-none border border-[#172544] rounded-xl p-[6px] my-auto"
-                type="radio"
+                className="bg-transparent checked:bg-[#7F8119] appearance-none border border-[#172544] rounded-xl p-[6px] my-auto"
+                type="checkbox"
                 {...register('amenities.bbq')}
                 id="bbq"
               />
@@ -592,8 +690,8 @@ const Page = (props: Props) => {
             </div>
             <div className="flex gap-2">
               <input
-                className="bg-transparent appearance-none border border-[#172544] rounded-xl p-[6px] my-auto"
-                type="radio"
+                className="bg-transparent checked:bg-[#7F8119] appearance-none border border-[#172544] rounded-xl p-[6px] my-auto"
+                type="checkbox"
                 {...register('amenities.computer')}
                 id="computer"
               />
@@ -604,9 +702,9 @@ const Page = (props: Props) => {
 
             <div className="flex gap-2">
               <input
-                className="bg-transparent appearance-none border border-[#172544] rounded-xl p-[6px] my-auto"
+                className="bg-transparent checked:bg-[#7F8119] appearance-none border border-[#172544] rounded-xl p-[6px] my-auto"
                 {...register('amenities.piano')}
-                type="radio"
+                type="checkbox"
                 id="wc"
               />
               <label className="" htmlFor="wc">
@@ -616,8 +714,8 @@ const Page = (props: Props) => {
 
             <div className="flex gap-2">
               <input
-                className="bg-transparent appearance-none border border-[#172544] rounded-xl p-[6px] my-auto"
-                type="radio"
+                className="bg-transparent checked:bg-[#7F8119] appearance-none border border-[#172544] rounded-xl p-[6px] my-auto"
+                type="checkbox"
                 {...register('amenities.pool')}
                 id="pool"
               />
@@ -628,8 +726,8 @@ const Page = (props: Props) => {
 
             <div className="flex gap-2">
               <input
-                className="bg-transparent appearance-none border border-[#172544] rounded-xl p-[6px] my-auto"
-                type="radio"
+                className="bg-transparent checked:bg-[#7F8119] appearance-none border border-[#172544] rounded-xl p-[6px] my-auto"
+                type="checkbox"
                 {...register('amenities.playground')}
                 id="playground"
               />
@@ -640,8 +738,8 @@ const Page = (props: Props) => {
 
             <div className="flex gap-2">
               <input
-                className="bg-transparent appearance-none border border-[#172544] rounded-xl p-[6px] my-auto"
-                type="radio"
+                className="bg-transparent checked:bg-[#7F8119] appearance-none border border-[#172544] rounded-xl p-[6px] my-auto"
+                type="checkbox"
                 {...register('amenities.babyGear')}
                 id="babyGear"
               />
@@ -654,8 +752,8 @@ const Page = (props: Props) => {
           <div className="md:w-1/5 w-1/2 gap-2 flex flex-col">
             <div className="flex gap-2">
               <input
-                className="bg-transparent appearance-none border border-[#172544] rounded-xl p-[6px] my-auto"
-                type="radio"
+                className="bg-transparent checked:bg-[#7F8119] appearance-none border border-[#172544] rounded-xl p-[6px] my-auto"
+                type="checkbox"
                 {...register('amenities.ac')}
                 id="ac"
               />
@@ -665,8 +763,8 @@ const Page = (props: Props) => {
             </div>
             <div className="flex gap-2">
               <input
-                className="bg-transparent appearance-none border border-[#172544] rounded-xl p-[6px] my-auto"
-                type="radio"
+                className="bg-transparent checked:bg-[#7F8119] appearance-none border border-[#172544] rounded-xl p-[6px] my-auto"
+                type="checkbox"
                 {...register('amenities.fireplace')}
                 id="fireplace"
               />
@@ -677,8 +775,8 @@ const Page = (props: Props) => {
 
             <div className="flex gap-2">
               <input
-                className="bg-transparent appearance-none border border-[#172544] rounded-xl p-[6px] my-auto"
-                type="radio"
+                className="bg-transparent checked:bg-[#7F8119] appearance-none border border-[#172544] rounded-xl p-[6px] my-auto"
+                type="checkbox"
                 {...register('amenities.parking')}
                 id="parking"
               />
@@ -689,8 +787,8 @@ const Page = (props: Props) => {
 
             <div className="flex gap-2">
               <input
-                className="bg-transparent appearance-none border border-[#172544] rounded-xl p-[6px] my-auto"
-                type="radio"
+                className="bg-transparent checked:bg-[#7F8119] appearance-none border border-[#172544] rounded-xl p-[6px] my-auto"
+                type="checkbox"
                 {...register('amenities.hotTub')}
                 id="hotTub"
               />
@@ -701,8 +799,8 @@ const Page = (props: Props) => {
 
             <div className="flex gap-2">
               <input
-                className="bg-transparent appearance-none border border-[#172544] rounded-xl p-[6px] my-auto"
-                type="radio"
+                className="bg-transparent checked:bg-[#7F8119] appearance-none border border-[#172544] rounded-xl p-[6px] my-auto"
+                type="checkbox"
                 {...register('amenities.sauna')}
                 id="sauna"
               />
@@ -713,8 +811,8 @@ const Page = (props: Props) => {
 
             <div className="flex gap-2">
               <input
-                className="bg-transparent appearance-none border border-[#172544] rounded-xl p-[6px] my-auto"
-                type="radio"
+                className="bg-transparent checked:bg-[#7F8119] appearance-none border border-[#172544] rounded-xl p-[6px] my-auto"
+                type="checkbox"
                 {...register('amenities.other')}
                 id="other"
               />
@@ -727,8 +825,8 @@ const Page = (props: Props) => {
           <div className="md:w-1/5 w-1/2 gap-2 flex flex-col">
             <div className="flex gap-2">
               <input
-                className="bg-transparent appearance-none border border-[#172544] rounded-xl p-[6px] my-auto"
-                type="radio"
+                className="bg-transparent checked:bg-[#7F8119] appearance-none border border-[#172544] rounded-xl p-[6px] my-auto"
+                type="checkbox"
                 {...register('amenities.doorman')}
                 id="doorman"
               />
@@ -738,8 +836,8 @@ const Page = (props: Props) => {
             </div>
             <div className="flex gap-2">
               <input
-                className="bg-transparent appearance-none border border-[#172544] rounded-xl p-[6px] my-auto"
-                type="radio"
+                className="bg-transparent checked:bg-[#7F8119] appearance-none border border-[#172544] rounded-xl p-[6px] my-auto"
+                type="checkbox"
                 {...register('amenities.cleaningService')}
                 id="cleaningService"
               />
@@ -750,8 +848,8 @@ const Page = (props: Props) => {
 
             <div className="flex gap-2">
               <input
-                className="bg-transparent appearance-none border border-[#172544] rounded-xl p-[6px] my-auto"
-                type="radio"
+                className="bg-transparent checked:bg-[#7F8119] appearance-none border border-[#172544] rounded-xl p-[6px] my-auto"
+                type="checkbox"
                 {...register('amenities.videoGames')}
                 id="videoGames"
               />
@@ -762,8 +860,8 @@ const Page = (props: Props) => {
 
             <div className="flex gap-2">
               <input
-                className="bg-transparent appearance-none border border-[#172544] rounded-xl p-[6px] my-auto"
-                type="radio"
+                className="bg-transparent checked:bg-[#7F8119] appearance-none border border-[#172544] rounded-xl p-[6px] my-auto"
+                type="checkbox"
                 {...register('amenities.tennisCourt')}
                 id="tennisCourt"
               />
@@ -774,8 +872,8 @@ const Page = (props: Props) => {
 
             <div className="flex gap-2">
               <input
-                className="bg-transparent appearance-none border border-[#172544] rounded-xl p-[6px] my-auto"
-                type="radio"
+                className="bg-transparent checked:bg-[#7F8119] appearance-none border border-[#172544] rounded-xl p-[6px] my-auto"
+                type="checkbox"
                 {...register('amenities.gym')}
                 id="gym"
               />
@@ -786,7 +884,9 @@ const Page = (props: Props) => {
           </div>
         </div>
 
-        <button className="uppercase mb-8 mx-auto rounded-lg w-fit text-white text-lg px-4 font-extralight bg-[#F87C1B] py-2">
+        <button
+          type="submit"
+          className="uppercase mb-8 mx-auto rounded-lg w-fit text-white text-lg px-4 font-extralight bg-[#F87C1B] py-2">
           Save Changes
         </button>
       </div>

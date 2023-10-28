@@ -6,6 +6,8 @@ const initialState: StateType = {
   user: null,
   showMobileMenu: false,
   noUser: false,
+  imgUploadPopUp: false,
+  aboutYou: false,
 };
 
 type StateType = {
@@ -13,6 +15,8 @@ type StateType = {
   user: any;
   showMobileMenu: boolean;
   noUser: boolean;
+  imgUploadPopUp: boolean;
+  aboutYou: boolean;
 };
 
 type StateContextType = {

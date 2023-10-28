@@ -122,12 +122,3 @@ a {
   border-radius: 10px; /* roundness of the scroll thumb */
   /* height of the scrollbar is   */
 }
-
-.terms {
-  h2 {
-    font-size: 1.5rem;
-    color: red;
-    font-weight: 500;
-    margin-bottom: 1rem;
-  }
-}
