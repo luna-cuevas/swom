@@ -238,7 +238,7 @@ const Page = (props: Props) => {
           </svg>
         </button>
         <div className={`w-full h-[30vh] ${mapsActive ? 'block' : 'hidden'}`}>
-          <GoogleMapComponent city="Colombia" />
+          <GoogleMapComponent />
         </div>
       </div>
 

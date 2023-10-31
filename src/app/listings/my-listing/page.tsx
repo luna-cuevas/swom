@@ -5,9 +5,10 @@ import GoogleMapComponent from '@/components/GoogleMapComponent';
 import { useStateContext } from '@/context/StateContext';
 import Image from 'next/image';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
-import { useForm } from 'react-hook-form';
+import { set, useForm, Controller } from 'react-hook-form';
 import { supabaseClient } from '@/utils/supabaseClient';
 import ProfilePicDropZone from '@/components/ProfilePicDropZone';
+import citiesData from '@/data/citiesDescriptions.json';
 
 type Props = {};
 
@@ -19,34 +20,44 @@ const Page = (props: Props) => {
   const [aboutYou, setAboutYou] = useState('');
   const { state, setState } = useStateContext();
   const [profileImage, setProfileImage] = useState<File[]>([]);
-
+  const [citySearchOpen, setCitySearchOpen] = useState(false);
   const [imageFiles, setImageFiles] = useState<File[]>([]);
   const supabase = supabaseClient();
   const [selectedImage, setSelectedImage] = useState(0); // Track selected image
   const aboutYourHomeRef = useRef<HTMLTextAreaElement | null>(null);
+  const [whereIsIt, setWhereIsIt] = useState('');
 
   const {
     register,
     handleSubmit,
     getValues,
+    control,
+    setValue,
     watch,
     formState: { errors },
   } = useForm({
     defaultValues: {
-      name: '',
-      age: '',
-      profession: '',
-      location: '',
+      userInfo: {
+        name: '',
+        age: '',
+        profession: '',
+        aboutYou: '',
+        whereTo: '',
+        otherDestinations: false,
+      },
+      homeInfo: {
+        property: '',
+        bedrooms: '',
+        locatedIn: '',
+        kindOfProperty: '',
+        bathrooms: '',
+        area: '',
+        aboutYourHome: '',
+        whereIsIt: '',
+      },
+
       city: '',
-      otherDestinations: false,
-      property: '',
-      bedrooms: '',
-      locatedIn: '',
-      kindOfProperty: '',
-      bathrooms: '',
-      area: '',
-      aboutYou: '',
-      aboutYourHome: '',
+
       amenities: {
         bike: false, // Default value for the "bike" radio button
         car: false, // Default value for the "car" radio button
@@ -62,7 +73,7 @@ const Page = (props: Props) => {
         scooter: false, // Default value for the "scooter" radio button
         bbq: false, // Default value for the "bbq" radio button
         computer: false, // Default value for the "computer" radio button
-        piano: false, // Default value for the "piano" radio button
+        wcAccess: false, // Default value for the "wcAccess" radio button
         pool: false, // Default value for the "pool" radio button
         playground: false, // Default value for the "playground" radio button
         babyGear: false, // Default value for the "babyGear" radio button
@@ -81,7 +92,7 @@ const Page = (props: Props) => {
     },
   });
 
-  const { ref, ...rest } = register('aboutYourHome');
+  const { ref, ...rest } = register('homeInfo.aboutYourHome');
 
   useEffect(() => {
     const textarea = aboutYourHomeRef.current;
@@ -99,31 +110,118 @@ const Page = (props: Props) => {
         textarea.style.overflowY = 'hidden';
       }
     }
-  }, [watch('aboutYourHome')]);
+  }, [watch('homeInfo.aboutYourHome')]);
+
+  useEffect(() => {
+    setValue('homeInfo.whereIsIt', whereIsIt);
+    console.log(watch('homeInfo.whereIsIt'));
+  }, [whereIsIt]);
+
+  const uploadImage = async (imageFile: any, bucket: any) => {
+    return supabase.storage
+      .from(bucket) // Specify the folder name here
+      .upload(
+        `${state.user.user_metadata.name} - ${state.user.id}/${imageFile.name}`,
+        imageFile,
+        {
+          upsert: true,
+        }
+      );
+  };
 
   const onSubmit = async (data: any) => {
+    if (profileImage && profileImage.length > 0) {
+      // Upload profile image
+      const profileImageFile = profileImage[0];
+      const { data: profileImg, error: profileImageError } = await uploadImage(
+        profileImageFile,
+        'profileImages'
+      );
+
+      if (profileImageError) {
+        console.error('Error uploading profile image:', profileImageError);
+      } else {
+        // Get the image URL from the downloaded Supabase Storage
+        const { data: profileImageUrl } = await supabase.storage
+          .from('profileImages') // Specify the folder name here
+          .getPublicUrl(
+            `${state.user.user_metadata.name} - ${state.user.id}/${profileImageFile.name}`
+          );
+
+        data.userInfo.profileImage = profileImageUrl;
+      }
+    }
+
+    if (imageFiles && imageFiles.length > 0) {
+      // Upload images to the listingImages bucket
+      const uploadPromises = imageFiles.map((imageFile) =>
+        uploadImage(imageFile, 'listingImages')
+      );
+      const results = await Promise.all(uploadPromises);
+
+      if (results.some((result) => result.error)) {
+        console.error('Error uploading listing images:', results);
+      } else {
+        // Get the image URLs from the downloaded Supabase Storage
+        const { data: listingImageUrls } = await supabase.storage
+          .from('listingImages') // Specify the folder name here
+          .list(`${state.user.user_metadata.name} - ${state.user.id}`);
+
+        if (listingImageUrls) {
+          const publicUrls = listingImageUrls.map((image) => {
+            return supabase.storage
+              .from('listingImages')
+              .getPublicUrl(
+                `${state.user.user_metadata.name} - ${state.user.id}/${image.name}`
+              );
+          });
+          // Set the listing image URLs to data.homeInfo.listingImages
+          data.homeInfo.listingImages = publicUrls;
+        }
+      }
+    }
+
+    // data.profileImage = profileImage;
+    // data.imageFiles = imageFiles;
     console.log(data);
-
-    // const { data: fileData, error: fileError } = await supabase.storage
-    //   .from('listingImages')
-    //   .upload(filePath, formData);
-
-    // if (fileError) {
-    //   console.log('file error', fileError);
-    // }
-
-    // if (fileError?.message == 'The resource already exists') {
-    //   const { data: fileData, error: fileError } = await supabase.storage
-    //     .from('listingImages')
-    //     .update(filePath, formData);
-    //   console.log('file updated', fileData);
-    // } else {
-    //   console.log('file data', fileData);
-    // }
   };
 
   const onError = (errors: any, e: any) => {
     console.log(errors, e);
+  };
+
+  const [searchTerm, setSearchTerm] = useState('');
+  const [selectedCity, setSelectedCity] = useState(null);
+
+  const handleInputChange = (e: any) => {
+    const value = e.target.value;
+    setCitySearchOpen(true);
+    setSearchTerm(value);
+    if (value.length > 0) {
+      setCitySearchOpen(true);
+    }
+  };
+
+  const filteredCities = citiesData.filter((city) => {
+    return city.city
+      .toLowerCase()
+      .includes(searchTerm.split(',')[0].toLowerCase());
+  });
+
+  const handleCitySelect = (city: any) => {
+    setSelectedCity(city);
+    setCitySearchOpen(false);
+    setSearchTerm(`${city.city}, ${city.country}`);
+    setValue('city', `${city.city}, ${city.country}`);
+  };
+
+  const handleSearch = () => {
+    const matchedCity = citiesData.find(
+      (city) => city.city.toLowerCase() === searchTerm.toLowerCase()
+    );
+    if (matchedCity) {
+      setSelectedCity(matchedCity as any);
+    }
   };
 
   return (
@@ -139,19 +237,19 @@ const Page = (props: Props) => {
                 <input
                   className="bg-transparent border-b border-[#172544] focus:outline-none"
                   placeholder="Name"
-                  {...register('name')}
+                  {...register('userInfo.name')}
                   onChange={(e) => setUserName(e.target.value)}
                 />
                 <input
                   className="bg-transparent border-b border-[#172544] focus:outline-none"
                   placeholder="Profession"
-                  {...register('profession')}
+                  {...register('userInfo.profession')}
                   onChange={(e) => setProfession(e.target.value)}
                 />
                 <input
                   className="bg-transparent border-b border-[#172544] focus:outline-none"
                   placeholder="Age"
-                  {...register('age')}
+                  {...register('userInfo.age')}
                   onChange={(e) => setAge(e.target.value)}
                 />
                 {/* save button */}
@@ -242,7 +340,7 @@ const Page = (props: Props) => {
           </div>
           {state.aboutYou ? (
             <textarea
-              {...register('aboutYou')}
+              {...register('userInfo.aboutYou')}
               onChange={(e) => setAboutYou(e.target.value)}
               placeholder="Tell us more about you."
               className="bg-transparent w-full my-4 p-2 outline-none border-b border-[#c5c5c5]"
@@ -259,7 +357,7 @@ const Page = (props: Props) => {
             </h4>
 
             <select
-              {...register('location')}
+              {...register('userInfo.whereTo')}
               className="bg-transparent focus:outline-none  rounded-xl border w-1/3 border-[#172544]">
               <option value="bogota">Bogota, Colombia</option>
               <option value="paris">Paris, France</option>
@@ -288,15 +386,17 @@ const Page = (props: Props) => {
                 className="appearance-none h-fit my-auto bg-transparent checked:bg-[#7F8119] rounded-full border border-[#172544] p-2 mx-2"
                 type="radio"
                 id="yesRadio"
-                {...register('otherDestinations')}
+                value="yes"
+                {...register('userInfo.otherDestinations')}
               />
               <label htmlFor="yesRadio">Yes</label>
 
               <input
                 className="appearance-none ml-4 h-fit my-auto bg-transparent checked:bg-[#7F8119] rounded-full border border-[#172544] p-2 mx-2"
                 type="radio"
+                value="no"
                 id="noRadio"
-                {...register('otherDestinations')}
+                {...register('userInfo.otherDestinations')}
               />
               <label htmlFor="noRadio">No</label>
             </div>
@@ -365,35 +465,53 @@ const Page = (props: Props) => {
               </div>
             </>
           )}
+        </div>
 
-          <div className="flex my-4  border-b border-[#172544] py-4 justify-between">
-            <h2 className="text-xl italic font-serif">Name of the city</h2>
-          </div>
+        <div className="flex my-4 border-b border-[#172544] py-4 justify-between">
+          <h2 className="text-xl italic font-serif">Name of the city</h2>
+        </div>
 
-          <div className="w-full flex p-2 my-4  rounded-xl border border-[#172544]">
-            <input
-              className=" bg-transparent w-full outline-none"
-              type="text"
-              placeholder="What's the city?"
-              {...register('city')}
-            />
+        <div className="w-full relative flex p-2 my-4 rounded-xl border border-[#172544]">
+          <input
+            className="bg-transparent w-full outline-none"
+            type="text"
+            placeholder="What's the city?"
+            {...register('city')}
+            value={searchTerm}
+            onChange={handleInputChange}
+          />
+          <button type="button" onClick={handleSearch}>
+            {' '}
             <img
               className="w-[20px] my-auto h-[20px]"
               src="/search-icon.svg"
               alt=""
             />
-          </div>
+          </button>
+
+          {filteredCities.length > 0 && citySearchOpen && (
+            <ul className="absolute bg-white w-full p-2 top-full left-0 max-h-[200px] overflow-y-scroll">
+              {filteredCities.map((city) => (
+                <li
+                  key={city.id}
+                  onClick={() => handleCitySelect(city)}
+                  style={{ cursor: 'pointer' }}>
+                  {city.city}, {city.country}
+                </li>
+              ))}
+            </ul>
+          )}
         </div>
-        <p className="font-sans text-sm my-6">
-          Cartagena, Colombia, is a vibrant coastal city on the northern
-          Caribbean coast. Known for its rich history, colonial architecture,
-          and stunning beaches, it&apos;s a popular tourist destination. The
-          city&apos;s walled Old Town, a UNESCO World Heritage site, is a maze
-          of colorful buildings, cobbled streets, and charming squares. Visitors
-          can explore historic forts like Castillo San Felipe de Barajas, enjoy
-          local cuisine, and soak up the lively atmosphere. Cartagena offers a
-          unique blend of history, culture, and natural beauty.
-        </p>
+
+        {selectedCity != null && filteredCities.length !== 0 && (
+          <p className="font-sans text-sm my-6">
+            {(selectedCity as { description?: string | undefined })
+              ?.description ?? 'No description available'}
+          </p>
+        )}
+        {filteredCities.length === 0 && (
+          <p className="font-sans text-sm my-6">No description available</p>
+        )}
 
         <div className="flex my-4  border-y border-[#172544] py-4 justify-between">
           <h2 className="text-xl italic font-serif">Tell us about your home</h2>
@@ -421,14 +539,15 @@ const Page = (props: Props) => {
             <label className="font-bold" htmlFor="property">
               Type of property*
             </label>
+
             <select
+              {...register('homeInfo.property')}
               className="w-fit m-auto bg-transparent outline-none p-2 my-2 rounded-lg border-[#172544] border"
-              {...register('property')}
               id="property">
-              <option value="">House</option>
-              <option value="">Apartment</option>
-              <option value="">Condo</option>
-              <option value="">Townhouse</option>
+              <option value="House">House</option>
+              <option value="Apartment">Apartment</option>
+              <option value="Condo">Condo</option>
+              <option value="Townhouse">Townhouse</option>
             </select>
           </div>
 
@@ -438,12 +557,12 @@ const Page = (props: Props) => {
             </label>
             <select
               className="w-fit m-auto bg-transparent outline-none p-2 my-2 rounded-lg border-[#172544] border"
-              {...register('bedrooms')}
+              {...register('homeInfo.bedrooms')}
               id="bedrooms">
-              <option value="">1</option>
-              <option value="">2</option>
-              <option value="">3</option>
-              <option value="">4+</option>
+              <option value="1">1</option>
+              <option value="2">2</option>
+              <option value="3">3</option>
+              <option value="4+">4+</option>
             </select>
           </div>
 
@@ -453,12 +572,12 @@ const Page = (props: Props) => {
             </label>
             <select
               className="w-fit m-auto bg-transparent outline-none p-2 my-2 rounded-lg border-[#172544] border"
-              {...register('locatedIn')}
+              {...register('homeInfo.locatedIn')}
               id="locatedIn">
-              <option value="">a condiminium</option>
-              <option value="">a gated community</option>
-              <option value="">a neighborhood</option>
-              <option value="">a rural area</option>
+              <option value="Condominium">a condiminium</option>
+              <option value="Gated Community">a gated community</option>
+              <option value="Neighborhood">a neighborhood</option>
+              <option value="Rural">a rural area</option>
             </select>
           </div>
         </div>
@@ -470,11 +589,11 @@ const Page = (props: Props) => {
             </label>
             <select
               className="w-fit m-auto bg-transparent outline-none p-2 my-2 rounded-lg border-[#172544] border"
-              {...register('kindOfProperty')}
+              {...register('homeInfo.kindOfProperty')}
               id="kindOfProperty">
-              <option value="">Main property </option>
-              <option value="">Second property</option>
-              <option value="">Third property</option>
+              <option value="Main">Main property </option>
+              <option value="Second">Second property</option>
+              <option value="Third">Third property</option>
             </select>
           </div>
 
@@ -484,12 +603,12 @@ const Page = (props: Props) => {
             </label>
             <select
               className="w-fit m-auto bg-transparent outline-none p-2 my-2 rounded-lg border-[#172544] border"
-              {...register('bathrooms')}
+              {...register('homeInfo.bathrooms')}
               id="bathrooms">
-              <option value="">1</option>
-              <option value="">2</option>
-              <option value="">3</option>
-              <option value="">4+</option>
+              <option value="1">1</option>
+              <option value="2">2</option>
+              <option value="3">3</option>
+              <option value="4+">4+</option>
             </select>
           </div>
 
@@ -499,19 +618,19 @@ const Page = (props: Props) => {
             </label>
             <select
               className="w-fit m-auto bg-transparent outline-none p-2 my-2 rounded-lg border-[#172544] border"
-              {...register('area')}
+              {...register('homeInfo.area')}
               id="area">
-              <option value="">60 - 100 m2</option>
-              <option value="">100 - 150 m2</option>
-              <option value="">150 - 200 m2</option>
-              <option value="">200 - 250 m2</option>
-              <option value="">250 - 300 m2</option>
-              <option value="">300 - 350 m2</option>
-              <option value="">350 - 400 m2</option>
-              <option value="">400 - 450 m2</option>
-              <option value="">450 - 500 m2</option>
-              <option value="">500 - 550 m2</option>
-              <option value="">550 - 600 m2</option>
+              <option value="60-100">60 - 100 m2</option>
+              <option value="100-150">100 - 150 m2</option>
+              <option value="150-200">150 - 200 m2</option>
+              <option value="200-250">200 - 250 m2</option>
+              <option value="250-300">250 - 300 m2</option>
+              <option value="300-350">300 - 350 m2</option>
+              <option value="350-400">350 - 400 m2</option>
+              <option value="400-450">400 - 450 m2</option>
+              <option value="450-500">450 - 500 m2</option>
+              <option value="500-550">500 - 550 m2</option>
+              <option value="550-600">550 - 600 m2</option>
             </select>
           </div>
         </div>
@@ -519,10 +638,8 @@ const Page = (props: Props) => {
           <h2 className="text-xl  font-serif">Where is it?</h2>
         </div>
 
-        <input className="w-full rounded-xl p-2 outline-none" type="text" />
-
         <div className={`w-full h-[30vh] my-4 rounded-xl`}>
-          <GoogleMapComponent city="Colombia" />
+          <GoogleMapComponent setWhereIsIt={setWhereIsIt} />
         </div>
 
         <div className="flex my-4  border-y border-[#172544] py-4 justify-between">
@@ -703,7 +820,7 @@ const Page = (props: Props) => {
             <div className="flex gap-2">
               <input
                 className="bg-transparent checked:bg-[#7F8119] appearance-none border border-[#172544] rounded-xl p-[6px] my-auto"
-                {...register('amenities.piano')}
+                {...register('amenities.wcAccess')}
                 type="checkbox"
                 id="wc"
               />
