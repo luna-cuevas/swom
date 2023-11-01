@@ -61,7 +61,12 @@ const Navigation = (props: Props) => {
     <nav className=" relative  md:px-12 px-4  py-4 bg-[#fff] flex justify-between">
       <div className="flex w-[150px] h-auto relative   items-center">
         <Link href="/home">
-          <Image src="/swom-logo.jpg" alt="logo" fill objectFit="contain" />
+          <Image
+            className="object-contain"
+            src="/swom-logo.jpg"
+            alt="logo"
+            fill
+          />
         </Link>
       </div>
       <div className="hidden xl:flex gap-8 align-middle">
@@ -121,10 +126,7 @@ const Navigation = (props: Props) => {
           theme="light"
         />
 
-        <Menu
-          dismiss={{
-            itemPress: false,
-          }}>
+        <Menu>
           <MenuHandler>
             <Button className="bg-[#fff] shadow-none">
               <Image
@@ -221,10 +223,7 @@ const Navigation = (props: Props) => {
           </button>
         )}
 
-        <Menu
-          dismiss={{
-            itemPress: false,
-          }}>
+        <Menu>
           <MenuHandler>
             <Button className="bg-[#fff] mx-auto shadow-none">
               <Image

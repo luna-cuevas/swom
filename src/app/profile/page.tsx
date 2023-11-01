@@ -1,4 +1,6 @@
 'use client';
+import { useStateContext } from '@/context/StateContext';
+import { supabaseClient } from '@/utils/supabaseClient';
 import Image from 'next/image';
 import React, { ChangeEvent, use, useEffect, useState } from 'react';
 import { ToastContainer, toast } from 'react-toastify';
@@ -15,11 +17,16 @@ const profileDummyData = {
 };
 
 const Page = (props: Props) => {
+  const { state, setState } = useStateContext();
+
   const [isPasswordChanged, setIsPasswordChanged] = useState(false);
-  const [newPassword, setNewPassword] = useState<string[]>([
-    profileDummyData.password,
-  ]);
-  const [confirmPassword, setConfirmPassword] = useState<string[]>([]);
+  const [newPassword, setNewPassword] = useState('');
+  const [firstName, setFirstName] = useState('');
+  const [lastName, setLastName] = useState('');
+  const [emailAddress, setEmailAddress] = useState('');
+  const [userName, setUserName] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const supabase = supabaseClient();
 
   const handlePasswordChange = (password: any) => {
     // i want it to add all the characters to the array to form newPassword
@@ -44,21 +51,53 @@ const Page = (props: Props) => {
     }
   };
 
-  useEffect(() => {
-    console.log(newPassword);
-  }, [newPassword]);
-
   const onSubmit = (e: any) => {
     e.preventDefault();
     const passwordResults = comparePasswords();
-    if (passwordResults) {
+    if (passwordResults && newPassword !== '') {
       setIsPasswordChanged(false);
-      toast.success('Details updated');
-    } else {
-      toast.error('Details not updated');
-      return;
+      const updatePassword = async () => {
+        const { data, error } = await supabase.auth.updateUser({
+          password: 'new password',
+        });
+        if (error) {
+          toast.error('Password not updated');
+        } else {
+          toast.success('Password updated');
+        }
+      };
+      updatePassword();
     }
+    const updateDetails = async () => {
+      const { data, error } = await supabase.auth.updateUser({
+        email: emailAddress,
+        data: {
+          name: `${firstName} ${lastName}`,
+          username: userName,
+          profilePic: '/profile/profile-pic-placeholder.png',
+        },
+      });
+      if (error) {
+        toast.error('Details not updated');
+        console.log('error', error);
+      } else {
+        console.log('data', data);
+        toast.success('Details updated');
+      }
+    };
+    updateDetails();
   };
+
+  useEffect(() => {
+    setFirstName(state?.user?.user_metadata?.name.split(' ')[0]);
+    setLastName(state?.user?.user_metadata?.name.split(' ')[1]);
+    setEmailAddress(state?.user?.email);
+    setUserName(state?.user?.email.split('@')[0]);
+  }, [
+    state?.user?.user_metadata?.name,
+    state?.user?.email,
+    state?.user?.user_metadata?.username,
+  ]);
 
   return (
     <main className="bg-[#F7F1EE] min-h-[80vh] relative flex flex-col">
@@ -78,9 +117,11 @@ const Page = (props: Props) => {
               />
             </div>
             <h4 className="font-bold mx-auto my-4 tracking-widest uppercase">
-              First Last Name
+              {state?.user?.user_metadata?.name}
             </h4>
-            <button className="bg-[#172544] py-2 px-4 mx-auto w-fit text-white rounded-3xl">
+            <button
+              type="button"
+              className="bg-[#172544] py-2 px-4 mx-auto w-fit text-white rounded-3xl">
               Upload a profile photo
             </button>
           </div>
@@ -98,7 +139,10 @@ const Page = (props: Props) => {
                   First Name
                 </label>
                 <input
-                  value={profileDummyData.name.split(' ')[0] || ''}
+                  value={firstName}
+                  onChange={(e) => {
+                    setFirstName(e.target.value);
+                  }}
                   className="w-full focus-visible:outline-none bg-transparent border-b-[1px] border-[#172544]"
                   type="text"
                 />
@@ -110,7 +154,10 @@ const Page = (props: Props) => {
                   Last Name
                 </label>
                 <input
-                  value={profileDummyData.name.split(' ')[1] || ''}
+                  value={lastName}
+                  onChange={(e) => {
+                    setLastName(e.target.value);
+                  }}
                   className="w-full focus-visible:outline-none bg-transparent border-b-[1px] border-[#172544]"
                   type="text"
                 />
@@ -124,7 +171,10 @@ const Page = (props: Props) => {
                 Email
               </label>
               <input
-                value={profileDummyData.email || ''}
+                value={emailAddress}
+                onChange={(e) => {
+                  setEmailAddress(e.target.value);
+                }}
                 className=" border-b-[1px] focus-visible:outline-none bg-transparent border-[#172544]"
                 type="email"
               />
@@ -138,7 +188,10 @@ const Page = (props: Props) => {
                   Username
                 </label>
                 <input
-                  value={profileDummyData.username || ''}
+                  value={userName}
+                  onChange={(e) => {
+                    setUserName(e.target.value);
+                  }}
                   className="w-full focus-visible:outline-none bg-transparent border-b-[1px] border-[#172544]"
                   type="text"
                 />

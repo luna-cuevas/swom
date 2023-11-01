@@ -8,6 +8,8 @@ import { StateProvider } from '@/context/StateContext';
 import CookieConsent from 'react-cookie-consent';
 import { Elements } from '@stripe/react-stripe-js';
 import { loadStripe } from '@stripe/stripe-js';
+import { useEffect, useState } from 'react';
+import { useRouter, usePathname } from 'next/navigation';
 
 // export const metadata: Metadata = {
 //   title: 'Create Next App',
@@ -19,6 +21,9 @@ export default function RootLayout({
 }: {
   children: React.ReactNode;
 }) {
+  const [loading, setLoading] = useState(true);
+  const pathname = usePathname();
+
   const stripePromise = loadStripe(
     process.env.NEXT_PUBLIC_STRIPE_PUBLIC_KEY as string
   );
@@ -27,6 +32,14 @@ export default function RootLayout({
     // passing the client secret obtained from the server
     clientSecret: process.env.NEXT_PUBLIC_STRIPE_SECRET_KEY,
   };
+
+  useEffect(() => {
+    setLoading(true);
+    const timer = setTimeout(() => {
+      setLoading(false);
+    }, 1000);
+    return () => clearTimeout(timer);
+  }, [pathname]);
 
   return (
     <html lang="en">
@@ -60,7 +73,11 @@ export default function RootLayout({
           <div className="m-auto w-full text-white text-center h-fit flex-none">
             We value your privacy <br />
             <span
-              style={{ fontSize: '16px', textAlign: 'left', color: 'white' }}>
+              style={{
+                fontSize: '16px',
+                textAlign: 'left',
+                color: 'white',
+              }}>
               We use cookies to enhance your experience on our website. By
               continuing to use our website, you consent to the use of cookies.
             </span>
@@ -71,10 +88,30 @@ export default function RootLayout({
           // options={options}
         >
           <body className="relative">
-            <Navigation />
-            {children}
-            <Footer />
-            <Script src="https://player.vimeo.com/api/player.js"></Script>
+            {loading ? (
+              <div
+                style={{
+                  position: 'fixed',
+                  top: 0,
+                  left: 0,
+                  width: '100%',
+                  height: '100%',
+                  backgroundColor: 'rgba(255, 255, 255, 0.8)',
+                  display: 'flex',
+                  justifyContent: 'center',
+                  alignItems: 'center',
+                  zIndex: 1000, // Adjust as needed
+                }}>
+                Loading...
+              </div>
+            ) : (
+              <>
+                <Navigation />
+                {children}
+                <Footer />
+                <Script src="https://player.vimeo.com/api/player.js"></Script>
+              </>
+            )}
           </body>
         </Elements>
       </StateProvider>

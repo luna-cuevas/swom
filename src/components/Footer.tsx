@@ -25,14 +25,19 @@ const Footer = (props: Props) => {
               'invert(98%) sepia(3%) saturate(2%) hue-rotate(304deg) brightness(105%) contrast(100%)',
           }}
           className="relative flex my-auto h-1/2 w-1/3 ">
-          <Image src="/footer-logo.jpg" alt="logo" fill objectFit="contain" />
+          <Image
+            src="/footer-logo.jpg"
+            alt="logo"
+            fill
+            className="object-contain"
+          />
         </div>
         <div className=" my-auto border-l-2 px-4 border-white">
           <ul className="text-[#F4ECE8] gap-1 flex flex-col font-extralight">
-            <Link href="/">What is Swom</Link>
-            <Link href="/">Become a member</Link>
-            <Link href="/">How it works</Link>
-            <Link href="/">About us</Link>
+            <Link href="/about-us">What is Swom</Link>
+            <Link href="/become-member">Become a member</Link>
+            <Link href="/how-it-works">How it works</Link>
+            <Link href="/about-us">About us</Link>
             <Link href="/terms-conditions">Terms & Conditions</Link>
             <Link href="/privacy-policy">Privacy Policy</Link>
           </ul>

@@ -102,8 +102,7 @@ const Page = (props: Props) => {
               src="/homepage/hero-image-6.png"
               alt="cto image"
               fill
-              objectFit="cover"
-              className="w-full h-full"
+              className="w-full h-full object-cover"
             />
             <div className="absolute inset-0 gradient-mask"></div>
           </div>
@@ -112,9 +111,8 @@ const Page = (props: Props) => {
         <div className="md:w-1/3 p-4  m-auto">
           <div className="relative justify-center m-auto w-1/2 h-[30px] flex ">
             <Image
-              className="m-auto"
+              className="m-auto object-contain"
               src="/swom-logo.jpg"
-              objectFit="contain"
               alt="swom logo"
               fill></Image>
           </div>
@@ -191,7 +189,7 @@ const Page = (props: Props) => {
             <div className="relative h-[40vh] md:h-full row-span-3">
               <Image
                 src="/homepage/bottom-1.jpg"
-                objectFit="cover"
+                className="object-cover"
                 alt="bottom image"
                 fill></Image>
             </div>
@@ -201,14 +199,14 @@ const Page = (props: Props) => {
             <div className="relative h-[40vh] sm:h-auto row-span-2">
               <Image
                 src="/homepage/bottom-2.jpg"
-                objectFit="cover"
+                className="object-cover"
                 alt="bottom image"
                 fill></Image>
             </div>
             <div className="relative h-[40vh] md:h-auto row-span-2">
               <Image
                 src="/homepage/bottom-3.jpg"
-                objectFit="cover"
+                className="object-cover"
                 alt="bottom image"
                 fill></Image>
             </div>
@@ -224,7 +222,7 @@ const Page = (props: Props) => {
             <div className="relative h-[40vh] md:h-auto  row-span-2">
               <Image
                 src="/homepage/bottom-4.jpg"
-                objectFit="cover"
+                className="object-cover"
                 alt="bottom image"
                 fill></Image>
             </div>
@@ -232,7 +230,7 @@ const Page = (props: Props) => {
             <div className="relative h-[40vh] md:h-auto  row-span-2">
               <Image
                 src="/homepage/bottom-5.jpg"
-                objectFit="cover"
+                className="object-cover"
                 alt="bottom image"
                 fill></Image>
             </div>
@@ -254,6 +252,7 @@ const Page = (props: Props) => {
             <Image
               src="/homepage/bottom-logo.png"
               objectFit="contain"
+              className="object-contain"
               alt="bottom image"
               fill></Image>
           </div>

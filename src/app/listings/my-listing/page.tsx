@@ -4,7 +4,7 @@ import DropZone from '@/components/DropZone';
 import GoogleMapComponent from '@/components/GoogleMapComponent';
 import { useStateContext } from '@/context/StateContext';
 import Image from 'next/image';
-import React, { useCallback, useEffect, useRef, useState } from 'react';
+import React, { use, useCallback, useEffect, useRef, useState } from 'react';
 import { set, useForm, Controller } from 'react-hook-form';
 import { supabaseClient } from '@/utils/supabaseClient';
 import ProfilePicDropZone from '@/components/ProfilePicDropZone';
@@ -14,6 +14,7 @@ type Props = {};
 
 const Page = (props: Props) => {
   const [editUserInfo, setEditUserInfo] = useState(false);
+  const [name, setName] = useState('');
   const [userName, setUserName] = useState('');
   const [profession, setProfession] = useState('');
   const [age, setAge] = useState('');
@@ -39,6 +40,7 @@ const Page = (props: Props) => {
     defaultValues: {
       userInfo: {
         name: '',
+        userName: '',
         age: '',
         profession: '',
         aboutYou: '',
@@ -117,6 +119,15 @@ const Page = (props: Props) => {
     console.log(watch('homeInfo.whereIsIt'));
   }, [whereIsIt]);
 
+  useEffect(() => {
+    if (state.user) {
+      setName(state.user.user_metadata.name);
+      setUserName(state.user.email);
+      setValue('userInfo.name', state.user.user_metadata.name);
+      setValue('userInfo.userName', state.user.email);
+    }
+  }, [state?.user]);
+
   const uploadImage = async (imageFile: any, bucket: any) => {
     return supabase.storage
       .from(bucket) // Specify the folder name here
@@ -181,9 +192,27 @@ const Page = (props: Props) => {
       }
     }
 
-    // data.profileImage = profileImage;
-    // data.imageFiles = imageFiles;
-    console.log(data);
+    // if no errors uploading images, then update the user info on the database
+    const { data: user, error: userError } = await supabase
+      .from('listings')
+      .upsert(
+        {
+          user_id: state.user.id,
+          userInfo: data.userInfo,
+          homeInfo: data.homeInfo,
+          city: data.city,
+          amenities: data.amenities,
+        },
+        {
+          ignoreDuplicates: false,
+        }
+      );
+
+    if (userError) {
+      console.error('Error updating user info:', userError);
+    } else {
+      console.log('User info updated successfully!', user);
+    }
   };
 
   const onError = (errors: any, e: any) => {
@@ -238,7 +267,7 @@ const Page = (props: Props) => {
                   className="bg-transparent border-b border-[#172544] focus:outline-none"
                   placeholder="Name"
                   {...register('userInfo.name')}
-                  onChange={(e) => setUserName(e.target.value)}
+                  onChange={(e) => setName(e.target.value)}
                 />
                 <input
                   className="bg-transparent border-b border-[#172544] focus:outline-none"
@@ -292,9 +321,7 @@ const Page = (props: Props) => {
                 </div>
               </div>
 
-              <h2 className="font-serif text-4xl ">
-                {userName ? userName : 'Name'}
-              </h2>
+              <h2 className="font-serif text-4xl ">{name ? name : 'Name'}</h2>
               <p className="font-sans my-1 font-bold uppercase tracking-[0.1rem]">
                 {profession ? profession : 'Profession'}
               </p>
@@ -311,13 +338,13 @@ const Page = (props: Props) => {
             <h3>Profession</h3>
           </div>
           <div className="grid py-2 text-center grid-cols-5 border-b border-[#172544]">
-            <h3>{userName ? userName.split(' ')[0] : 'First Name'}</h3>
-            <h3>{userName ? userName.split(' ')[1] : 'Last Name'}</h3>
-            <h3>XX</h3>
+            <h3>{name ? name.split(' ')[0] : 'First Name'}</h3>
+            <h3>{name ? name.split(' ')[1] : 'Last Name'}</h3>
+            <h3>{userName ? userName.split('@')[0] : 'User Name'}</h3>
             <h3>
-              {age ? age : 'Age'} {age ? 'years' : ''}
+              {age ? age : ''} {age ? 'years' : ''}
             </h3>
-            <h3>{profession ? profession : 'Profession'}</h3>
+            <h3>{profession ? profession : ''}</h3>
           </div>
           <div className="flex justify-between py-2 border-b border-[#172544]">
             <h2>About you</h2>
@@ -406,7 +433,7 @@ const Page = (props: Props) => {
 
       <div className="w-full flex flex-col px-8 md:px-16 m-auto">
         <div className="flex my-4 flex-col md:flex-row border-y border-[#172544] py-4 justify-between">
-          <h2 className="text-xl">Cartagena, Colombia</h2>
+          <h2 className="text-xl">{watch('city') ? getValues('city') : ''}</h2>
           <div className="flex gap-2 justify-evenly">
             <div className="relative w-[20px] my-auto h-[20px]">
               <Image
@@ -418,7 +445,8 @@ const Page = (props: Props) => {
               />
             </div>
             <h2 className="text-xl my-auto font-sans">
-              Listing <span className="font-bold">No. XXX</span>
+              Listing{' '}
+              <span className="font-bold">{state?.user?.id?.slice(-6)}</span>
             </h2>
             <button
               className="ml-4 bg-[#FE8217] my-auto py-2 px-4 text-white rounded-xl"
@@ -524,7 +552,9 @@ const Page = (props: Props) => {
             ref(e);
             aboutYourHomeRef.current = e;
           }}
-          // i want the rows to only be present when no input is present in the textarea and no rows when there is input
+          onChange={(e) => {
+            setValue('homeInfo.aboutYourHome', e.target.value);
+          }}
           className="w-full h-fit max-h-[300px] my-4 p-2 bg-transparent outline-none border-b border-[#c5c5c5] resize-none"
           placeholder="Villa linda is dolor sit amet, consectetuer adipiscing elit, sed diam
           nonummy nibh euismod tincidunt ut laoreet dolore magna aliquam erat

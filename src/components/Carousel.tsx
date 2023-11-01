@@ -34,7 +34,6 @@ const CarouselPage = (props: Props) => {
     } else {
       setUser(null);
     }
-    console.log('user', user);
   }, [stateSession]);
 
   const prevSlide = () => {
@@ -125,7 +124,7 @@ const CarouselPage = (props: Props) => {
           <div
             key={index}
             onClick={() => handleImageSelection(index)} // Add click handler
-            className={`h-full w-full relative ${
+            className={`h-full w-full overflow-hidden relative ${
               props.picturesPerSlide != undefined &&
               Math.floor(index / props.picturesPerSlide) === currentSlide
                 ? 'block'
@@ -136,7 +135,7 @@ const CarouselPage = (props: Props) => {
                 ? 'translate-x-0'
                 : 'translate-x-full'
             }${
-              props.selectedImage === index ? ' border-2 border-blue-500' : ''
+              props.selectedImage === index ? ' border-4 border-[#7F8119]' : ''
             }`}>
             <div className="w-full h-full z-[50] m-auto top-0  absolute ">
               {image.listingNum && (
