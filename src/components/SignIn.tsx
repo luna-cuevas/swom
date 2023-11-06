@@ -138,8 +138,8 @@ const SignIn = (props: Props) => {
               onClick={() => {
                 props.setSignInActive(false);
               }}
-              className="font-sans text-sm text-blue-gray-300"
-              href="/sign-up">
+              className="font-sans text-sm text-blue-300"
+              href="/become-member">
               Sign up
             </Link>
           </div>

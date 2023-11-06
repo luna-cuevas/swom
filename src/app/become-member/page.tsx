@@ -40,12 +40,14 @@ const Page = (props: Props) => {
           </div>
         </div>
       </div>
-      <p className="my-14  m-auto px-8 md:ml-[10vw] justify-center flex md:w-[40%]">
+      <p className="my-14   m-auto px-8 md:ml-[10vw] justify-center  md:w-[40%]">
         SWOM&apos;s selection process is rigorous and highly selective. All
         applicants must pass a screening process that verifies their
         trustworthiness, reveals their familiarity with family and friends, and
-        assesses how well they fit into the design values of the community. Read
-        our terms and conditions
+        assesses how well they fit into the design values of the community.{' '}
+        <Link className="text-blue-500 w-fit" href={'/terms-conditions'}>
+          Read our terms and conditions.
+        </Link>
       </p>
       <div className=" hidden md:block h-[45vh]  w-1/4 z-10 right-0 bottom-0 absolute">
         <Image

@@ -121,10 +121,10 @@ const Page = (props: Props) => {
 
   useEffect(() => {
     if (state.user) {
-      setName(state.user.user_metadata.name);
-      setUserName(state.user.email);
-      setValue('userInfo.name', state.user.user_metadata.name);
-      setValue('userInfo.userName', state.user.email);
+      setName(state?.user?.user_metadata.name);
+      setUserName(state?.user?.email);
+      setValue('userInfo.name', state?.user?.user_metadata.name);
+      setValue('userInfo.userName', state?.user?.email);
     }
   }, [state?.user]);
 
@@ -664,16 +664,23 @@ const Page = (props: Props) => {
             </select>
           </div>
         </div>
-        <div className="flex my-4  border-y border-[#172544] py-4 justify-between">
-          <h2 className="text-xl  font-serif">Where is it?</h2>
+        <div className="flex my-4  border-y border-[#172544] py-4 flex-col">
+          <h2 className="text-xl italic font-serif">Where is it? </h2>
+          <p className="font-serif">
+            {' '}
+            Write down the exact address so google can identify the location of
+            your property.
+          </p>
         </div>
 
-        <div className={`w-full h-[30vh] my-4 rounded-xl`}>
+        <div className={`w-full h-[30vh] my-4 mb-8 rounded-xl`}>
           <GoogleMapComponent setWhereIsIt={setWhereIsIt} />
         </div>
 
         <div className="flex my-4  border-y border-[#172544] py-4 justify-between">
-          <h2 className="text-xl  font-serif">Amenities and advantages</h2>
+          <h2 className="text-xl italic font-serif">
+            Amenities and advantages
+          </h2>
         </div>
 
         <div className="flex flex-wrap pb-8">
