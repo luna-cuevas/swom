@@ -84,12 +84,18 @@ const Navigation = (props: Props) => {
             <Link className="m-auto" href="/membership">
               MEMBERSHIP
             </Link>
-            {/* <Link className="m-auto" href="/listings">
+            <Link className="m-auto" href="/listings">
               LISTINGS
-            </Link> */}
+            </Link>
             <Link className="m-auto" href="/listings/my-listing">
               MY LISTING
             </Link>
+            {state.user?.email ===
+              ('s.cuevas14@gmail.com' || 'anamariagomezc@gmail.com') && (
+              <Link className="m-auto" href="/listings/admin-dashboard">
+                APPROVAL DASHBOARD
+              </Link>
+            )}
           </>
         )}
         <Link href="/about-us">US</Link>
@@ -191,12 +197,18 @@ const Navigation = (props: Props) => {
             <Link className="m-auto" href="/membership">
               MEMBERSHIP
             </Link>
-            {/* <Link className="m-auto" href="/listings">
+            <Link className="m-auto" href="/listings">
               LISTINGS
-            </Link> */}
+            </Link>
             <Link className="m-auto" href="/listings/my-listing">
               MY LISTING
             </Link>
+            {state.user?.email ===
+              ('s.cuevas14@gmail.com' || 'anamariagomezc@gmail.com') && (
+              <Link className="m-auto" href="/listings/admin-dashboard">
+                APPROVAL DASHBOARD
+              </Link>
+            )}
           </>
         )}
         <Link className="m-auto" href="/about-us">

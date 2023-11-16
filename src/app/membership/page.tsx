@@ -9,7 +9,7 @@ const Page = (props: Props) => {
     <main className="flex relative min-h-screen flex-col h-[120vh] sm:h-[100vh] md:h-fit overflow-hidden bg-[#17212D]">
       <div className="relative h-screen w-full">
         <Image
-          src="/membership/membership.webp"
+          src="/membership/membership.png"
           alt="hero"
           fill
           objectPosition="bottom"
