@@ -5,6 +5,7 @@ import Autocomplete from 'react-google-autocomplete';
 type Props = {
   setWhereIsIt?: React.Dispatch<React.SetStateAction<string>>;
   city?: string;
+  noSearch?: boolean;
 };
 
 export default function GoogleMapComponent(props: Props) {
@@ -21,10 +22,11 @@ export default function GoogleMapComponent(props: Props) {
   };
 
   useEffect(() => {
-    if (isLoaded && city) {
+    console.log('city', props.city);
+    if (isLoaded && (city || props.city)) {
       // Get the latitude and longitude of the city
       const geocoder = new window.google.maps.Geocoder();
-      geocoder.geocode({ address: city }, (results, status) => {
+      geocoder.geocode({ address: city || props.city }, (results, status) => {
         if (status === 'OK' && results != null) {
           const location = results[0].geometry.location;
           const lat = location.lat();
@@ -37,7 +39,7 @@ export default function GoogleMapComponent(props: Props) {
         props.setWhereIsIt(city);
       }
     }
-  }, [isLoaded, city]);
+  }, [city, props.city, isLoaded]);
 
   if (!isLoaded) {
     return <div>Loading...</div>;
@@ -45,13 +47,15 @@ export default function GoogleMapComponent(props: Props) {
 
   return (
     <>
-      <Autocomplete
-        className="w-full rounded-xl p-2 outline-none mb-2"
-        apiKey={process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY ?? ''}
-        onPlaceSelected={(place) => {
-          setCity(place.formatted_address ?? '');
-        }}
-      />
+      {props.noSearch ? null : (
+        <Autocomplete
+          className="w-full rounded-xl p-2 outline-none mb-2"
+          apiKey={process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY ?? ''}
+          onPlaceSelected={(place) => {
+            setCity(place.formatted_address ?? '');
+          }}
+        />
+      )}
       <GoogleMap
         mapContainerStyle={mapContainerStyle}
         zoom={10} // Adjust the initial zoom level as needed

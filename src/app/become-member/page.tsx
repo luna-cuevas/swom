@@ -5,6 +5,10 @@ import Link from 'next/link';
 import React, { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import generatePassword from '@/utils/generatePassword';
+import DropZone from '@/components/DropZone';
+import BecomeMemberDropzone from '@/components/BecomeMemberDropzone';
+import { ToastContainer, toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 type Props = {};
 
@@ -17,6 +21,7 @@ const Page = (props: Props) => {
   const [submitted, setSubmitted] = useState(false);
   const supabase = supabaseClient();
   const temporaryPassword = generatePassword();
+  const [imageFiles, setImageFiles] = useState<File[]>([]);
 
   const {
     register,
@@ -31,11 +36,14 @@ const Page = (props: Props) => {
         email: '',
         phone: '',
         profession: '',
+        about_me: '',
         children: '',
         recommended: '',
       },
       homeInfo: {
+        title: '',
         property: '',
+        description: '',
         locatedIn: '',
         bathrooms: '',
         area: '',
@@ -79,6 +87,11 @@ const Page = (props: Props) => {
   });
 
   const onSubmit = async (data: any) => {
+    if (imageFiles.length === 0) {
+      toast.error('Please upload at least one image');
+      return;
+    }
+
     const { data: userData, error } = await supabase.auth.signUp({
       email: data.userInfo.email,
       password: temporaryPassword,
@@ -98,11 +111,54 @@ const Page = (props: Props) => {
       console.log('userData', userData);
 
       if (userData.user) {
+        const uploadImageToCloudinary = async (imageFile: any) => {
+          try {
+            const formData = new FormData();
+            formData.append('file', imageFile);
+            formData.append('upload_preset', 'zttdzjqk');
+            formData.append('folder', `${userData.user?.id}/listingImages}`);
+
+            const response = await fetch(
+              'https://api.cloudinary.com/v1_1/dxfz8k7g8/image/upload',
+              {
+                method: 'POST',
+                body: formData,
+              }
+            );
+
+            if (!response.ok) {
+              throw new Error('Failed to upload image to Cloudinary');
+            }
+
+            const result = await response.json();
+            console.log('Uploaded image to Cloudinary:', result);
+            return result.secure_url; // Cloudinary provides a secure URL for the uploaded image
+          } catch (error) {
+            console.error('Error uploading image to Cloudinary:', error);
+            throw error;
+          }
+        };
+
+        if (imageFiles && imageFiles.length > 0) {
+          // Upload images to the listingImages bucket
+          const uploadPromises = imageFiles.map((imageFile) =>
+            uploadImageToCloudinary(imageFile)
+          );
+          const results = await Promise.all(uploadPromises);
+
+          if (results.some((result) => result.error)) {
+            console.error('Error uploading listing images:', results);
+          } else {
+            data.homeInfo.listingImages = results;
+            console.log('results', results);
+          }
+        }
+
         const { data: userListing, error: userError } = await supabase
           .from('needs_approval')
           .upsert(
             {
-              user_id: userData.user.id,
+              user_id: userData.user?.id,
               userInfo: data.userInfo,
               homeInfo: data.homeInfo,
               amenities: data.amenities,
@@ -124,7 +180,13 @@ const Page = (props: Props) => {
     }
   };
 
-  const onError = (errors: any, e: any) => console.log(errors, e);
+  const onError = (errors: any, e: any) => {
+    console.log(errors, e);
+
+    if (errors) {
+      toast.error('Please fill out all fields');
+    }
+  };
 
   return (
     <main className="md:min-h-screen relative flex flex-col">
@@ -188,7 +250,9 @@ const Page = (props: Props) => {
             <div className="m-auto flex-col w-2/3 flex">
               <label htmlFor="name">Name</label>
               <input
-                {...register('userInfo.name')}
+                {...register('userInfo.name', {
+                  required: 'Please enter your name',
+                })}
                 className="w-full bg-transparent border-b border-[#172544] focus:outline-none"
                 type="text"
                 id="name"
@@ -197,7 +261,9 @@ const Page = (props: Props) => {
             <div className="m-auto flex-col w-2/3 flex">
               <label htmlFor="email">Email</label>
               <input
-                {...register('userInfo.email')}
+                {...register('userInfo.email', {
+                  required: 'Please enter your email',
+                })}
                 className="w-full bg-transparent border-b border-[#172544] focus:outline-none"
                 type="email"
                 id="email"
@@ -206,7 +272,9 @@ const Page = (props: Props) => {
             <div className="m-auto flex-col w-2/3 flex">
               <label htmlFor="phone">Phone</label>
               <input
-                {...register('userInfo.phone')}
+                {...register('userInfo.phone', {
+                  required: 'Please enter your phone number',
+                })}
                 className="w-full bg-transparent border-b border-[#172544] focus:outline-none"
                 type="tel"
                 id="phone"
@@ -215,7 +283,9 @@ const Page = (props: Props) => {
             <div className="m-auto flex-col w-2/3 flex">
               <label htmlFor="dob">What is your date of birth?</label>
               <input
-                {...register('userInfo.dob')}
+                {...register('userInfo.dob', {
+                  required: 'Please enter your date of birth',
+                })}
                 className="w-full bg-transparent border-b border-[#172544] focus:outline-none"
                 type="date"
                 id="dob"
@@ -224,10 +294,23 @@ const Page = (props: Props) => {
             <div className="m-auto flex-col w-2/3 flex">
               <label htmlFor="profession">What do you do for a living?</label>
               <input
-                {...register('userInfo.profession')}
+                {...register('userInfo.profession', {
+                  required: 'Please enter your profession',
+                })}
                 className="w-full bg-transparent border-b border-[#172544] focus:outline-none"
                 type="input"
                 id="profession"
+              />
+            </div>
+            <div className="m-auto flex-col w-2/3 flex">
+              <label htmlFor="about_me">Tell us more about yourself.</label>
+              <input
+                {...register('userInfo.about_me', {
+                  required: 'Please tell us more about yourself.',
+                })}
+                className="w-full bg-transparent border-b border-[#172544] focus:outline-none"
+                type="input"
+                id="about_me"
               />
             </div>
             <div className="m-auto flex-col w-2/3 flex">
@@ -266,7 +349,10 @@ const Page = (props: Props) => {
                 Name of the person who invited you to SWOM?
               </label>
               <input
-                {...register('userInfo.recommended')}
+                {...register('userInfo.recommended', {
+                  required:
+                    'Please enter the name of the person who invited you',
+                })}
                 className="w-full bg-transparent border-b border-[#172544] focus:outline-none"
                 type="text"
                 id="recommended"
@@ -357,7 +443,9 @@ const Page = (props: Props) => {
                 </label>
                 <textarea
                   id="address"
-                  {...register('homeInfo.address')}
+                  {...register('homeInfo.address', {
+                    required: 'Please enter the address of the property',
+                  })}
                   className="w-full bg-transparent border-b border-[#172544] focus:outline-none"
                 />
               </div>
@@ -370,7 +458,7 @@ const Page = (props: Props) => {
                       type="radio"
                       id="condominium"
                       value="condominium"
-                      {...register('homeInfo.locatedIn')}
+                      {...register('homeInfo.locatedIn', {})}
                     />
                     <label htmlFor="condominium">a condominium</label>
                   </div>
@@ -410,7 +498,9 @@ const Page = (props: Props) => {
                 <label htmlFor="">How many people does it sleep?</label>
                 <select
                   className="bg-transparent focus:outline-none  rounded-xl border w-fit px-2 border-[#172544]"
-                  {...register('homeInfo.howManySleep')}
+                  {...register('homeInfo.howManySleep', {
+                    required: 'Please select how many people it sleeps',
+                  })}
                   id="">
                   <option value="1">1</option>
                   <option value="2">2</option>
@@ -425,7 +515,9 @@ const Page = (props: Props) => {
                 <label htmlFor="">How many bathrooms?</label>
                 <select
                   className="bg-transparent focus:outline-none  rounded-xl border w-fit px-2 border-[#172544]"
-                  {...register('homeInfo.bathrooms')}
+                  {...register('homeInfo.bathrooms', {
+                    required: 'Please select how many bathrooms',
+                  })}
                   id="">
                   <option value="1">1</option>
                   <option value="2">2</option>
@@ -439,7 +531,10 @@ const Page = (props: Props) => {
                 </label>
                 <select
                   className="bg-transparent focus:outline-none  rounded-xl border w-fit px-2 border-[#172544]"
-                  {...register('homeInfo.mainOrSecond')}
+                  {...register('homeInfo.mainOrSecond', {
+                    required:
+                      'Please select if this is your main or second home',
+                  })}
                   id="">
                   <option value="main">Main</option>
                   <option value="second">Second</option>
@@ -449,7 +544,9 @@ const Page = (props: Props) => {
                 <label htmlFor="">Size in square meters.</label>
                 <select
                   className="bg-transparent focus:outline-none  rounded-xl border w-fit px-2 border-[#172544]"
-                  {...register('homeInfo.area')}
+                  {...register('homeInfo.area', {
+                    required: 'Please select the size of your home',
+                  })}
                   id="">
                   <option value="60-100">60 - 100 m2</option>
                   <option value="100-150">100 - 150 m2</option>
@@ -463,6 +560,32 @@ const Page = (props: Props) => {
                   <option value="500-550">500 - 550 m2</option>
                   <option value="550-600">550 - 600 m2</option>
                 </select>
+              </div>
+              <div>
+                <label htmlFor="">Upload some photos.</label>
+                <BecomeMemberDropzone
+                  imageFiles={imageFiles}
+                  setImageFiles={setImageFiles}
+                />
+              </div>
+              <div>
+                <label htmlFor="">Give your property a title.</label>
+                <input
+                  {...register('homeInfo.title', {
+                    required: 'Please give your listing a title.',
+                  })}
+                  className="w-full mb-4 bg-transparent border-b border-[#172544] focus:outline-none"
+                  type="text"
+                  id="title"
+                />
+                <label htmlFor="">Write a description of the property.</label>
+                <textarea
+                  id="description"
+                  {...register('homeInfo.description', {
+                    required: 'Please enter a description of your property',
+                  })}
+                  className="w-full bg-transparent border-b border-[#172544] focus:outline-none"
+                />
               </div>
             </div>
             <div className="flex w-2/3 m-auto flex-wrap pb-8">
@@ -834,6 +957,18 @@ const Page = (props: Props) => {
           <p className="text-lg">Someone will be in touch with you shortly.</p>
         </div>
       )}
+      <ToastContainer
+        position="bottom-right"
+        autoClose={5000}
+        hideProgressBar={false}
+        newestOnTop={false}
+        closeOnClick
+        rtl={false}
+        pauseOnFocusLoss
+        draggable
+        pauseOnHover
+        theme="light"
+      />
     </main>
   );
 };

@@ -11,6 +11,7 @@ type Props = {
     src: string;
     listingNum?: string;
   }[];
+  listingPage?: boolean;
   picturesPerSlide?: number | 1;
   overlay?: boolean;
   contain?: boolean;
@@ -78,7 +79,7 @@ const CarouselPage = (props: Props) => {
   };
 
   return (
-    <div className="relative h-full">
+    <div className="relative h-full w-full">
       <button
         type="button"
         onClick={() => prevSlide()}
@@ -135,10 +136,17 @@ const CarouselPage = (props: Props) => {
                 ? 'translate-x-0'
                 : 'translate-x-full'
             }${
-              props.selectedImage === index ? ' border-4 border-[#7F8119]' : ''
+              props.selectedImage === index
+                ? ' rounded-2xl border-4 border-[#7F8119]'
+                : ''
             }`}>
             <div className="w-full h-full z-[50] m-auto top-0  absolute ">
-              {image.listingNum && (
+              {props.listingPage && (
+                <div className=" absolute bg-white rounded-b-xl px-4 text-xs right-4">
+                  Listing No. {image.listingNum}
+                </div>
+              )}
+              {image.listingNum && !props.listingPage && (
                 <div className="absolute  top-[10%] -right-4 text-md ">
                   <div className="absolute  inset-0 transform skew-x-[10deg]  bg-[#f4ece7b3]" />
                   {user == null ? (

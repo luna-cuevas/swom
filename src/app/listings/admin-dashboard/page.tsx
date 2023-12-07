@@ -2,6 +2,7 @@
 import React, { useState, useEffect } from 'react';
 
 import { supabaseClient } from '@/utils/supabaseClient';
+import Image from 'next/image';
 
 interface Listing {
   user_id: number;
@@ -85,6 +86,10 @@ const Dashboard: React.FC = () => {
   };
 
   const handleApprove = async (listingObj: any) => {
+    const dob = new Date(listingObj.userInfo.dob);
+    const today = new Date();
+    const age = today.getFullYear() - dob.getFullYear();
+
     try {
       // Move the listing to the 'listings' table
       const { data, error } = await supabase
@@ -106,6 +111,23 @@ const Dashboard: React.FC = () => {
             city: listingObj.city,
             amenities: listingObj.amenities,
           });
+
+        const { data: userInfo, error: userError } = await supabase
+          .from('appUsers')
+          .insert({
+            id: listingObj.user_id,
+            name: listingObj.userInfo.name,
+            profession: listingObj.userInfo.profession,
+            age: age,
+          });
+
+        if (userError) {
+          console.error(
+            'Error sending user to appUser table:',
+            userError.message
+          );
+        }
+
         if (error) {
           console.error('Error approving listing:', error.message);
         } else {
@@ -190,11 +212,17 @@ const Dashboard: React.FC = () => {
                 <p className="mt-2 text-lg">Home Information:</p>
                 <ul className="">
                   {Object.entries(selectedListing.homeInfo).map(
-                    ([key, value]) => (
-                      <li key={key} className="capitalize">
-                        {key}: {value}
-                      </li>
-                    )
+                    ([key, value]) => {
+                      if (key !== 'listingImages') {
+                        return (
+                          <li
+                            key={key}
+                            className={key !== 'email' ? 'capitalize' : ''}>
+                            {key}: {value}
+                          </li>
+                        );
+                      }
+                    }
                   )}
                 </ul>
               </div>
@@ -225,6 +253,27 @@ const Dashboard: React.FC = () => {
                     )
                   )}
                 </ul>
+              </div>
+              <div className="flex gap-2 w-full my-4">
+                {Object.entries(selectedListing.homeInfo).map(
+                  ([key, value]) => {
+                    if (key === 'listingImages' && Array.isArray(value)) {
+                      return value.map((image) => (
+                        <div
+                          key={image}
+                          className="flex relative h-[200px] w-1/4 object-cover">
+                          <Image
+                            src={image}
+                            alt="listing image"
+                            fill
+                            objectFit="cover"
+                          />
+                        </div>
+                      ));
+                    }
+                    return null; // or any other fallback JSX if needed
+                  }
+                )}
               </div>
             </div>
             <button

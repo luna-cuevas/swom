@@ -27,6 +27,7 @@ const Page = (props: Props) => {
   const [selectedImage, setSelectedImage] = useState(0); // Track selected image
   const aboutYourHomeRef = useRef<HTMLTextAreaElement | null>(null);
   const [whereIsIt, setWhereIsIt] = useState('');
+  const [listings, setListings] = useState<any>([]);
 
   const {
     register,
@@ -96,6 +97,25 @@ const Page = (props: Props) => {
 
   const { ref, ...rest } = register('homeInfo.aboutYourHome');
 
+  const fetchListings = async () => {
+    try {
+      console.log('state.user.id', state.user.id);
+      const { data, error } = await supabase
+        .from('listings')
+        .select('*')
+        .eq('user_id', state.user.id);
+
+      if (error) {
+        throw error;
+      }
+
+      setListings(data);
+      console.log('listing', data);
+    } catch (error: any) {
+      console.error('Error fetching data:', error.message);
+    }
+  };
+
   useEffect(() => {
     const textarea = aboutYourHomeRef.current;
 
@@ -121,6 +141,7 @@ const Page = (props: Props) => {
 
   useEffect(() => {
     if (state.user) {
+      fetchListings();
       setName(state?.user?.user_metadata.name);
       setUserName(state?.user?.email);
       setValue('userInfo.name', state?.user?.user_metadata.name);

@@ -2,8 +2,10 @@
 import CarouselPage from '@/components/Carousel';
 import Image from 'next/image';
 import { usePathname, useRouter } from 'next/navigation';
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import GoogleMapComponent from '@/components/GoogleMapComponent';
+import { supabaseClient } from '../../../utils/supabaseClient';
+import cityData from '@/data/citiesDescriptions.json';
 
 type Props = {};
 
@@ -11,17 +13,76 @@ const Page = (props: Props) => {
   const pathName = usePathname();
   const slug = pathName.split('/listings/')[1];
   const [mapsActive, setMapsActive] = useState(true);
+  const [listings, setListings] = useState<any>([]);
+  const supabase = supabaseClient();
+  const [imageFiles, setImageFiles] = useState<any[]>([]);
+  const [selectedImage, setSelectedImage] = useState(0); // Track selected image
+
+  const fetchListings = async () => {
+    try {
+      // Replace 'listings' with your actual table name
+      const { data, error } = await supabase
+        .from('listings')
+        .select('*')
+        .eq('user_id', slug);
+
+      if (error) {
+        throw error;
+      }
+
+      const userInfo = data[0]?.userInfo;
+      const dob = new Date(userInfo?.dob);
+      const today = new Date();
+      const age =
+        today.getFullYear() -
+        dob.getFullYear() -
+        (today < new Date(today.getFullYear(), dob.getMonth(), dob.getDate())
+          ? 1
+          : 0);
+
+      console.log('dob', age);
+
+      const updatedData = data.map((item: any) => ({
+        ...item,
+        userInfo: {
+          ...item.userInfo,
+          age: age,
+        },
+      }));
+
+      setListings(updatedData);
+      setImageFiles(data[0]?.homeInfo?.listingImages);
+    } catch (error: any) {
+      console.error('Error fetching data:', error.message);
+    }
+  };
+
+  const checkCityDescription = (city: string) => {
+    const cityDescription = cityData.find(
+      (cityObj: any) => cityObj.city === city
+    );
+    return cityDescription?.description ?? 'No description available';
+  };
+
+  useEffect(() => {
+    fetchListings();
+  }, []);
+
+  console.log('listings', listings);
 
   return (
     <main className="px-[5%] py-[2%] bg-[#F7F1EE]">
       {/* title section */}
       <div className="m-auto border-y-[1px] py-4 border-[#172544] justify-between flex">
-        <h1 className="text-2xl font-thin">City, Country</h1>
-        <div className="relative w-[30px] h-[30px]">
+        <h1 className="text-2xl font-thin">
+          {listings[0]?.homeInfo?.title} <br />
+          <span className="font-bold"> {listings[0]?.homeInfo?.city}</span>
+        </h1>
+        <div className="relative w-[30px] flex align-middle my-auto h-[30px]">
           <Image
             fill
             objectFit="contain"
-            className="h-full"
+            className="h-full m-auto"
             src="/logo-icons.png"
             alt=""
           />
@@ -33,16 +94,22 @@ const Page = (props: Props) => {
         {/* User Info - Left Section */}
         <div className="w-[25%]  flex flex-col">
           <h2 className="font-sans mx-auto mb-8 font-light text-2xl border border-[#172544] py-2 px-8 rounded-xl w-fit">
-            Listing <span className="font-bold"> No. {slug}</span>
+            Listing <span className="font-bold"> No. {slug.slice(-5)}</span>
           </h2>
 
           <div className="mx-auto text-center">
             <div className="relative m-auto  h-[100px] w-[100px]">
               <Image fill src="/profile/profile-pic-placeholder.png" alt="" />
             </div>
-            <h3 className="text-xl">User Name</h3>
-            <p className="font-bold font-sans">Profession</p>
-            <p className="font-sans">Age</p>
+            <h3 className="text-xl">{listings[0]?.userInfo?.name}</h3>
+            <p className="font-bold font-sans">
+              {listings[0]?.userInfo?.profession}
+            </p>
+            <p className="font-sans">
+              {listings[0]?.userInfo?.age
+                ? `${listings[0]?.userInfo?.age} years old`
+                : ''}
+            </p>
             <button className="bg-[#E78426] hover:bg-[#e78326d8] text-[#fff]  my-2 px-3 py-1 rounded-xl">
               Contact me
             </button>
@@ -52,85 +119,72 @@ const Page = (props: Props) => {
             <h4 className="font-serif text-xl font-thin border-b border-[#172544] mb-2">
               About us
             </h4>
-            <p>
-              We are, lorem ipsum dolor sit amet, consectetuer Lorem ipsum dolor
-              sit amet, consectetuer adi- piscing elit, sed diam nonummy
-            </p>
+            <p>{listings[0]?.userInfo?.about_me}</p>
           </div>
 
-          <div className="my-2">
-            <h4 className="font-serif text-xl font-thin border-b border-[#172544] mb-2">
-              We want to go to
-            </h4>
-            <ul>
-              <li>City</li>
-              <li>City</li>
-              <li>City</li>
-            </ul>
-          </div>
+          {listings[0]?.userInfo?.citiesToGo && (
+            <div className="my-2">
+              <h4 className="font-serif text-xl font-thin border-b border-[#172544] mb-2">
+                We want to go to
+              </h4>
+              <ul>
+                <li>City</li>
+                <li>City</li>
+                <li>City</li>
+              </ul>
+            </div>
+          )}
 
           <div className="my-2">
             <h4 className="font-serif text-xl font-thin border-b border-[#172544] mb-2">
               Open to other destinations
             </h4>
-            <p>Yes</p>
+            <p>
+              {listings[0]?.userInfo?.openToOtherDestinations ? 'Yes' : 'No'}
+            </p>
           </div>
         </div>
 
         {/* Listing Info - Right Section */}
         <div className="w-2/3 flex flex-col">
-          <div className="flex flex-col  h-[40vh] w-full mx-auto">
-            <CarouselPage
-              images={[
-                { src: '/homepage/hero-image-1.png' },
-                { src: '/homepage/hero-image-2.png' },
-                { src: '/homepage/hero-image-3.png' },
-              ]}
-              picturesPerSlide={1}
+          <div className="flex flex-col relative h-[40vh] w-full mx-auto">
+            <Image
+              src={
+                imageFiles[selectedImage]
+                  ? imageFiles[selectedImage]
+                  : '/placeholder.png'
+              }
+              alt=""
+              className="rounded-3xl object-cover "
+              fill
+              objectPosition="center"
             />
           </div>
 
-          <div className="flex gap-4 my-4">
-            {[
-              '/homepage/hero-image-1.png',
-              '/homepage/hero-image-2.png',
-              '/homepage/hero-image-3.png',
-            ].map((image, id) => (
-              <div key={id} className="relative h-[200px] w-1/3">
-                <Image
-                  fill
-                  objectFit="cover"
-                  className="rounded-xl"
-                  src={image}
-                  alt=""
-                />
-              </div>
-            ))}
+          <div className="flex relative h-[30vh] gap-4 my-4">
+            {imageFiles.length > 0 && (
+              <CarouselPage
+                picturesPerSlide={3}
+                selectedImage={selectedImage}
+                setSelectedImage={setSelectedImage}
+                overlay={false}
+                contain={false}
+                images={imageFiles.map((file) => ({
+                  src: file.toString(),
+                }))}
+              />
+            )}
           </div>
 
           <div className="flex border-t border-[#172544]">
             <div className="w-1/2 mt-4">
               <h4>About the City</h4>
-              <p>
-                Monteria is beautiful, dolor sit amet, consectetuer adipiscing
-                elit, sed diam nonummy nibh euismod tin- cidunt ut laoreet
-                dolore magna aliquam erat volutpat. Ut wisi enim ad minim
-                veniam, quis nostrud exerci tation ullamcorper suscipit lobortis
-                nisl ut aliquip ex ea commodo consequat. Duis autem vel eum
-                iriure dolor in hen
-              </p>
+              <p>{checkCityDescription(listings[0]?.homeInfo?.city)}</p>
             </div>
             <div className=" h-[80%] mx-6 my-auto border border-[#172544]" />
             <div className="w-1/2 mt-4">
               <h4>About my home</h4>
-              <p>
-                This swom is, dolor sit amet, consectetuer adipiscing elit, sed
-                diam nonummy nibh euismod tincidunt ut laoreet dolore magna
-                aliquam erat volutpat. Ut wisi enim ad minim veniam, quis
-                nostrud exerci tation ullamcorper suscipit lobortis nisl ut
-                aliquip ex ea commodo consequat. Duis autem vel eum iriure dolor
-                in hen
-              </p>
+              <p>{listings[0]?.homeInfo?.description}</p>
             </div>
           </div>
         </div>
@@ -149,7 +203,9 @@ const Page = (props: Props) => {
               />
             </div>
             <h3 className="font-bold">Type of property</h3>
-            <p>Apartment</p>
+            <p className="capitalize text-xl">
+              {listings[0]?.homeInfo?.property}
+            </p>
           </div>
           <div className="border-r border-[#172544]">
             <div className="relative my-1 m-auto w-[40px] h-[40px]">
@@ -160,8 +216,8 @@ const Page = (props: Props) => {
                 alt=""
               />
             </div>
-            <h3 className="font-bold">Bedroom 2</h3>
-            <p>2 double bed</p>
+            <h3 className="font-bold">Bedrooms</h3>
+            <p className="text-xl">{listings[0]?.homeInfo?.howManySleep}</p>
           </div>
           <div className="">
             <div className="relative my-1 m-auto w-[40px] h-[40px]">
@@ -173,7 +229,9 @@ const Page = (props: Props) => {
               />
             </div>
             <h3 className="font-bold">Property located in</h3>
-            <p>Condominium</p>
+            <p className="capitalize text-xl">
+              {listings[0]?.homeInfo?.locatedIn}
+            </p>
           </div>
         </div>
 
@@ -188,7 +246,9 @@ const Page = (props: Props) => {
               />
             </div>
             <h3 className="font-bold">Kind of property</h3>
-            <p>Main Property</p>
+            <p className="capitalize text-xl">
+              {listings[0]?.homeInfo?.mainOrSecond}
+            </p>
           </div>
           <div className="border-r border-[#172544]">
             <div className="relative my-1 m-auto w-[40px] h-[40px]">
@@ -200,7 +260,7 @@ const Page = (props: Props) => {
               />
             </div>
             <h3 className="font-bold">Bathrooms</h3>
-            <p>3 bathrooms</p>
+            <p className="text-xl">{listings[0]?.homeInfo?.bathrooms}</p>
           </div>
           <div className="">
             <div className="relative my-1 m-auto w-[40px] h-[40px]">
@@ -212,7 +272,11 @@ const Page = (props: Props) => {
               />
             </div>
             <h3 className="font-bold">Area</h3>
-            <p>100 mts2</p>
+            <p className="text-xl">
+              {listings[0]?.homeInfo?.area
+                ? `${listings[0]?.homeInfo?.area} sqm`
+                : ''}
+            </p>
           </div>
         </div>
       </div>
@@ -237,34 +301,35 @@ const Page = (props: Props) => {
             />
           </svg>
         </button>
-        <div className={`w-full h-[30vh] ${mapsActive ? 'block' : 'hidden'}`}>
-          <GoogleMapComponent />
+        <div
+          className={`w-full p-4 h-[40vh] ${mapsActive ? 'block' : 'hidden'}`}>
+          {listings[0]?.homeInfo?.city && (
+            <GoogleMapComponent
+              city={listings[0].homeInfo.city}
+              noSearch={true}
+            />
+          )}
         </div>
       </div>
 
-      <div>
+      <div className="mt-14">
         <h2 className="text-2xl flex justify-between w-full text-left my-4 py-4 border-y-[1px] border-[#172544] font-serif">
           Amenities & advantages
         </h2>
         <div className="flex gap-[5%]">
           <ul className="flex flex-col gap-2">
-            <li>TV</li>
-            <li>Dishwasher</li>
-            <li>Coworking</li>
-            <li>Wifi</li>
-            <li>Pool</li>
-          </ul>
-          <ul className="flex flex-col gap-2">
-            <li>Video Games</li>
-            <li>Elevator</li>
-            <li>Terrace</li>
-            <li>Cleaning service</li>
-            <li>Fireplace</li>
+            {listings[0]?.amenities &&
+              Object.entries(listings[0]?.amenities).map(([key, value]) => {
+                if (value === true) {
+                  return <li className="capitalize">{key}</li>;
+                }
+                return null;
+              })}
           </ul>
         </div>
-        <button className="font-sans hover:bg-[#fff] text-base my-8 py-2 px-4 border border-[#172544] rounded-xl">
+        {/* <button className="font-sans hover:bg-[#fff] text-base my-8 py-2 px-4 border border-[#172544] rounded-xl">
           Show all xx services
-        </button>
+        </button> */}
       </div>
     </main>
   );
