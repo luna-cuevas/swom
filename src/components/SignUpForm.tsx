@@ -7,6 +7,7 @@ import { loadStripe } from '@stripe/stripe-js';
 import Stripe from 'stripe';
 import { useStateContext } from '@/context/StateContext';
 import { ToastContainer, toast } from 'react-toastify';
+import { useRouter } from 'next/navigation';
 
 import 'react-toastify/dist/ReactToastify.css';
 
@@ -23,6 +24,7 @@ const SignUpForm = (props: Props) => {
   const { state, setState } = useStateContext();
   const [stripe, setStripe] = useState<Stripe | null>(null);
   const [subScreen, setSubScreen] = useState(false);
+  const router = useRouter();
 
   const {
     register,
@@ -43,11 +45,32 @@ const SignUpForm = (props: Props) => {
     fetchStripe();
   }, []);
 
+  useEffect(() => {
+    if (state.user) {
+      if (state.isSubscribed) {
+        router.push('/home');
+      }
+    }
+  }, [state.user]);
+
   const onSubmit = (data: any) => {
     const fullName = data.firstName + ' ' + data.lastName;
-    handleSignUp(fullName, data.email, data.password).then((result) => {
-      setSubScreen(result);
-    });
+    if (!subScreen) {
+      handleSignUp(fullName, data.email, data.password).then((result) => {
+        setSubScreen(result);
+      });
+    } else {
+      handleSubscription().then((result) => {
+        if (result) {
+          setState({ ...state, isSubscribed: true });
+          toast.success('Subscribed successfully');
+          // navigate to the listings/my-listing page
+        } else {
+          toast.error('Something went wrong');
+          setSubScreen(true);
+        }
+      });
+    }
   };
 
   useEffect(() => {
@@ -122,18 +145,20 @@ const SignUpForm = (props: Props) => {
     });
 
     console.log('session', session);
-    setState({
-      ...state,
-      user: session?.user,
-      session: session,
-    });
-    localStorage.setItem('user', JSON.stringify(session?.user));
-    localStorage.setItem('session', JSON.stringify(session));
-    toast.success('Signed up successfully');
+
     if (error) {
       toast.error(error.message);
       return false;
     } else {
+      setState({
+        ...state,
+        user: session?.user,
+        session: session,
+        isSubscribed: false,
+      });
+      localStorage.setItem('user', JSON.stringify(session?.user));
+      localStorage.setItem('session', JSON.stringify(session));
+      toast.success('Signed up successfully');
       return true;
     }
   };

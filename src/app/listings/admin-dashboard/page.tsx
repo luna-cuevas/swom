@@ -250,13 +250,17 @@ const Dashboard: React.FC = () => {
                 <p className="mt-2 text-lg">User Information:</p>
                 <ul>
                   {Object.entries(selectedListing.userInfo).map(
-                    ([key, value]) => (
-                      <li
-                        key={key}
-                        className={key !== 'email' ? 'capitalize' : ''}>
-                        {key}: {value}
-                      </li>
-                    )
+                    ([key, value]) => {
+                      if (key !== 'openToOtherCities') {
+                        return (
+                          <li
+                            key={key}
+                            className={key !== 'email' ? 'capitalize' : ''}>
+                            {key}: {value}
+                          </li>
+                        );
+                      }
+                    }
                   )}
                 </ul>
               </div>

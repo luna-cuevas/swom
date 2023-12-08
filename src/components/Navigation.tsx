@@ -2,7 +2,7 @@
 
 import Image from 'next/image';
 import Link from 'next/link';
-import React, { useEffect } from 'react';
+import React, { use, useEffect } from 'react';
 import {
   Menu,
   MenuHandler,
@@ -81,24 +81,31 @@ const Navigation = (props: Props) => {
     const session = JSON.parse(localStorage.getItem('session')!);
     const user = JSON.parse(localStorage.getItem('user')!);
     if (session && user) {
+      fetchStripe();
+
       setState({
         ...state,
         session: session,
         user: user,
       });
-
-      fetchStripe();
-      isUserSubscribed(user.email);
     }
   }, []);
 
   useEffect(() => {
-    if (state.session) {
-      setActiveNavButtons(true);
+    if (state.user !== null) {
+      fetchStripe();
+      isUserSubscribed(state.user.email);
+    }
+  }, [state.user]);
+
+  useEffect(() => {
+    if (state.session !== null && state.user !== null) {
+      console.log(state);
+
       isUserSubscribed(state.user.email);
       localStorage.setItem('session', JSON.stringify(state.session));
       localStorage.setItem('user', JSON.stringify(state.user));
-      console.log(state);
+      setActiveNavButtons(true);
     } else {
       setActiveNavButtons(false);
     }
@@ -128,7 +135,7 @@ const Navigation = (props: Props) => {
         </Link>
       </div>
       <div className="hidden xl:flex gap-8 align-middle">
-        {activeNavButtons && (
+        {activeNavButtons && state.isSubscribed && (
           <>
             <Link className="m-auto" href="/how-it-works">
               HOW IT WORKS
@@ -241,7 +248,7 @@ const Navigation = (props: Props) => {
           padding: mobileActive ? '20px 0' : '0',
         }}
         className={`xl:hidden z-[20000] align-middle gap-4  box-border top-full flex flex-col justify-center text-center transition-all duration-300 ease-in-out overflow-hidden max-h-[100vh] left-0 bg-white w-full absolute`}>
-        {activeNavButtons && (
+        {activeNavButtons && state.isSubscribed && (
           <>
             <Link className="m-auto" href="/how-it-works">
               HOW IT WORKS
