@@ -8,6 +8,7 @@ const initialState: StateType = {
   noUser: false,
   imgUploadPopUp: false,
   aboutYou: false,
+  isSubscribed: false,
 };
 
 type StateType = {
@@ -17,6 +18,7 @@ type StateType = {
   noUser: boolean;
   imgUploadPopUp: boolean;
   aboutYou: boolean;
+  isSubscribed: boolean;
 };
 
 type StateContextType = {

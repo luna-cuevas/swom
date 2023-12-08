@@ -26,6 +26,8 @@ const Page = (props: Props) => {
         .select('*')
         .eq('user_id', slug);
 
+      console.log('data', data);
+
       if (error) {
         throw error;
       }
@@ -139,9 +141,11 @@ const Page = (props: Props) => {
             <h4 className="font-serif text-xl font-thin border-b border-[#172544] mb-2">
               Open to other destinations
             </h4>
-            <p>
-              {listings[0]?.userInfo?.openToOtherDestinations ? 'Yes' : 'No'}
-            </p>
+            {listings[0]?.userInfo?.openToOtherCities &&
+              Object.values(listings[0]?.userInfo?.openToOtherCities).map(
+                // @ts-ignore
+                (city: string) => <p key={city}>{city}</p>
+              )}
           </div>
         </div>
 

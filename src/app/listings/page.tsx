@@ -1,5 +1,6 @@
 'use client';
 import ListingCard from '@/components/ListingCard';
+import { useStateContext } from '@/context/StateContext';
 import { supabaseClient } from '@/utils/supabaseClient';
 import React, { useEffect, useState } from 'react';
 
@@ -9,27 +10,30 @@ const Page = (props: Props) => {
   const supabase = supabaseClient();
 
   const [listings, setListings] = useState<any>([]);
+  const { state, setState } = useStateContext();
 
   console.log('listings', listings);
 
-  useEffect(() => {
-    const fetchListings = async () => {
-      try {
-        // Replace 'listings' with your actual table name
-        const { data, error } = await supabase.from('listings').select('*');
+  const fetchListings = async () => {
+    try {
+      // Replace 'listings' with your actual table name
+      const { data, error } = await supabase.from('listings').select('*');
 
-        if (error) {
-          throw error;
-        }
-
-        setListings(data);
-      } catch (error: any) {
-        console.error('Error fetching data:', error.message);
+      if (error) {
+        throw error;
       }
-    };
 
+      console.log('data', data);
+
+      setListings(data);
+    } catch (error: any) {
+      console.error('Error fetching data:', error.message);
+    }
+  };
+
+  useEffect(() => {
     fetchListings();
-  }, []);
+  }, [supabase]);
 
   return (
     <main className="py-6  flex flex-col bg-[#F2E9E7] min-h-screen">

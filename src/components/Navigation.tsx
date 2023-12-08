@@ -16,6 +16,9 @@ import { useStateContext } from '@/context/StateContext';
 import { supabaseClient } from '@/utils/supabaseClient';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
+import { loadStripe } from '@stripe/stripe-js';
+
+import Stripe from 'stripe';
 
 type Props = {};
 
@@ -25,22 +28,77 @@ const Navigation = (props: Props) => {
   const { state, setState } = useStateContext();
   const [activeNavButtons, setActiveNavButtons] = React.useState(false);
   const supabase = supabaseClient();
+  const [stripe, setStripe] = React.useState<Stripe | null>(null);
+
+  const fetchStripe = async () => {
+    // const stripe = await loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLIC_KEY!);
+
+    const stripe = new Stripe(process.env.NEXT_PUBLIC_STRIPE_SECRET_KEY!, {
+      apiVersion: '2023-08-16',
+    });
+    setStripe(stripe as Stripe | null); // Use type assertion
+
+    if (stripe && state.user) {
+      const isSubscribed = await isUserSubscribed(state.user.email);
+      if (isSubscribed) {
+        console.log('isSubscribed', isSubscribed);
+        setState({ ...state, isSubscribed: true });
+      } else {
+        setState({ ...state, isSubscribed: false });
+      }
+    }
+  };
+
+  async function isUserSubscribed(email: string): Promise<boolean> {
+    console.log('stripe', stripe);
+    try {
+      if (!stripe) return false;
+      // Retrieve the customer by email
+      const customers = await stripe.customers.list({ email: email });
+      const customer = customers.data[0]; // Assuming the first customer is the desired one
+
+      console.log(customer);
+
+      if (customer) {
+        // Retrieve the customer's subscriptions
+        const subscriptions = await stripe.subscriptions.list({
+          customer: customer.id,
+          limit: 1, // Assuming only checking the latest subscription
+        });
+
+        return subscriptions.data.length > 0; // User is subscribed if there's at least one subscription
+      } else {
+        // Customer not found
+        return false;
+      }
+    } catch (error) {
+      console.error('Error checking subscription status:', error);
+      throw error;
+    }
+  }
 
   useEffect(() => {
-    const session = localStorage.getItem('session');
-    const user = localStorage.getItem('user');
+    const session = JSON.parse(localStorage.getItem('session')!);
+    const user = JSON.parse(localStorage.getItem('user')!);
     if (session && user) {
       setState({
         ...state,
-        session: JSON.parse(session),
-        user: JSON.parse(user),
+        session: session,
+        user: user,
       });
+
+      fetchStripe();
+      isUserSubscribed(user.email);
     }
   }, []);
 
   useEffect(() => {
     if (state.session) {
       setActiveNavButtons(true);
+      isUserSubscribed(state.user.email);
+      localStorage.setItem('session', JSON.stringify(state.session));
+      localStorage.setItem('user', JSON.stringify(state.user));
+      console.log(state);
     } else {
       setActiveNavButtons(false);
     }

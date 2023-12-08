@@ -121,10 +121,16 @@ const Dashboard: React.FC = () => {
             age: age,
           });
 
-        if (userError) {
+        const { data: userCreationData, error: userCreationError } =
+          await supabase.auth.resetPasswordForEmail(listingObj.userInfo.email, {
+            redirectTo: 'http://localhost:3000/sign-up',
+          });
+
+        if (userError || userCreationError) {
           console.error(
             'Error sending user to appUser table:',
-            userError.message
+            (userError && userError.message) ||
+              (userCreationError && userCreationError.message)
           );
         }
 
@@ -194,8 +200,8 @@ const Dashboard: React.FC = () => {
         </tbody>
       </table>
       {selectedListing && (
-        <div className="fixed inset-0 px-2  bg-black bg-opacity-50 flex justify-center items-center">
-          <div className="bg-white md:w-2/3 p-4  m-auto overflow-y-scroll">
+        <div className="fixed inset-0 px-2   bg-black bg-opacity-50 flex justify-center items-center">
+          <div className="bg-white md:w-2/3 max-h-[80vh] p-4  m-auto overflow-y-scroll">
             <div className="flex md:flex-row flex-col md:text-center border-b border-gray-600 text-lg justify-evenly my-2">
               <p>
                 User: <br /> {selectedListing.userInfo.name}
@@ -263,6 +269,9 @@ const Dashboard: React.FC = () => {
                           key={image}
                           className="flex relative h-[200px] w-1/4 object-cover">
                           <Image
+                            priority
+                            placeholder="blur"
+                            blurDataURL="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAARgAAABYCAYAA"
                             src={image}
                             alt="listing image"
                             fill

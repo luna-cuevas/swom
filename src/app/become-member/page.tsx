@@ -39,6 +39,11 @@ const Page = (props: Props) => {
         about_me: '',
         children: '',
         recommended: '',
+        openToOtherCities: {
+          cityVisit1: '',
+          cityVisit2: '',
+          cityVisit3: '',
+        },
       },
       homeInfo: {
         title: '',
@@ -49,6 +54,7 @@ const Page = (props: Props) => {
         area: '',
         mainOrSecond: '',
         address: '',
+        city: '',
         howManySleep: '',
       },
 
@@ -132,7 +138,16 @@ const Page = (props: Props) => {
 
             const result = await response.json();
             console.log('Uploaded image to Cloudinary:', result);
-            return result.secure_url; // Cloudinary provides a secure URL for the uploaded image
+
+            // Include transformation parameters to reduce image size
+            const transformedUrl = `${result.secure_url.replace(
+              '/upload/',
+              '/upload/w_auto,c_scale,q_auto:low/'
+            )}`;
+
+            console.log('Transformed URL:', transformedUrl);
+
+            return transformedUrl;
           } catch (error) {
             console.error('Error uploading image to Cloudinary:', error);
             throw error;
@@ -146,7 +161,7 @@ const Page = (props: Props) => {
           );
           const results = await Promise.all(uploadPromises);
 
-          if (results.some((result) => result.error)) {
+          if (results.some((result) => result.length === 0)) {
             console.error('Error uploading listing images:', results);
           } else {
             data.homeInfo.listingImages = results;
@@ -450,6 +465,16 @@ const Page = (props: Props) => {
                 />
               </div>
               <div>
+                <label htmlFor="city">What is the city and state?</label>
+                <input
+                  id="city"
+                  {...register('homeInfo.city', {
+                    required: 'Please enter the city of the property',
+                  })}
+                  className="w-full bg-transparent border-b border-[#172544] focus:outline-none"
+                />
+              </div>
+              <div>
                 <label htmlFor="">Is your property located in:</label>
                 <div className="flex gap-2 flex-wrap">
                   <div className="flex gap-2">
@@ -586,6 +611,21 @@ const Page = (props: Props) => {
                   })}
                   className="w-full bg-transparent border-b border-[#172544] focus:outline-none"
                 />
+                <label htmlFor="">Three cities you would visit?</label>
+                <div className="flex gap-8">
+                  <input
+                    className="w-1/3 bg-transparent border-b border-[#172544] focus:outline-none"
+                    {...register('userInfo.openToOtherCities.cityVisit1')}
+                  />
+                  <input
+                    className="w-1/3 bg-transparent border-b border-[#172544] focus:outline-none"
+                    {...register('userInfo.openToOtherCities.cityVisit2')}
+                  />
+                  <input
+                    className="w-1/3 bg-transparent border-b border-[#172544] focus:outline-none"
+                    {...register('userInfo.openToOtherCities.cityVisit3')}
+                  />
+                </div>
               </div>
             </div>
             <div className="flex w-2/3 m-auto flex-wrap pb-8">
