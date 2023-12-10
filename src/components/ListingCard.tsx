@@ -50,7 +50,7 @@ const ListingCard = (props: Props) => {
           <Link
             href={`/listings/${props.listingInfo.user_id}`}
             className="bg-[#F28A38] py-1 px-2 rounded-xl text-white text-sm">
-            Let's reserve
+            Let&apos;s reserve
           </Link>
         </div>
       </div>

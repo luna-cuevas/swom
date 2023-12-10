@@ -326,7 +326,11 @@ const Page = (props: Props) => {
             {listings[0]?.amenities &&
               Object.entries(listings[0]?.amenities).map(([key, value]) => {
                 if (value === true) {
-                  return <li className="capitalize">{key}</li>;
+                  return (
+                    <li key={key} className="capitalize">
+                      {key}
+                    </li>
+                  );
                 }
                 return null;
               })}

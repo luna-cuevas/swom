@@ -52,7 +52,7 @@ const Page = (props: Props) => {
             <h2 className="text-3xl">Lorem Ipsum</h2>
           </div>
           <h1 className="text-3xl m-auto">
-            Let's discover <br />
+            Let&apos;s discover <br />
             your new adventure
           </h1>
         </div>
