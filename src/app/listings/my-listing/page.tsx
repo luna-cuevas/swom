@@ -9,6 +9,7 @@ import { set, useForm, Controller } from 'react-hook-form';
 import { supabaseClient } from '@/utils/supabaseClient';
 import ProfilePicDropZone from '@/components/ProfilePicDropZone';
 import citiesData from '@/data/citiesDescriptions.json';
+import BecomeMemberDropzone from '@/components/BecomeMemberDropzone';
 
 type Props = {};
 
@@ -17,7 +18,7 @@ const Page = (props: Props) => {
   const [name, setName] = useState('');
   const [userName, setUserName] = useState('');
   const [profession, setProfession] = useState('');
-  const [age, setAge] = useState('');
+  const [age, setAge] = useState(0);
   const [aboutYou, setAboutYou] = useState('');
   const { state, setState } = useStateContext();
   const [profileImage, setProfileImage] = useState<File[]>([]);
@@ -28,6 +29,7 @@ const Page = (props: Props) => {
   const aboutYourHomeRef = useRef<HTMLTextAreaElement | null>(null);
   const [whereIsIt, setWhereIsIt] = useState('');
   const [listings, setListings] = useState<any>([]);
+  const [downloadedImages, setDownloadedImages] = useState<any>([]);
 
   const {
     register,
@@ -42,16 +44,21 @@ const Page = (props: Props) => {
       userInfo: {
         name: '',
         userName: '',
-        age: '',
+        age: 0,
         profession: '',
         aboutYou: '',
         whereTo: '',
-        otherDestinations: false,
+        openToOtherCities: {
+          cityVisit1: '',
+          cityVisit2: '',
+          cityVisit3: '',
+        },
       },
       homeInfo: {
         property: '',
         bedrooms: '',
         locatedIn: '',
+        city: '',
         kindOfProperty: '',
         bathrooms: '',
         area: '',
@@ -94,6 +101,39 @@ const Page = (props: Props) => {
       },
     },
   });
+
+  const [searchTerm, setSearchTerm] = useState('');
+  const [selectedCity, setSelectedCity] = useState(null);
+
+  const handleInputChange = (e: any) => {
+    const value = e.target.value;
+    setSearchTerm(value);
+    if (value.length > 0) {
+      setCitySearchOpen(true);
+    }
+  };
+
+  const filteredCities = citiesData.filter((city) => {
+    return city.city
+      .toLowerCase()
+      .includes(searchTerm.split(',')[0].toLowerCase());
+  });
+
+  const handleCitySelect = (city: any) => {
+    setSelectedCity(city);
+    setCitySearchOpen(false);
+    setSearchTerm(`${city.city}, ${city.country}`);
+    setValue('homeInfo.city', `${city.city}, ${city.country}`);
+  };
+
+  const handleSearch = () => {
+    const matchedCity = citiesData.find(
+      (city) => city.city.toLowerCase() === searchTerm.toLowerCase()
+    );
+    if (matchedCity) {
+      setSelectedCity(matchedCity as any);
+    }
+  };
 
   const { ref, ...rest } = register('homeInfo.aboutYourHome');
 
@@ -149,67 +189,110 @@ const Page = (props: Props) => {
     }
   }, [state?.user]);
 
-  const uploadImage = async (imageFile: any, bucket: any) => {
-    return supabase.storage
-      .from(bucket) // Specify the folder name here
-      .upload(
-        `${state.user.user_metadata.name} - ${state.user.id}/${imageFile.name}`,
-        imageFile,
-        {
-          upsert: true,
-        }
+  useEffect(() => {
+    if (listings.length > 0) {
+      const dob = new Date(listings[0].userInfo.dob);
+      const today = new Date();
+      const age = today.getFullYear() - dob.getFullYear();
+      setProfession(listings[0].userInfo.profession);
+      setValue('userInfo.profession', listings[0].userInfo.profession);
+      setAge(age);
+      setValue('userInfo.age', age);
+      setAboutYou(listings[0].userInfo.about_me);
+
+      setValue(
+        'userInfo.openToOtherCities.cityVisit1',
+        listings[0].userInfo.openToOtherCities.cityVisit1
       );
-  };
+      setValue(
+        'userInfo.openToOtherCities.cityVisit2',
+        listings[0].userInfo.openToOtherCities.cityVisit2
+      );
+      setValue(
+        'userInfo.openToOtherCities.cityVisit3',
+        listings[0].userInfo.openToOtherCities.cityVisit3
+      );
+      setValue('homeInfo.city', listings[0].homeInfo.city);
+      setDownloadedImages(listings[0].homeInfo.listingImages);
+      setValue('homeInfo.aboutYourHome', listings[0].homeInfo.description);
+      setValue('homeInfo.property', listings[0].homeInfo.property);
+      setValue('homeInfo.bedrooms', listings[0].homeInfo.howManySleep);
+      setValue('homeInfo.locatedIn', listings[0].homeInfo.locatedIn);
+      setValue('homeInfo.kindOfProperty', listings[0].homeInfo.mainOrSecond);
+      setValue('homeInfo.bathrooms', listings[0].homeInfo.bathrooms);
+      setValue('homeInfo.area', listings[0].homeInfo.area);
+      Object.keys(listings[0].amenities).forEach((amenityKey) => {
+        // Set the default value for each amenity using setValue
+        // @ts-ignore
+        setValue(`amenities.${amenityKey}`, listings[0].amenities[amenityKey]);
+      });
+      setSearchTerm(listings[0].homeInfo.city);
+      handleSearch();
+    }
+  }, [listings]);
 
   const onSubmit = async (data: any) => {
+    const uploadImageToCloudinary = async (imageFile: any, folder: string) => {
+      try {
+        const formData = new FormData();
+        formData.append('file', imageFile);
+        formData.append('upload_preset', 'zttdzjqk');
+        formData.append('folder', folder);
+
+        const response = await fetch(
+          'https://api.cloudinary.com/v1_1/dxfz8k7g8/image/upload',
+          {
+            method: 'POST',
+            body: formData,
+          }
+        );
+
+        if (!response.ok) {
+          throw new Error('Failed to upload image to Cloudinary');
+        }
+
+        const result = await response.json();
+        console.log('Uploaded image to Cloudinary:', result);
+
+        // Include transformation parameters to reduce image size
+        const transformedUrl = `${result.secure_url.replace(
+          '/upload/',
+          '/upload/w_auto,c_scale,q_auto:low/'
+        )}`;
+
+        console.log('Transformed URL:', transformedUrl);
+
+        return transformedUrl;
+      } catch (error) {
+        console.error('Error uploading image to Cloudinary:', error);
+        throw error;
+      }
+    };
+
     if (profileImage && profileImage.length > 0) {
-      // Upload profile image
+      // Upload profile image to Cloudinary
       const profileImageFile = profileImage[0];
-      const { data: profileImg, error: profileImageError } = await uploadImage(
+      const profileImageUrl = await uploadImageToCloudinary(
         profileImageFile,
-        'profileImages'
+        `${state.user?.id}/profileImage`
       );
 
-      if (profileImageError) {
-        console.error('Error uploading profile image:', profileImageError);
-      } else {
-        // Get the image URL from the downloaded Supabase Storage
-        const { data: profileImageUrl } = await supabase.storage
-          .from('profileImages') // Specify the folder name here
-          .getPublicUrl(
-            `${state.user.user_metadata.name} - ${state.user.id}/${profileImageFile.name}`
-          );
-
-        data.userInfo.profileImage = profileImageUrl;
-      }
+      // Use the Cloudinary URL directly
+      data.userInfo.profileImage = profileImageUrl;
     }
 
     if (imageFiles && imageFiles.length > 0) {
       // Upload images to the listingImages bucket
       const uploadPromises = imageFiles.map((imageFile) =>
-        uploadImage(imageFile, 'listingImages')
+        uploadImageToCloudinary(imageFile, `${state.user?.id}/listingImages`)
       );
       const results = await Promise.all(uploadPromises);
 
-      if (results.some((result) => result.error)) {
+      if (results.some((result) => result.length === 0)) {
         console.error('Error uploading listing images:', results);
       } else {
-        // Get the image URLs from the downloaded Supabase Storage
-        const { data: listingImageUrls } = await supabase.storage
-          .from('listingImages') // Specify the folder name here
-          .list(`${state.user.user_metadata.name} - ${state.user.id}`);
-
-        if (listingImageUrls) {
-          const publicUrls = listingImageUrls.map((image) => {
-            return supabase.storage
-              .from('listingImages')
-              .getPublicUrl(
-                `${state.user.user_metadata.name} - ${state.user.id}/${image.name}`
-              );
-          });
-          // Set the listing image URLs to data.homeInfo.listingImages
-          data.homeInfo.listingImages = publicUrls;
-        }
+        data.homeInfo.listingImages = results;
+        console.log('results', results);
       }
     }
 
@@ -221,13 +304,13 @@ const Page = (props: Props) => {
           user_id: state.user.id,
           userInfo: data.userInfo,
           homeInfo: data.homeInfo,
-          city: data.city,
           amenities: data.amenities,
         },
         {
           ignoreDuplicates: false,
         }
-      );
+      )
+      .eq('user_id', state.user.id);
 
     if (userError) {
       console.error('Error updating user info:', userError);
@@ -238,40 +321,6 @@ const Page = (props: Props) => {
 
   const onError = (errors: any, e: any) => {
     console.log(errors, e);
-  };
-
-  const [searchTerm, setSearchTerm] = useState('');
-  const [selectedCity, setSelectedCity] = useState(null);
-
-  const handleInputChange = (e: any) => {
-    const value = e.target.value;
-    setCitySearchOpen(true);
-    setSearchTerm(value);
-    if (value.length > 0) {
-      setCitySearchOpen(true);
-    }
-  };
-
-  const filteredCities = citiesData.filter((city) => {
-    return city.city
-      .toLowerCase()
-      .includes(searchTerm.split(',')[0].toLowerCase());
-  });
-
-  const handleCitySelect = (city: any) => {
-    setSelectedCity(city);
-    setCitySearchOpen(false);
-    setSearchTerm(`${city.city}, ${city.country}`);
-    setValue('city', `${city.city}, ${city.country}`);
-  };
-
-  const handleSearch = () => {
-    const matchedCity = citiesData.find(
-      (city) => city.city.toLowerCase() === searchTerm.toLowerCase()
-    );
-    if (matchedCity) {
-      setSelectedCity(matchedCity as any);
-    }
   };
 
   return (
@@ -300,7 +349,7 @@ const Page = (props: Props) => {
                   className="bg-transparent border-b border-[#172544] focus:outline-none"
                   placeholder="Age"
                   {...register('userInfo.age')}
-                  onChange={(e) => setAge(e.target.value)}
+                  onChange={(e) => setAge(e.target.value as any)}
                 />
                 {/* save button */}
                 <button
@@ -404,25 +453,20 @@ const Page = (props: Props) => {
               Where would you like to go?
             </h4>
 
-            <select
-              {...register('userInfo.whereTo')}
-              className="bg-transparent focus:outline-none  rounded-xl border w-1/3 border-[#172544]">
-              <option value="bogota">Bogota, Colombia</option>
-              <option value="paris">Paris, France</option>
-              <option value="london">London, England</option>
-              <option value="newYork">New York, USA</option>
-              <option value="tokyo">Tokyo, Japan</option>
-              <option value="sydney">Sydney, Australia</option>
-              <option value="dubai">Dubai, UAE</option>
-              <option value="rome">Rome, Italy</option>
-              <option value="barcelona">Barcelona, Spain</option>
-              <option value="berlin">Berlin, Germany</option>
-              <option value="amsterdam">Amsterdam, Netherlands</option>
-              <option value="madrid">Madrid, Spain</option>
-              <option value="miami">Miami, USA</option>
-              <option value="istanbul">Istanbul, Turkey</option>
-              <option value="singapore">Singapore, Singapore</option>
-            </select>
+            <div className="gap-4 flex">
+              <input
+                className="w-1/3 h-fit my-auto bg-transparent border-b border-[#172544] focus:outline-none"
+                {...register('userInfo.openToOtherCities.cityVisit1')}
+              />
+              <input
+                className="w-1/3 h-fit my-auto bg-transparent border-b border-[#172544] focus:outline-none"
+                {...register('userInfo.openToOtherCities.cityVisit2')}
+              />
+              <input
+                className="w-1/3 h-fit my-auto bg-transparent border-b border-[#172544] focus:outline-none"
+                {...register('userInfo.openToOtherCities.cityVisit3')}
+              />
+            </div>
           </div>
 
           <div className="flex flex-col justify-between py-4 ">
@@ -435,7 +479,7 @@ const Page = (props: Props) => {
                 type="radio"
                 id="yesRadio"
                 value="yes"
-                {...register('userInfo.otherDestinations')}
+                {...register('userInfo.openToOtherCities')}
               />
               <label htmlFor="yesRadio">Yes</label>
 
@@ -444,7 +488,7 @@ const Page = (props: Props) => {
                 type="radio"
                 value="no"
                 id="noRadio"
-                {...register('userInfo.otherDestinations')}
+                {...register('userInfo.openToOtherCities')}
               />
               <label htmlFor="noRadio">No</label>
             </div>
@@ -454,7 +498,9 @@ const Page = (props: Props) => {
 
       <div className="w-full flex flex-col px-8 md:px-16 m-auto">
         <div className="flex my-4 flex-col md:flex-row border-y border-[#172544] py-4 justify-between">
-          <h2 className="text-xl">{watch('city') ? getValues('city') : ''}</h2>
+          <h2 className="text-xl">
+            {watch('homeInfo.city') ? getValues('homeInfo.city') : ''}
+          </h2>
           <div className="flex gap-2 justify-evenly">
             <div className="relative w-[20px] my-auto h-[20px]">
               <Image
@@ -477,14 +523,18 @@ const Page = (props: Props) => {
               type="button">
               Upload Photos
             </button>
-
-            {state.imgUploadPopUp && (
-              <DropZone imageFiles={imageFiles} setImageFiles={setImageFiles} />
-            )}
           </div>
         </div>
+        {state.imgUploadPopUp && (
+          <div className=" z-50 h-fit w-full bg-white flex m-auto top-0 bottom-0 left-0 right-0">
+            <BecomeMemberDropzone
+              imageFiles={imageFiles}
+              setImageFiles={setImageFiles}
+            />
+          </div>
+        )}
         <div>
-          {imageFiles.length > 0 && (
+          {imageFiles.length > 0 && !state.imgUploadPopUp && (
             <>
               <div className="relative mt-8 mb-6 w-[95%] mx-auto h-[50vh]">
                 <Image
@@ -514,6 +564,36 @@ const Page = (props: Props) => {
               </div>
             </>
           )}
+          {downloadedImages.length > 0 && imageFiles.length == 0 && (
+            <>
+              <div className="relative mt-8 mb-6 w-[95%] mx-auto h-[50vh]">
+                <Image
+                  src={
+                    downloadedImages[selectedImage]
+                      ? downloadedImages[selectedImage]
+                      : '/placeholder.png'
+                  }
+                  alt=""
+                  className="rounded-3xl object-contain"
+                  fill
+                  objectPosition="center"
+                />
+              </div>
+
+              <div className="relative w-[95%] mx-auto h-[30vh]">
+                <CarouselPage
+                  picturesPerSlide={3}
+                  selectedImage={selectedImage}
+                  setSelectedImage={setSelectedImage}
+                  overlay={false}
+                  contain={true}
+                  images={downloadedImages.map((file: any) => ({
+                    src: file,
+                  }))}
+                />
+              </div>
+            </>
+          )}
         </div>
 
         <div className="flex my-4 border-b border-[#172544] py-4 justify-between">
@@ -525,7 +605,7 @@ const Page = (props: Props) => {
             className="bg-transparent w-full outline-none"
             type="text"
             placeholder="What's the city?"
-            {...register('city')}
+            {...register('homeInfo.city')}
             value={searchTerm}
             onChange={handleInputChange}
           />
@@ -595,10 +675,10 @@ const Page = (props: Props) => {
               {...register('homeInfo.property')}
               className="w-fit m-auto bg-transparent outline-none p-2 my-2 rounded-lg border-[#172544] border"
               id="property">
-              <option value="House">House</option>
-              <option value="Apartment">Apartment</option>
-              <option value="Condo">Condo</option>
-              <option value="Townhouse">Townhouse</option>
+              <option value="house">House</option>
+              <option value="apartment">Apartment</option>
+              <option value="condo">Condo</option>
+              <option value="townhouse">Townhouse</option>
             </select>
           </div>
 
@@ -613,7 +693,8 @@ const Page = (props: Props) => {
               <option value="1">1</option>
               <option value="2">2</option>
               <option value="3">3</option>
-              <option value="4+">4+</option>
+              <option value="4">4</option>
+              <option value="5+">+4</option>
             </select>
           </div>
 
@@ -625,10 +706,10 @@ const Page = (props: Props) => {
               className="w-fit m-auto bg-transparent outline-none p-2 my-2 rounded-lg border-[#172544] border"
               {...register('homeInfo.locatedIn')}
               id="locatedIn">
-              <option value="Condominium">a condiminium</option>
-              <option value="Gated Community">a gated community</option>
-              <option value="Neighborhood">a neighborhood</option>
-              <option value="Rural">a rural area</option>
+              <option value="condominium">a condominium</option>
+              <option value="gated community">a gated community</option>
+              <option value="neighborhood">a neighborhood</option>
+              <option value="rural">a rural area</option>
             </select>
           </div>
         </div>
@@ -642,9 +723,9 @@ const Page = (props: Props) => {
               className="w-fit m-auto bg-transparent outline-none p-2 my-2 rounded-lg border-[#172544] border"
               {...register('homeInfo.kindOfProperty')}
               id="kindOfProperty">
-              <option value="Main">Main property </option>
-              <option value="Second">Second property</option>
-              <option value="Third">Third property</option>
+              <option value="main">Main property </option>
+              <option value="second">Second property</option>
+              {/* <option value="Third">Third property</option> */}
             </select>
           </div>
 
@@ -695,7 +776,10 @@ const Page = (props: Props) => {
         </div>
 
         <div className={`w-full h-[30vh] my-4 mb-8 rounded-xl`}>
-          <GoogleMapComponent setWhereIsIt={setWhereIsIt} />
+          <GoogleMapComponent
+            exactAddress={listings[0]?.homeInfo.address}
+            setWhereIsIt={setWhereIsIt}
+          />
         </div>
 
         <div className="flex my-4  border-y border-[#172544] py-4 justify-between">

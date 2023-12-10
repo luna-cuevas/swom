@@ -311,6 +311,7 @@ const Page = (props: Props) => {
             <GoogleMapComponent
               city={listings[0].homeInfo.city}
               noSearch={true}
+              radius={100}
             />
           )}
         </div>

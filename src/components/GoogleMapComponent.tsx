@@ -1,11 +1,17 @@
 import React, { useEffect, useState } from 'react';
-import { GoogleMap, Marker, useLoadScript } from '@react-google-maps/api';
-import Autocomplete from 'react-google-autocomplete';
+import {
+  GoogleMap,
+  Marker,
+  Circle,
+  useLoadScript,
+} from '@react-google-maps/api';
 
 type Props = {
   setWhereIsIt?: React.Dispatch<React.SetStateAction<string>>;
   city?: string;
   noSearch?: boolean;
+  exactAddress?: string; // Prop for the exact address
+  radius?: number; // Radius in meters
 };
 
 export default function GoogleMapComponent(props: Props) {
@@ -22,24 +28,38 @@ export default function GoogleMapComponent(props: Props) {
   };
 
   useEffect(() => {
-    console.log('city', props.city);
-    if (isLoaded && (city || props.city)) {
-      // Get the latitude and longitude of the city
-      const geocoder = new window.google.maps.Geocoder();
-      geocoder.geocode({ address: city || props.city }, (results, status) => {
-        if (status === 'OK' && results != null) {
-          const location = results[0].geometry.location;
-          const lat = location.lat();
-          const lng = location.lng();
-          setCenter({ lat, lng });
+    if (isLoaded) {
+      if (props.exactAddress) {
+        // Use geocoding for the exact address
+        const geocoder = new window.google.maps.Geocoder();
+        geocoder.geocode({ address: props.exactAddress }, (results, status) => {
+          if (status === 'OK' && results != null) {
+            const location = results[0].geometry.location;
+            const lat = location.lat();
+            const lng = location.lng();
+            setCenter({ lat, lng });
+          }
+        });
+        if (props.setWhereIsIt) {
+          props.setWhereIsIt(props.exactAddress);
         }
-      });
-      if (props.setWhereIsIt) {
-        console.log('city', city);
-        props.setWhereIsIt(city);
+      } else if (city || props.city) {
+        // Get the latitude and longitude of the city
+        const geocoder = new window.google.maps.Geocoder();
+        geocoder.geocode({ address: city || props.city }, (results, status) => {
+          if (status === 'OK' && results != null) {
+            const location = results[0].geometry.location;
+            const lat = location.lat();
+            const lng = location.lng();
+            setCenter({ lat, lng });
+          }
+        });
+        if (props.setWhereIsIt) {
+          props.setWhereIsIt(city);
+        }
       }
     }
-  }, [city, props.city, isLoaded]);
+  }, [city, props.city, props.exactAddress, isLoaded, props.setWhereIsIt]);
 
   if (!isLoaded) {
     return <div>Loading...</div>;
@@ -48,19 +68,34 @@ export default function GoogleMapComponent(props: Props) {
   return (
     <>
       {props.noSearch ? null : (
-        <Autocomplete
+        <input
           className="w-full rounded-xl p-2 outline-none mb-2"
-          apiKey={process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY ?? ''}
-          onPlaceSelected={(place) => {
-            setCity(place.formatted_address ?? '');
-          }}
+          value={props.exactAddress || city}
+          onChange={(e) => setCity(e.target.value)}
+          placeholder={
+            props.exactAddress ? props.exactAddress : 'Search for a city'
+          }
         />
       )}
       <GoogleMap
         mapContainerStyle={mapContainerStyle}
-        zoom={10} // Adjust the initial zoom level as needed
+        zoom={10}
         center={center}>
-        <Marker position={center} />
+        {props.radius ? (
+          <Circle
+            center={center}
+            radius={props.radius}
+            options={{
+              fillColor: 'red',
+              fillOpacity: 0.35,
+              strokeColor: 'red',
+              strokeOpacity: 1,
+              strokeWeight: 1,
+            }}
+          />
+        ) : (
+          <Marker position={center} />
+        )}
       </GoogleMap>
     </>
   );
