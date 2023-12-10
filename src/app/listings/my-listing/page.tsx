@@ -42,11 +42,17 @@ const Page = (props: Props) => {
   } = useForm({
     defaultValues: {
       userInfo: {
+        profileImage: '',
         name: '',
         userName: '',
+        dob: '',
+        email: '',
+        phone: '',
         age: 0,
         profession: '',
-        aboutYou: '',
+        about_me: '',
+        children: '',
+        recommended: '',
         whereTo: '',
         openToOtherCities: {
           cityVisit1: '',
@@ -55,14 +61,17 @@ const Page = (props: Props) => {
         },
       },
       homeInfo: {
+        title: '',
+        address: '',
+        description: '',
+        listingImages: [],
         property: '',
-        bedrooms: '',
+        howManySleep: '',
         locatedIn: '',
         city: '',
-        kindOfProperty: '',
+        mainOrSecond: '',
         bathrooms: '',
         area: '',
-        aboutYourHome: '',
         whereIsIt: '',
       },
 
@@ -135,7 +144,7 @@ const Page = (props: Props) => {
     }
   };
 
-  const { ref, ...rest } = register('homeInfo.aboutYourHome');
+  const { ref, ...rest } = register('homeInfo.description');
 
   const fetchListings = async () => {
     try {
@@ -172,7 +181,7 @@ const Page = (props: Props) => {
         textarea.style.overflowY = 'hidden';
       }
     }
-  }, [watch('homeInfo.aboutYourHome')]);
+  }, [watch('homeInfo.description')]);
 
   useEffect(() => {
     setValue('homeInfo.whereIsIt', whereIsIt);
@@ -199,6 +208,17 @@ const Page = (props: Props) => {
       setAge(age);
       setValue('userInfo.age', age);
       setAboutYou(listings[0].userInfo.about_me);
+      setValue('userInfo.profileImage', listings[0].userInfo.profileImage);
+      setValue('userInfo.about_me', listings[0].userInfo.about_me);
+      setValue('userInfo.children', listings[0].userInfo.children);
+      setValue('userInfo.recommended', listings[0].userInfo.recommended);
+      setValue('userInfo.email', listings[0].userInfo.email);
+      setValue('userInfo.phone', listings[0].userInfo.phone);
+      setValue('homeInfo.title', listings[0].homeInfo.title);
+      setValue('homeInfo.address', listings[0].homeInfo.address);
+      setValue('homeInfo.description', listings[0].homeInfo.description);
+      setValue('userInfo.dob', listings[0].userInfo.dob);
+      setValue('homeInfo.description', listings[0].homeInfo.description);
 
       setValue(
         'userInfo.openToOtherCities.cityVisit1',
@@ -213,12 +233,15 @@ const Page = (props: Props) => {
         listings[0].userInfo.openToOtherCities.cityVisit3
       );
       setValue('homeInfo.city', listings[0].homeInfo.city);
+      if (listings[0].homeInfo.city) {
+        handleSearch();
+      }
       setDownloadedImages(listings[0].homeInfo.listingImages);
-      setValue('homeInfo.aboutYourHome', listings[0].homeInfo.description);
+      setValue('homeInfo.description', listings[0].homeInfo.description);
       setValue('homeInfo.property', listings[0].homeInfo.property);
-      setValue('homeInfo.bedrooms', listings[0].homeInfo.howManySleep);
+      setValue('homeInfo.howManySleep', listings[0].homeInfo.howManySleep);
       setValue('homeInfo.locatedIn', listings[0].homeInfo.locatedIn);
-      setValue('homeInfo.kindOfProperty', listings[0].homeInfo.mainOrSecond);
+      setValue('homeInfo.mainOrSecond', listings[0].homeInfo.mainOrSecond);
       setValue('homeInfo.bathrooms', listings[0].homeInfo.bathrooms);
       setValue('homeInfo.area', listings[0].homeInfo.area);
       Object.keys(listings[0].amenities).forEach((amenityKey) => {
@@ -367,7 +390,7 @@ const Page = (props: Props) => {
                   src={
                     profileImage.length > 0
                       ? URL.createObjectURL(profileImage[0])
-                      : '/placeholder.png'
+                      : listings[0]?.userInfo.profileImage
                   }
                   alt="hero"
                   fill
@@ -437,7 +460,7 @@ const Page = (props: Props) => {
           </div>
           {state.aboutYou ? (
             <textarea
-              {...register('userInfo.aboutYou')}
+              {...register('userInfo.about_me')}
               onChange={(e) => setAboutYou(e.target.value)}
               placeholder="Tell us more about you."
               className="bg-transparent w-full my-4 p-2 outline-none border-b border-[#c5c5c5]"
@@ -564,7 +587,7 @@ const Page = (props: Props) => {
               </div>
             </>
           )}
-          {downloadedImages.length > 0 && imageFiles.length == 0 && (
+          {downloadedImages?.length > 0 && imageFiles.length == 0 && (
             <>
               <div className="relative mt-8 mb-6 w-[95%] mx-auto h-[50vh]">
                 <Image
@@ -648,13 +671,13 @@ const Page = (props: Props) => {
 
         <textarea
           {...rest}
-          name="aboutYourHome"
+          name="description"
           ref={(e) => {
             ref(e);
             aboutYourHomeRef.current = e;
           }}
           onChange={(e) => {
-            setValue('homeInfo.aboutYourHome', e.target.value);
+            setValue('homeInfo.description', e.target.value);
           }}
           className="w-full h-fit max-h-[300px] my-4 p-2 bg-transparent outline-none border-b border-[#c5c5c5] resize-none"
           placeholder="Villa linda is dolor sit amet, consectetuer adipiscing elit, sed diam
@@ -683,13 +706,13 @@ const Page = (props: Props) => {
           </div>
 
           <div className="flex flex-col text-center justify-center h-full py-2 md:py-0 md:w-1/3 border-b md:border-b-0 md:border-r border-[#172544]">
-            <label className="font-bold" htmlFor="bedrooms">
+            <label className="font-bold" htmlFor="howManySleep">
               Bedrooms
             </label>
             <select
               className="w-fit m-auto bg-transparent outline-none p-2 my-2 rounded-lg border-[#172544] border"
-              {...register('homeInfo.bedrooms')}
-              id="bedrooms">
+              {...register('homeInfo.howManySleep')}
+              id="howManySleep">
               <option value="1">1</option>
               <option value="2">2</option>
               <option value="3">3</option>
@@ -716,13 +739,13 @@ const Page = (props: Props) => {
 
         <div className="px-8 py-4 flex flex-col md:flex-row border rounded-xl my-8 border-[#172544]">
           <div className="flex flex-col py-2 md:py-0 text-center justify-center h-full md:w-1/3 border-b md:border-b-0 md:border-r border-[#172544]">
-            <label className="font-bold" htmlFor="kindOfProperty">
+            <label className="font-bold" htmlFor="mainOrSecond">
               Kind of property
             </label>
             <select
               className="w-fit m-auto bg-transparent outline-none p-2 my-2 rounded-lg border-[#172544] border"
-              {...register('homeInfo.kindOfProperty')}
-              id="kindOfProperty">
+              {...register('homeInfo.mainOrSecond')}
+              id="mainOrSecond">
               <option value="main">Main property </option>
               <option value="second">Second property</option>
               {/* <option value="Third">Third property</option> */}
