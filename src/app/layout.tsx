@@ -10,6 +10,7 @@ import { Elements } from '@stripe/react-stripe-js';
 import { loadStripe } from '@stripe/stripe-js';
 import { useEffect, useState } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
+import React from 'react';
 
 // export const metadata: Metadata = {
 //   title: 'Create Next App',
@@ -88,30 +89,29 @@ export default function RootLayout({
           // options={options}
         >
           <body className="relative">
-            {loading ? (
-              <div
-                style={{
-                  position: 'fixed',
-                  top: 0,
-                  left: 0,
-                  width: '100%',
-                  height: '100%',
-                  backgroundColor: 'rgba(255, 255, 255, 0.8)',
-                  display: 'flex',
-                  justifyContent: 'center',
-                  alignItems: 'center',
-                  zIndex: 1000, // Adjust as needed
-                }}>
-                Loading...
-              </div>
-            ) : (
-              <>
-                <Navigation />
-                {children}
-                <Footer />
-                <Script src="https://player.vimeo.com/api/player.js"></Script>
-              </>
-            )}
+            <>
+              {loading && (
+                <div
+                  style={{
+                    position: 'fixed',
+                    top: 0,
+                    left: 0,
+                    width: '100%',
+                    height: '100%',
+                    backgroundColor: 'rgba(255, 255, 255)',
+                    display: 'flex',
+                    justifyContent: 'center',
+                    alignItems: 'center',
+                    zIndex: 1000, // Adjust as needed
+                  }}>
+                  Loading...
+                </div>
+              )}
+              <Navigation />
+              {children}
+              <Footer />
+              <Script src="https://player.vimeo.com/api/player.js"></Script>
+            </>
           </body>
         </Elements>
       </StateProvider>

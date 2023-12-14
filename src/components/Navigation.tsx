@@ -16,7 +16,7 @@ import { useStateContext } from '@/context/StateContext';
 import { supabaseClient } from '@/utils/supabaseClient';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
-import { loadStripe } from '@stripe/stripe-js';
+import { usePathname } from 'next/navigation';
 
 import Stripe from 'stripe';
 
@@ -29,6 +29,7 @@ const Navigation = (props: Props) => {
   const [activeNavButtons, setActiveNavButtons] = React.useState(false);
   const supabase = supabaseClient();
   const [stripe, setStripe] = React.useState<Stripe | null>(null);
+  const navigation = usePathname();
 
   const fetchStripe = async () => {
     // const stripe = await loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLIC_KEY!);
@@ -92,15 +93,9 @@ const Navigation = (props: Props) => {
   }, []);
 
   useEffect(() => {
-    if (state.user !== null) {
-      fetchStripe();
-      isUserSubscribed(state.user.email);
-    }
-  }, [state.user]);
-
-  useEffect(() => {
     if (state.session !== null && state.user !== null) {
       console.log(state);
+      fetchStripe();
 
       isUserSubscribed(state.user.email);
       localStorage.setItem('session', JSON.stringify(state.session));
@@ -109,7 +104,7 @@ const Navigation = (props: Props) => {
     } else {
       setActiveNavButtons(false);
     }
-  }, [state.session]);
+  }, [state.session, navigation]);
 
   const handleSignOut = async () => {
     try {
@@ -123,7 +118,7 @@ const Navigation = (props: Props) => {
   };
 
   return (
-    <nav className=" relative  md:px-12 px-4  py-4 bg-[#fff] flex justify-between">
+    <nav className=" relative  md:px-12 px-4  py-6 bg-[#fff] flex justify-between">
       <div className="flex w-[150px] h-auto relative   items-center">
         <Link href="/home">
           <Image
@@ -134,41 +129,45 @@ const Navigation = (props: Props) => {
           />
         </Link>
       </div>
-      <div className="hidden xl:flex gap-8 align-middle">
+      <div className="hidden 2xl:flex gap-4 align-middle">
         {activeNavButtons && state.isSubscribed && (
           <>
-            <Link className="m-auto" href="/how-it-works">
+            <Link className="m-auto text-sm" href="/how-it-works">
               HOW IT WORKS
             </Link>
-            <Link className="m-auto" href="/messages">
+            <Link className="m-auto text-sm" href="/messages">
               MESSAGES
             </Link>
-            <Link className="m-auto" href="/profile">
+            <Link className="m-auto text-sm" href="/profile">
               PROFILE
             </Link>
-            <Link className="m-auto" href="/membership">
+            <Link className="m-auto text-sm" href="/membership">
               MEMBERSHIP
             </Link>
-            <Link className="m-auto" href="/listings">
+            <Link className="m-auto text-sm" href="/listings">
               LISTINGS
             </Link>
-            <Link className="m-auto" href="/listings/my-listing">
+            <Link className="m-auto text-sm" href="/listings/my-listing">
               MY LISTING
             </Link>
             {state.user?.email ===
               ('s.cuevas14@gmail.com' || 'anamariagomezc@gmail.com') && (
-              <Link className="m-auto" href="/listings/admin-dashboard">
+              <Link className="m-auto text-sm" href="/listings/admin-dashboard">
                 APPROVAL DASHBOARD
               </Link>
             )}
           </>
         )}
-        <Link href="/about-us">US</Link>
-        <Link href="/become-member">BECOME A MEMEBER</Link>
+        <Link className="text-sm" href="/about-us">
+          US
+        </Link>
+        <Link className="text-sm" href="/become-member">
+          BECOME A MEMEBER
+        </Link>
 
         {activeNavButtons ? (
           <button
-            className="m-auto"
+            className="m-auto text-sm"
             onClick={() => {
               handleSignOut();
             }}>
@@ -176,7 +175,7 @@ const Navigation = (props: Props) => {
           </button>
         ) : (
           <button
-            className="m-auto"
+            className="m-auto text-sm"
             onClick={() => {
               setSignInActive(!signInActive);
             }}>
@@ -199,7 +198,7 @@ const Navigation = (props: Props) => {
 
         <Menu>
           <MenuHandler>
-            <Button className="bg-[#fff] shadow-none">
+            <Button className="bg-[#fff] shadow-none m-0 p-0">
               <Image
                 alt="search"
                 width={20}
@@ -225,7 +224,7 @@ const Navigation = (props: Props) => {
 
       {signInActive && <SignIn setSignInActive={setSignInActive} />}
 
-      <div className="xl:hidden">
+      <div className="2xl:hidden">
         <button onClick={() => setMobileActive(!mobileActive)}>
           <svg
             width="20"
@@ -247,7 +246,7 @@ const Navigation = (props: Props) => {
           borderTop: mobileActive ? '1px solid #a9a9a9' : 'none',
           padding: mobileActive ? '20px 0' : '0',
         }}
-        className={`xl:hidden z-[20000] align-middle gap-4  box-border top-full flex flex-col justify-center text-center transition-all duration-300 ease-in-out overflow-hidden max-h-[100vh] left-0 bg-white w-full absolute`}>
+        className={`2xl:hidden z-[20000] align-middle gap-4  box-border top-full flex flex-col justify-center text-center transition-all duration-300 ease-in-out overflow-hidden max-h-[100vh] left-0 bg-white w-full absolute`}>
         {activeNavButtons && state.isSubscribed && (
           <>
             <Link className="m-auto" href="/how-it-works">

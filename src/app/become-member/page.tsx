@@ -9,6 +9,7 @@ import DropZone from '@/components/DropZone';
 import BecomeMemberDropzone from '@/components/BecomeMemberDropzone';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
+import ReCAPTCHA from 'react-google-recaptcha';
 
 type Props = {};
 
@@ -22,6 +23,7 @@ const Page = (props: Props) => {
   const supabase = supabaseClient();
   const temporaryPassword = generatePassword();
   const [imageFiles, setImageFiles] = useState<File[]>([]);
+  const [captchaToken, setCaptchaToken] = useState(false);
 
   const {
     register,
@@ -95,6 +97,10 @@ const Page = (props: Props) => {
   const onSubmit = async (data: any) => {
     if (imageFiles.length === 0) {
       toast.error('Please upload at least one image');
+      return;
+    }
+    if (!captchaToken) {
+      toast.error('Please complete the captcha');
       return;
     }
 
@@ -982,6 +988,15 @@ const Page = (props: Props) => {
                 </div>
               </div>
             </div>
+            <div className="flex w-fit m-auto">
+              <ReCAPTCHA
+                sitekey={
+                  process.env.NEXT_PUBLIC_GOOGLE_RECAPTCHA_SITE_KEY || ''
+                }
+                onChange={() => setCaptchaToken(true)}
+              />
+            </div>
+
             <button
               type="submit"
               className="bg-[#E78426] w-fit m-auto hover:bg-[#e78326d8] text-[#fff] font-bold px-4 py-2 rounded-3xl">

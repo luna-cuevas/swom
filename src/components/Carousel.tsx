@@ -177,6 +177,8 @@ const CarouselPage = (props: Props) => {
               src={image.src}
               alt="image"
               fill
+              priority
+              // placeholder="blur"
             />
           </div>
         ))}

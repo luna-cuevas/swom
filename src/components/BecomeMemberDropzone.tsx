@@ -70,6 +70,7 @@ const BecomeMemberDropzone: React.FC<Props> = (props) => {
   return (
     <div className="flex bg-[#d2d2d244] z-[2000] rounded-lg flex-col h-fit w-full top-0 bottom-0 left-0 right-0 m-auto">
       <button
+        type="button"
         className=" ml-auto z-[100000] w-fit mr-2 text-sm bg-red-300 text-white px-1 h-fit rounded-full cursor-pointer"
         onClick={() => {
           setState({
