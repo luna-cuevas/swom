@@ -165,7 +165,11 @@ const Page = (props: Props) => {
         if (data && data.length === 0) {
           createNewConversation();
         } else {
-          setSelectedConversation(data[0].conversation_id as unknown as number);
+          if (data) {
+            setSelectedConversation(
+              data[0].conversation_id as unknown as number
+            );
+          }
         }
       });
     }
