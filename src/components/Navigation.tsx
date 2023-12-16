@@ -16,7 +16,7 @@ import { useStateContext } from '@/context/StateContext';
 import { supabaseClient } from '@/utils/supabaseClient';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 
 import Stripe from 'stripe';
 
@@ -30,6 +30,7 @@ const Navigation = (props: Props) => {
   const supabase = supabaseClient();
   const [stripe, setStripe] = React.useState<Stripe | null>(null);
   const navigation = usePathname();
+  const router = useRouter();
 
   const fetchStripe = async () => {
     // const stripe = await loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLIC_KEY!);
@@ -58,8 +59,6 @@ const Navigation = (props: Props) => {
       const customers = await stripe.customers.list({ email: email });
       const customer = customers.data[0]; // Assuming the first customer is the desired one
 
-      console.log(customer);
-
       if (customer) {
         // Retrieve the customer's subscriptions
         const subscriptions = await stripe.subscriptions.list({
@@ -79,6 +78,22 @@ const Navigation = (props: Props) => {
   }
 
   useEffect(() => {
+    if (state.user !== null) {
+      const loggedInUser = async () => {
+        await supabase
+          .from('listings')
+          .select('userInfo')
+          .eq('user_id', state?.user?.id)
+          .then((data: any) => {
+            console.log('logged in user', data?.data[0]?.userInfo);
+            setState({ ...state, loggedInUser: data?.data[0]?.userInfo });
+          });
+      };
+      loggedInUser();
+    }
+  }, [state.user]);
+
+  useEffect(() => {
     const session = JSON.parse(localStorage.getItem('session')!);
     const user = JSON.parse(localStorage.getItem('user')!);
     if (session && user) {
@@ -94,7 +109,7 @@ const Navigation = (props: Props) => {
 
   useEffect(() => {
     if (state.session !== null && state.user !== null) {
-      console.log(state);
+      console.log('state', state);
       fetchStripe();
 
       isUserSubscribed(state.user.email);
@@ -111,6 +126,7 @@ const Navigation = (props: Props) => {
       await supabase.auth.signOut();
       localStorage.clear();
       setState({ ...state, session: null, user: null });
+      router.push('/home');
       toast.success('Signed out successfully');
     } catch (error) {
       console.error('Error signing out:', error);

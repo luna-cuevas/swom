@@ -1,14 +1,196 @@
 'use client';
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import Image from 'next/image';
 import dummyMessages from '../../data/dummyMessages.json';
+import { supabaseClient } from '@/utils/supabaseClient';
+import { useStateContext } from '@/context/StateContext';
 
 type Props = {};
 
 const Page = (props: Props) => {
+  const queryParams = new URLSearchParams(window.location.search);
+  const contactedUserID = queryParams.get('user');
+
   const [selectedConversation, setSelectedConversation] = useState<
     number | null
   >(null);
+  const [conversations, setConversations] = useState<any[]>([]);
+  const [messages, setMessages] = useState<any[]>([]);
+  const [newMessage, setNewMessage] = useState<string>(''); // New state to handle the input message
+  const supabase = supabaseClient();
+  const { state, setState } = useStateContext();
+
+  console.log('selectedConversation', selectedConversation);
+
+  useEffect(() => {
+    // Fetch conversations
+    // const fetchConversations = async () => {
+    //   const { data, error } = await supabase
+    //     .from('conversations')
+    //     .select('*')
+    //     .eq('id', [state.user?.id]);
+
+    //   if (error) {
+    //     console.error('Error fetching conversations:', error.message);
+    //   } else {
+    //     console.log('data', data);
+    //     // setConversations(data || []);
+    //   }
+    // };
+
+    // Fetch messages for the selected conversation
+    // const fetchMessages = async () => {
+    //   if (selectedConversation !== null) {
+    //     const { data, error } = await supabase
+    //       .from('messages')
+    //       .select('*')
+    //       .eq('conversation_id', selectedConversation)
+    //       .order('timestamp', { ascending: true });
+
+    //     if (error) {
+    //       console.error('Error fetching messages:', error.message);
+    //     } else {
+    //       setMessages(data || []);
+    //     }
+    //   }
+    // };
+
+    // Subscribe to real-time updates for new messages
+    // const messageSubscription = supabase
+    //   .from(`messages:conversation_id=eq.${selectedConversation}`)
+    //   .on('INSERT', (payload: any) => {
+    //     // Handle the new message in real-time
+    //     setMessages((prevMessages) => [...prevMessages, payload.new]);
+    //   })
+    //   .subscribe();
+
+    // fetchConversations();
+    // fetchMessages();
+
+    // Cleanup subscriptions when the component unmounts
+    return () => {
+      // messageSubscription?.unsubscribe();
+    };
+  }, [selectedConversation]);
+
+  const fetchContactedUserInfo = async () => {
+    const { data, error } = await supabase
+      .from('listings')
+      .select('userInfo')
+      .eq('user_id', contactedUserID);
+
+    if (error) {
+      console.error('Error fetching user:', error.message);
+    } else {
+      console.log('contactedUserData', data);
+      return data[0].userInfo;
+    }
+  };
+
+  fetchContactedUserInfo();
+
+  const createNewConversation = async () => {
+    if (state.user !== null && state.loggedInUser !== null) {
+      const contactedUserInfo = await fetchContactedUserInfo();
+      const { data: convoData, error } = await supabase
+        .from('conversations')
+        .upsert([
+          {
+            members: {
+              '1': {
+                name: state.loggedInUser.name,
+                id: state.user.id as unknown as string,
+                email: state.loggedInUser.email,
+              },
+              '2': {
+                name: contactedUserInfo?.name,
+                id: contactedUserID as unknown as string,
+                email: contactedUserInfo?.email,
+              },
+            },
+          },
+        ])
+        .select('*');
+
+      if (error) {
+        return console.error('Error creating new conversation:', error.message);
+      } else {
+        console.log('convoData', convoData);
+        const { data: messagesData, error: messagesError } = await supabase
+          .from('messages')
+          .insert([
+            {
+              conversation_id: convoData[0].conversation_id,
+            },
+          ]);
+        console.log('messagesData', messagesData);
+        if (messagesError) {
+          console.error(
+            'Error creating new conversation:',
+            messagesError.message
+          );
+        }
+      }
+    }
+  };
+
+  const checkIfConversationExists = async () => {
+    if (state.user !== null && contactedUserID !== null) {
+      const { data: convoData, error } = await supabase
+        .from('conversations')
+        .select('*')
+        .contains('members', {
+          1: { id: state.user.id },
+          2: { id: contactedUserID },
+        });
+
+      if (error) {
+        console.error('Error checking if conversation exists:', error.message);
+      } else {
+        return convoData;
+        // console.log('convo exists', data);
+      }
+    }
+  };
+
+  useEffect(() => {
+    if (
+      contactedUserID !== null &&
+      selectedConversation === null &&
+      state.user !== null &&
+      state.loggedInUser !== null
+    ) {
+      checkIfConversationExists().then((data) => {
+        // console.log('convo data', data);
+        if (data && data.length === 0) {
+          createNewConversation();
+        } else {
+          setSelectedConversation(data[0].conversation_id as unknown as number);
+        }
+      });
+    }
+  }, [state.user, state.loggedInUser, contactedUserID]);
+
+  // Function to send a new message
+  const sendMessage = async () => {
+    if (selectedConversation !== null && newMessage.trim() !== '') {
+      const { data, error } = await supabase.from('messages').upsert([
+        {
+          conversation_id: selectedConversation,
+          sender_id: state.user?.id,
+          content: newMessage,
+          timestamp: new Date(),
+        },
+      ]);
+
+      if (error) {
+        console.error('Error sending message:', error.message);
+      } else {
+        // setMessages([...messages, data[0]]);
+        setNewMessage(''); // Clear the input field after sending the message
+      }
+    }
+  };
 
   return (
     <>
@@ -32,7 +214,7 @@ const Page = (props: Props) => {
             <div className="border-r-2 h-auto w-[35%] md:w-1/3 border-[#172544]">
               <h2 className="tracking-[0.3rem] flex py-4 border-b-2 border-inherit uppercase md:text-xl gap-2 md:gap-4 pl-[8%]">
                 <div className="relative w-[3vmax] invisible h-[3vmax]">
-                  <Image
+                  {/* <Image
                     src={
                       selectedConversation !== null
                         ? dummyMessages[selectedConversation - 1].convoPic
@@ -42,12 +224,12 @@ const Page = (props: Props) => {
                     width={28}
                     height={28}
                     className="rounded-full"
-                  />
+                  /> */}
                 </div>
                 <span className="my-auto font-sans font-bold">Inbox</span>
               </h2>
               <ul className="">
-                {dummyMessages.map((convo) => (
+                {/* {dummyMessages.map((convo) => (
                   <li
                     key={convo.convoID}
                     className={`cursor-pointer my-auto flex pl-[8%] gap-2  md:gap-4 align-middle tracking-[0.3rem] py-4 border-b-2 border-[#172544] uppercase md:text-xl ${
@@ -67,7 +249,7 @@ const Page = (props: Props) => {
                     </div>
                     <span className="my-auto">{convo.convoMembers[1]}</span>
                   </li>
-                ))}
+                ))} */}
               </ul>
             </div>
 
@@ -77,7 +259,7 @@ const Page = (props: Props) => {
                   <>
                     <h3 className="flex gap-4 tracking-[0.3rem] pl-[8%] py-4 border-b-2 border-[#172544] uppercase md:text-xl">
                       <div className="relative w-[3vmax] my-auto flex h-[3vmax]">
-                        <Image
+                        {/* <Image
                           src={
                             selectedConversation !== null
                               ? dummyMessages[selectedConversation - 1].convoPic
@@ -87,19 +269,19 @@ const Page = (props: Props) => {
                           width={28}
                           height={28}
                           className="rounded-full my-auto"
-                        />
+                        /> */}
                       </div>
                       <span className="my-auto font-serif">
-                        {selectedConversation !== null &&
+                        {/* {selectedConversation !== null &&
                           dummyMessages[selectedConversation - 1]
-                            .convoMembers[1]}
+                            .convoMembers[1]} */}
                       </span>
                     </h3>
 
                     <div className=" overflow-y-auto h-[50vh] py-6 px-2   md:px-10 ">
                       <div className="">
                         <ul className="flex flex-col gap-6">
-                          {dummyMessages[selectedConversation - 1].messages.map(
+                          {/* {dummyMessages[selectedConversation - 1].messages.map(
                             (message) => (
                               <li
                                 key={message.messageID}
@@ -130,7 +312,7 @@ const Page = (props: Props) => {
                                 </p>
                               </li>
                             )
-                          )}
+                          )} */}
                         </ul>
                       </div>
                     </div>

@@ -6,6 +6,7 @@ import React, { useEffect, useState } from 'react';
 import GoogleMapComponent from '@/components/GoogleMapComponent';
 import { supabaseClient } from '../../../utils/supabaseClient';
 import cityData from '@/data/citiesDescriptions.json';
+import Link from 'next/link';
 
 type Props = {};
 
@@ -112,9 +113,11 @@ const Page = (props: Props) => {
                 ? `${listings[0]?.userInfo?.age} years old`
                 : ''}
             </p>
-            <button className="bg-[#E78426] hover:bg-[#e78326d8] text-[#fff]  my-2 px-3 py-1 rounded-xl">
+            <Link
+              href={`/messages?user=${listings[0]?.user_id}`}
+              className="bg-[#E78426] hover:bg-[#e78326d8] text-[#fff]  my-2 px-3 py-1 rounded-xl">
               Contact me
-            </button>
+            </Link>
           </div>
 
           <div className="my-2">

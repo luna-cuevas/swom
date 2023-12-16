@@ -51,7 +51,7 @@ const SignUpForm = (props: Props) => {
         router.push('/home');
       }
     }
-  }, [state.user]);
+  }, [state.user, state.isSubscribed]);
 
   const onSubmit = (data: any) => {
     const fullName = data.firstName + ' ' + data.lastName;

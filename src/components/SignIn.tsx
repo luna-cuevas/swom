@@ -99,7 +99,7 @@ const SignIn = (props: Props) => {
                     },
                     input: {
                       letterSpacing: '0.25rem',
-                      textTransform: 'uppercase',
+                      // textTransform: 'uppercase',
                       color: '#F7F1EE',
                       background: '#7F8019',
                       borderRadius: '0.375rem',

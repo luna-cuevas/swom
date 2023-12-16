@@ -108,7 +108,6 @@ const Dashboard: React.FC = () => {
             user_id: listingObj.user_id,
             userInfo: listingObj.userInfo,
             homeInfo: listingObj.homeInfo,
-            city: listingObj.city,
             amenities: listingObj.amenities,
           });
 

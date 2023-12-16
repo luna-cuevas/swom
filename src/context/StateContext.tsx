@@ -9,6 +9,7 @@ const initialState: StateType = {
   imgUploadPopUp: false,
   aboutYou: false,
   isSubscribed: false,
+  loggedInUser: null,
 };
 
 type StateType = {
@@ -19,6 +20,7 @@ type StateType = {
   imgUploadPopUp: boolean;
   aboutYou: boolean;
   isSubscribed: boolean;
+  loggedInUser: any;
 };
 
 type StateContextType = {
