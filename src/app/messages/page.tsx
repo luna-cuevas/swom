@@ -8,8 +8,8 @@ import { useStateContext } from '@/context/StateContext';
 type Props = {};
 
 const Page = (props: Props) => {
-  const queryParams = new URLSearchParams(window.location.search);
-  const contactedUserID = queryParams.get('user');
+  const queryParams = window && new URLSearchParams(window.location.search);
+  const contactedUserID = queryParams && queryParams.get('user');
 
   const [selectedConversation, setSelectedConversation] = useState<
     number | null
