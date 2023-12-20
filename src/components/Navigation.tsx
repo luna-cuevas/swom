@@ -86,16 +86,21 @@ const Navigation = (props: Props) => {
           .eq('user_id', state?.user?.id)
           .then((data: any) => {
             console.log('logged in user', data?.data[0]?.userInfo);
+            localStorage.setItem(
+              'loggedInUser',
+              JSON.stringify(data?.data[0]?.userInfo)
+            );
             setState({ ...state, loggedInUser: data?.data[0]?.userInfo });
           });
       };
       loggedInUser();
     }
-  }, [state.user]);
+  }, [state.user, state.session]);
 
   useEffect(() => {
     const session = JSON.parse(localStorage.getItem('session')!);
     const user = JSON.parse(localStorage.getItem('user')!);
+    const loggedInUser = JSON.parse(localStorage.getItem('loggedInUser')!);
     if (session && user) {
       fetchStripe();
 
@@ -103,6 +108,7 @@ const Navigation = (props: Props) => {
         ...state,
         session: session,
         user: user,
+        loggedInUser: loggedInUser,
       });
     }
   }, []);

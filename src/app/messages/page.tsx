@@ -4,15 +4,13 @@ import Image from 'next/image';
 import dummyMessages from '../../data/dummyMessages.json';
 import { supabaseClient } from '@/utils/supabaseClient';
 import { useStateContext } from '@/context/StateContext';
+import { useSearchParams } from 'next/navigation';
 
 type Props = {};
 
 const Page = (props: Props) => {
-  let queryParams;
-  if (typeof window !== 'undefined') {
-    queryParams = new URLSearchParams(window.location.search);
-  }
-  const contactedUserID = queryParams && queryParams.get('user');
+  const queryParams = useSearchParams();
+  const contactedUserID = queryParams.get('user');
 
   const [selectedConversation, setSelectedConversation] = useState<
     number | null
@@ -22,8 +20,7 @@ const Page = (props: Props) => {
   const [newMessage, setNewMessage] = useState<string>(''); // New state to handle the input message
   const supabase = supabaseClient();
   const { state, setState } = useStateContext();
-
-  console.log('selectedConversation', selectedConversation);
+  const [contactedUserInfo, setContactedUserInfo] = useState<any>(null);
 
   useEffect(() => {
     // Fetch conversations
@@ -90,10 +87,42 @@ const Page = (props: Props) => {
     }
   };
 
-  fetchContactedUserInfo();
+  const fetchAllConversations = async () => {
+    if (state.user !== null) {
+      const { data, error } = await supabase
+        .from('conversations')
+        .select('*')
+        .contains('members', {
+          1: { id: state.user.id },
+        });
+
+      if (error) {
+        console.error('Error fetching conversations:', error.message);
+      } else {
+        console.log('all convos with me', data);
+        setConversations(data || []);
+      }
+    }
+  };
+
+  const fetchMessagesForSelectedConversation = async () => {
+    if (selectedConversation !== null) {
+      const { data, error } = await supabase
+        .from('messages')
+        .select('*')
+        .eq('conversation_id', selectedConversation);
+
+      if (error) {
+        console.error('Error fetching messages:', error.message);
+      } else {
+        console.log('messages for convo', data[0].messageObj);
+        setMessages(data[0].messageObj || []);
+      }
+    }
+  };
 
   const createNewConversation = async () => {
-    if (state.user !== null && state.loggedInUser !== null) {
+    if (state.user !== null && state.loggedInUser !== undefined) {
       const contactedUserInfo = await fetchContactedUserInfo();
       const { data: convoData, error } = await supabase
         .from('conversations')
@@ -104,11 +133,13 @@ const Page = (props: Props) => {
                 name: state.loggedInUser.name,
                 id: state.user.id as unknown as string,
                 email: state.loggedInUser.email,
+                profilePic: state.loggedInUser.profilePic,
               },
               '2': {
                 name: contactedUserInfo?.name,
                 id: contactedUserID as unknown as string,
                 email: contactedUserInfo?.email,
+                profilePic: contactedUserInfo?.profilePic,
               },
             },
           },
@@ -150,8 +181,9 @@ const Page = (props: Props) => {
       if (error) {
         console.error('Error checking if conversation exists:', error.message);
       } else {
+        console.log('convo exists', convoData);
+
         return convoData;
-        // console.log('convo exists', data);
       }
     }
   };
@@ -163,6 +195,7 @@ const Page = (props: Props) => {
       state.user !== null &&
       state.loggedInUser !== null
     ) {
+      console.log('checking if convo exists');
       checkIfConversationExists().then((data) => {
         // console.log('convo data', data);
         if (data && data.length === 0) {
@@ -176,28 +209,70 @@ const Page = (props: Props) => {
         }
       });
     }
-  }, [state.user, state.loggedInUser, contactedUserID]);
+  }, [state.user, state.loggedInUser, contactedUserID != null]);
 
   // Function to send a new message
   const sendMessage = async () => {
     if (selectedConversation !== null && newMessage.trim() !== '') {
-      const { data, error } = await supabase.from('messages').upsert([
+      // Fetch the existing messages for the selected conversation
+      const { data: existingData, error: existingError } = await supabase
+        .from('messages')
+        .select('messagesObj')
+        .eq('conversation_id', selectedConversation);
+
+      if (existingError) {
+        console.error(
+          'Error fetching existing messages:',
+          existingError.message
+        );
+        return;
+      }
+
+      // Append the new message to the existing messages
+      const updatedMessages = [
+        ...(existingData.length > 0 ? existingData[0].messagesObj : []),
         {
-          conversation_id: selectedConversation,
           sender_id: state.user?.id,
           content: newMessage,
           timestamp: new Date(),
         },
-      ]);
+      ];
+
+      // Perform the upsert with the updated messages
+      const { data, error } = await supabase
+        .from('messages')
+        .upsert([
+          {
+            conversation_id: selectedConversation,
+            messagesObj: updatedMessages,
+          },
+        ])
+        .eq('conversation_id', selectedConversation);
 
       if (error) {
         console.error('Error sending message:', error.message);
       } else {
+        console.log('Message sent', data);
         // setMessages([...messages, data[0]]);
-        setNewMessage(''); // Clear the input field after sending the message
+        // setNewMessage(''); // Clear the input field after sending the message
       }
     }
   };
+
+  useEffect(() => {
+    fetchContactedUserInfo().then((data) => {
+      setContactedUserInfo(data);
+      console.log('contactedUserData', data);
+    });
+  }, [contactedUserID]);
+
+  useEffect(() => {
+    fetchAllConversations();
+  }, [state.user]);
+
+  useEffect(() => {
+    fetchMessagesForSelectedConversation();
+  }, [selectedConversation]);
 
   return (
     <>
@@ -223,9 +298,10 @@ const Page = (props: Props) => {
                 <div className="relative w-[3vmax] invisible h-[3vmax]">
                   {/* <Image
                     src={
-                      selectedConversation !== null
-                        ? dummyMessages[selectedConversation - 1].convoPic
-                        : ''
+                      contactedUserInfo &&
+                      contactedUserInfo.profilePic != undefined
+                        ? contactedUserInfo.profilePic
+                        : '/profile/profile-pic-placeholder.png'
                     }
                     alt="hero"
                     width={28}
@@ -236,27 +312,31 @@ const Page = (props: Props) => {
                 <span className="my-auto font-sans font-bold">Inbox</span>
               </h2>
               <ul className="">
-                {/* {dummyMessages.map((convo) => (
+                {conversations.map((convo) => (
                   <li
-                    key={convo.convoID}
+                    key={convo.conversation_id} // Assuming conversation_id is the unique identifier
                     className={`cursor-pointer my-auto flex pl-[8%] gap-2  md:gap-4 align-middle tracking-[0.3rem] py-4 border-b-2 border-[#172544] uppercase md:text-xl ${
-                      selectedConversation === convo.convoID
+                      selectedConversation === convo.conversation_id
                         ? 'bg-gray-300'
                         : ''
                     }`}
-                    onClick={() => setSelectedConversation(convo.convoID)}>
+                    onClick={() =>
+                      setSelectedConversation(convo.conversation_id)
+                    }>
                     <div className="relative w-[3vmax] justify-center align-middle flex my-auto h-[3vmax]">
-                      <Image
-                        src={convo.convoPic}
+                      <img
+                        src={
+                          convo.members[2].convoPic != undefined
+                            ? convo.members[2].convoPic
+                            : '/profile/profile-pic-placeholder.png'
+                        } // Assuming convoPic is a property of the second member
                         alt="hero"
-                        fill
-                        objectFit="cover"
                         className="rounded-full flex mx-auto"
                       />
                     </div>
-                    <span className="my-auto">{convo.convoMembers[1]}</span>
+                    <span className="my-auto">{convo.members[2].name}</span>
                   </li>
-                ))} */}
+                ))}
               </ul>
             </div>
 
@@ -266,22 +346,32 @@ const Page = (props: Props) => {
                   <>
                     <h3 className="flex gap-4 tracking-[0.3rem] pl-[8%] py-4 border-b-2 border-[#172544] uppercase md:text-xl">
                       <div className="relative w-[3vmax] my-auto flex h-[3vmax]">
-                        {/* <Image
+                        <Image
                           src={
-                            selectedConversation !== null
-                              ? dummyMessages[selectedConversation - 1].convoPic
-                              : ''
+                            conversations?.find(
+                              (convo) =>
+                                convo.conversation_id === selectedConversation
+                            )?.members[2]?.profilePic != undefined
+                              ? conversations?.find(
+                                  (convo) =>
+                                    convo.conversation_id ===
+                                    selectedConversation
+                                )?.members[2]?.profilePic // Assuming convoPic is a property of the second member
+                              : '/profile/profile-pic-placeholder.png'
                           }
                           alt="hero"
                           width={28}
                           height={28}
                           className="rounded-full my-auto"
-                        /> */}
+                        />
                       </div>
                       <span className="my-auto font-serif">
-                        {/* {selectedConversation !== null &&
-                          dummyMessages[selectedConversation - 1]
-                            .convoMembers[1]} */}
+                        {
+                          conversations?.find(
+                            (convo) =>
+                              convo.conversation_id === selectedConversation
+                          )?.members[2]?.name
+                        }
                       </span>
                     </h3>
 
@@ -329,11 +419,14 @@ const Page = (props: Props) => {
 
               <div className=" w-full px-2 h-[10%] flex gap-6 md:pl-10">
                 <input
+                  onChange={(e) => setNewMessage(e.target.value)}
                   className="w-[80%] h-full pl-2 placeholder:tracking-[0.3rem] focus-visible:outline-none bg-transparent border-t-2 border-[#E5DEDB]"
                   placeholder="Type your message here"
                   type="text"
                 />
-                <button className="bg-[#E88527] hover:bg-[#e88427ca] h-fit w-fit my-auto px-4 py-2 text-white rounded-xl ">
+                <button
+                  onClick={() => sendMessage()}
+                  className="bg-[#E88527] hover:bg-[#e88427ca] h-fit w-fit my-auto px-4 py-2 text-white rounded-xl ">
                   Send
                 </button>
               </div>
