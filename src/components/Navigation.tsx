@@ -77,45 +77,64 @@ const Navigation = (props: Props) => {
     }
   }
 
-  useEffect(() => {
-    if (state.user !== null) {
-      const loggedInUser = async () => {
-        await supabase
-          .from('listings')
-          .select('userInfo')
-          .eq('user_id', state?.user?.id)
-          .then((data: any) => {
-            console.log('logged in user', data?.data[0]?.userInfo);
-            localStorage.setItem(
-              'loggedInUser',
-              JSON.stringify(data?.data[0]?.userInfo)
-            );
-            setState({ ...state, loggedInUser: data?.data[0]?.userInfo });
-          });
-      };
-      loggedInUser();
+  const fetchLoggedInUser = async () => {
+    if (state.user) {
+      const loggedInUserData = await supabase
+        .from('listings')
+        .select('userInfo')
+        .eq('user_id', state.user.id);
+
+      if (loggedInUserData.data.length === 0) {
+        console.log('no user data');
+        return;
+      }
+
+      console.log('logged in user', loggedInUserData.data[0].userInfo);
+      localStorage.setItem(
+        'loggedInUser',
+        JSON.stringify(loggedInUserData.data[0].userInfo)
+      );
+      setState({ ...state, loggedInUser: loggedInUserData.data[0].userInfo });
     }
-  }, [state.user, state.session]);
+  };
+
+  const session = JSON.parse(localStorage.getItem('session')!);
+  const user = JSON.parse(localStorage.getItem('user')!);
+  const localLoggedInUser = JSON.parse(localStorage.getItem('loggedInUser')!);
 
   useEffect(() => {
-    const session = JSON.parse(localStorage.getItem('session')!);
-    const user = JSON.parse(localStorage.getItem('user')!);
-    const loggedInUser = JSON.parse(localStorage.getItem('loggedInUser')!);
     if (session && user) {
       fetchStripe();
+      console.log('session', session);
+      console.log('user', user);
 
       setState({
         ...state,
         session: session,
         user: user,
-        loggedInUser: loggedInUser,
       });
+
+      if (!localLoggedInUser) {
+        console.log('no localLoggedInUser');
+        fetchLoggedInUser();
+      } else {
+        console.log('localLoggedInUser', localLoggedInUser);
+        setState({
+          ...state,
+          session: session,
+          user: user,
+          loggedInUser: localLoggedInUser,
+        });
+      }
     }
   }, []);
 
   useEffect(() => {
+    console.log('state', state);
+  }, [state]);
+
+  useEffect(() => {
     if (state.session !== null && state.user !== null) {
-      console.log('state', state);
       fetchStripe();
 
       isUserSubscribed(state.user.email);
