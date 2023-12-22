@@ -12,7 +12,6 @@ const ListingCard = (props: Props) => {
       return { src: image, listingNum: props.listingInfo.user_id.slice(-5) };
     }
   );
-  console.log('props', formattedImages);
 
   return (
     <div className="rounded-xl p-[10px] flex-col md:m-2 bg-white relative flex h-[40vh] my-2 m-auto w-[90%] md:w-[45%]">

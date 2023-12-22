@@ -228,6 +228,7 @@ const Page = (props: Props) => {
   };
 
   useEffect(() => {
+    console.log('checking if convo exists');
     if (
       state.user !== null &&
       contactedUserID !== null &&

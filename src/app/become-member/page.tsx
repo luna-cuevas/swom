@@ -119,6 +119,7 @@ const Page = (props: Props) => {
 
     if (error) {
       console.log(error);
+      toast.error(error.message);
     } else {
       console.log('userData', userData);
 
@@ -192,8 +193,10 @@ const Page = (props: Props) => {
 
         if (userError) {
           console.log(userError);
+          toast.error(userError.message);
         } else {
           console.log('user', userListing);
+          toast.success('Application submitted successfully');
         }
       }
       setSignUpActive(false);

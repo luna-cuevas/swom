@@ -42,19 +42,26 @@ const Navigation = (props: Props) => {
 
     if (stripe && state.user) {
       const isSubscribed = await isUserSubscribed(state.user.email);
+
       if (isSubscribed) {
         console.log('isSubscribed', isSubscribed);
+        setActiveNavButtons(true);
+
         setState({ ...state, isSubscribed: true });
       } else {
+        console.log('not subbed', isSubscribed);
         setState({ ...state, isSubscribed: false });
       }
     }
   };
 
   async function isUserSubscribed(email: string): Promise<boolean> {
-    console.log('stripe', stripe);
+    console.log('email', email);
     try {
-      if (!stripe) return false;
+      if (!stripe) {
+        console.log('Stripe.js has not loaded yet.');
+        return false;
+      }
       // Retrieve the customer by email
       const customers = await stripe.customers.list({ email: email });
       const customer = customers.data[0]; // Assuming the first customer is the desired one
@@ -66,9 +73,12 @@ const Navigation = (props: Props) => {
           limit: 1, // Assuming only checking the latest subscription
         });
 
+        console.log('subscriptions', subscriptions);
+
         return subscriptions.data.length > 0; // User is subscribed if there's at least one subscription
       } else {
         // Customer not found
+        console.log('Customer not found');
         return false;
       }
     } catch (error) {
@@ -84,47 +94,30 @@ const Navigation = (props: Props) => {
         .select('userInfo')
         .eq('user_id', state.user.id);
 
-      if (loggedInUserData.data.length === 0) {
+      if (loggedInUserData?.data?.length === 0) {
         console.log('no user data');
         return;
-      }
+      } else {
+        if (loggedInUserData?.data) {
+          console.log('logged in user', loggedInUserData?.data[0]?.userInfo);
 
-      console.log('logged in user', loggedInUserData.data[0].userInfo);
-      localStorage.setItem(
-        'loggedInUser',
-        JSON.stringify(loggedInUserData.data[0].userInfo)
-      );
-      setState({ ...state, loggedInUser: loggedInUserData.data[0].userInfo });
+          setState({
+            ...state,
+            loggedInUser: loggedInUserData?.data[0]?.userInfo,
+          });
+        }
+      }
     }
   };
 
-  const session = JSON.parse(localStorage.getItem('session')!);
-  const user = JSON.parse(localStorage.getItem('user')!);
-  const localLoggedInUser = JSON.parse(localStorage.getItem('loggedInUser')!);
-
   useEffect(() => {
-    if (session && user) {
-      fetchStripe();
-      console.log('session', session);
-      console.log('user', user);
+    if (state.session && state.user) {
+      console.log('session', state.session);
+      console.log('user', state.user);
 
-      setState({
-        ...state,
-        session: session,
-        user: user,
-      });
-
-      if (!localLoggedInUser) {
-        console.log('no localLoggedInUser');
+      if (!state.loggedInUser) {
+        console.log('fetching logged in user');
         fetchLoggedInUser();
-      } else {
-        console.log('localLoggedInUser', localLoggedInUser);
-        setState({
-          ...state,
-          session: session,
-          user: user,
-          loggedInUser: localLoggedInUser,
-        });
       }
     }
   }, []);
@@ -134,23 +127,34 @@ const Navigation = (props: Props) => {
   }, [state]);
 
   useEffect(() => {
-    if (state.session !== null && state.user !== null) {
-      fetchStripe();
-
+    if (state.session && state.user) {
       isUserSubscribed(state.user.email);
-      localStorage.setItem('session', JSON.stringify(state.session));
-      localStorage.setItem('user', JSON.stringify(state.user));
-      setActiveNavButtons(true);
+      console.log('stripe', stripe);
+
+      if (stripe !== null) {
+        fetchStripe();
+      }
     } else {
       setActiveNavButtons(false);
     }
-  }, [state.session, navigation]);
+  }, [state.session, navigation, router]);
 
   const handleSignOut = async () => {
     try {
       await supabase.auth.signOut();
       localStorage.clear();
-      setState({ ...state, session: null, user: null });
+      // clear all state
+      setState({
+        ...state,
+        session: null,
+        user: null,
+        showMobileMenu: false,
+        noUser: false,
+        imgUploadPopUp: false,
+        aboutYou: false,
+        isSubscribed: false,
+        loggedInUser: null,
+      });
       router.push('/home');
       toast.success('Signed out successfully');
     } catch (error) {

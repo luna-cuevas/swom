@@ -91,52 +91,51 @@ const Dashboard: React.FC = () => {
     const age = today.getFullYear() - dob.getFullYear();
 
     try {
-      // Move the listing to the 'listings' table
-      const { data, error } = await supabase
-        .from('needs_approval')
-        .delete()
-        .eq('user_id', listingObj.user_id);
+      // Add the approved listing to the 'listings' table
+      const { data: listingUpdate, error: listingError } = await supabase
+        .from('listings')
+        .insert({
+          user_id: listingObj.user_id,
+          userInfo: listingObj.userInfo,
+          homeInfo: listingObj.homeInfo,
+          amenities: listingObj.amenities,
+        });
 
-      if (error) {
-        console.error('Error approving listing:', error.message);
-      } else {
-        console.log('data', data);
-        // Add the approved listing to the 'listings' table
-        const { data: listingUpdate, error } = await supabase
-          .from('listings')
-          .insert({
-            user_id: listingObj.user_id,
-            userInfo: listingObj.userInfo,
-            homeInfo: listingObj.homeInfo,
-            amenities: listingObj.amenities,
-          });
+      const { data: userInfo, error: userError } = await supabase
+        .from('appUsers')
+        .insert({
+          id: listingObj.user_id,
+          name: listingObj.userInfo.name,
+          profession: listingObj.userInfo.profession,
+          age: age,
+        });
 
-        const { data: userInfo, error: userError } = await supabase
-          .from('appUsers')
-          .insert({
-            id: listingObj.user_id,
-            name: listingObj.userInfo.name,
-            profession: listingObj.userInfo.profession,
-            age: age,
-          });
+      const { data: userCreationData, error: userCreationError } =
+        await supabase.auth.resetPasswordForEmail(listingObj.userInfo.email, {
+          redirectTo: 'http://localhost:3000/sign-up',
+        });
 
-        const { data: userCreationData, error: userCreationError } =
-          await supabase.auth.resetPasswordForEmail(listingObj.userInfo.email, {
-            redirectTo: 'http://localhost:3000/sign-up',
-          });
-
-        if (userError || userCreationError) {
-          console.error(
-            'Error sending user to appUser table:',
+      if (listingError || userError || userCreationError) {
+        console.error(
+          'Error adding listing or user data:',
+          (listingError && listingError.message) ||
             (userError && userError.message) ||
-              (userCreationError && userCreationError.message)
-          );
-        }
+            (userCreationError && userCreationError.message)
+        );
+      } else {
+        // Move the listing to the 'listings' table only if both insertions are successful
+        const { data, error } = await supabase
+          .from('needs_approval')
+          .delete()
+          .eq('user_id', listingObj.user_id);
 
         if (error) {
-          console.error('Error approving listing:', error.message);
+          console.error(
+            'Error deleting listing from needs_approval:',
+            error.message
+          );
         } else {
-          console.log('data', listingUpdate);
+          console.log('Successfully approved listing:', data);
           // Remove the listing from the local state
           setNeedsApprovalListings(
             needsApprovalListings.filter(
@@ -159,7 +158,7 @@ const Dashboard: React.FC = () => {
   };
 
   return (
-    <div className=" w-full overflow-scroll md:w-2/3 m-auto min-h-screen">
+    <div className=" w-full  md:w-2/3 m-auto min-h-screen">
       <h1 className="text-xl text-center my-4">Listings Needing Approval</h1>
       <table className="w-[500px] md:w-full h-fit">
         <thead>

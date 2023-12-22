@@ -34,8 +34,7 @@ const SignIn = (props: Props) => {
     console.log('session', session);
     if (event === 'SIGNED_IN' && session !== null) {
       console.log('session', event);
-      localStorage.setItem('session', JSON.stringify(session));
-      localStorage.setItem('user', JSON.stringify(session.user));
+
       setState({
         ...state,
         session,

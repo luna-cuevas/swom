@@ -28,10 +28,8 @@ const CarouselPage = (props: Props) => {
   const stateSession = state.session;
 
   useEffect(() => {
-    const session = localStorage.getItem('session');
-    const user = localStorage.getItem('user');
-    if (session && user && stateSession) {
-      setUser(JSON.parse(user));
+    if (state.session && state.user) {
+      setUser(state.user);
     } else {
       setUser(null);
     }

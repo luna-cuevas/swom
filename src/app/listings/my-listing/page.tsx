@@ -206,6 +206,7 @@ const Page = (props: Props) => {
       setProfession(listings[0].userInfo.profession);
       setValue('userInfo.profession', listings[0].userInfo.profession);
       setAge(age);
+      console.log('age', age);
       setValue('userInfo.age', age);
       setAboutYou(listings[0].userInfo.about_me);
       setValue('userInfo.profileImage', listings[0].userInfo.profileImage);
