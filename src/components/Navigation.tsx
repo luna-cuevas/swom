@@ -35,18 +35,21 @@ const Navigation = (props: Props) => {
   const fetchStripe = async () => {
     // const stripe = await loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLIC_KEY!);
 
-    const stripe = new Stripe(process.env.NEXT_PUBLIC_STRIPE_SECRET_KEY!, {
-      apiVersion: '2023-08-16',
-    });
-    setStripe(stripe as Stripe | null); // Use type assertion
+    const stripeActivation = new Stripe(
+      process.env.NEXT_PUBLIC_STRIPE_SECRET_KEY!,
+      {
+        apiVersion: '2023-08-16',
+      }
+    );
+    setStripe(stripeActivation as Stripe | null); // Use type assertion
+  };
 
-    if (stripe && state.user) {
+  const settingIfSubbed = async () => {
+    if (stripe != null && state.user) {
       const isSubscribed = await isUserSubscribed(state.user.email);
 
       if (isSubscribed) {
         console.log('isSubscribed', isSubscribed);
-        setActiveNavButtons(true);
-
         setState({ ...state, isSubscribed: true });
       } else {
         console.log('not subbed', isSubscribed);
@@ -54,6 +57,10 @@ const Navigation = (props: Props) => {
       }
     }
   };
+
+  useEffect(() => {
+    settingIfSubbed();
+  }, [stripe]);
 
   async function isUserSubscribed(email: string): Promise<boolean> {
     console.log('email', email);
@@ -131,13 +138,14 @@ const Navigation = (props: Props) => {
       isUserSubscribed(state.user.email);
       console.log('stripe', stripe);
 
-      if (stripe !== null) {
+      if (!stripe) {
         fetchStripe();
       }
+      setActiveNavButtons(true);
     } else {
       setActiveNavButtons(false);
     }
-  }, [state.session, navigation, router]);
+  }, [state.session, state.user, state.loggedInUser]);
 
   const handleSignOut = async () => {
     try {
