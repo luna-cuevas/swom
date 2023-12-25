@@ -1,17 +1,12 @@
 'use client';
 import ListingCard from '@/components/ListingCard';
-import { useStateContext } from '@/context/StateContext';
-import { supabaseClient } from '@/utils/supabaseClient';
 import React, { useEffect, useState } from 'react';
 import Stripe from 'stripe';
 
-type Props = {
-  listings: any;
-};
+type Props = {};
 
 const Page = (props: Props) => {
   const [listings, setListings] = useState<any>([]);
-  const { state, setState } = useStateContext();
   const stripeActivation = new Stripe(
     process.env.NEXT_PUBLIC_STRIPE_SECRET_KEY!,
     {
