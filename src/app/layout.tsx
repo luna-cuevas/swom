@@ -34,13 +34,13 @@ export default function RootLayout({
     clientSecret: process.env.NEXT_PUBLIC_STRIPE_SECRET_KEY,
   };
 
-  useEffect(() => {
-    setLoading(true);
-    const timer = setTimeout(() => {
-      setLoading(false);
-    }, 1000);
-    return () => clearTimeout(timer);
-  }, [pathname]);
+  // useEffect(() => {
+  //   setLoading(true);
+  //   const timer = setTimeout(() => {
+  //     setLoading(false);
+  //   }, 1000);
+  //   return () => clearTimeout(timer);
+  // }, [pathname]);
 
   return (
     <html lang="en">
@@ -90,7 +90,7 @@ export default function RootLayout({
         >
           <body className="relative">
             <>
-              {loading && (
+              {/* {loading && (
                 <div
                   style={{
                     position: 'fixed',
@@ -106,9 +106,11 @@ export default function RootLayout({
                   }}>
                   Loading...
                 </div>
-              )}
+              )} */}
               <Navigation />
-              {children}
+              <React.Suspense fallback={<div>Loading...</div>}>
+                {children}
+              </React.Suspense>
               <Footer />
               <Script src="https://player.vimeo.com/api/player.js"></Script>
             </>

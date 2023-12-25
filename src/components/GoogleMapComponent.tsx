@@ -79,7 +79,7 @@ export default function GoogleMapComponent(props: Props) {
       )}
       <GoogleMap
         mapContainerStyle={mapContainerStyle}
-        zoom={10}
+        zoom={14}
         center={center}>
         {props.radius ? (
           <Circle

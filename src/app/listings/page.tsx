@@ -5,32 +5,36 @@ import { supabaseClient } from '@/utils/supabaseClient';
 import React, { useEffect, useState } from 'react';
 import Stripe from 'stripe';
 
-type Props = {};
+type Props = {
+  listings: any;
+};
 
 const Page = (props: Props) => {
-  const supabase = supabaseClient();
-
   const [listings, setListings] = useState<any>([]);
   const { state, setState } = useStateContext();
-  const [stripe, setStripe] = useState<Stripe | null>(null);
-
-  console.log('listings', listings);
+  const stripeActivation = new Stripe(
+    process.env.NEXT_PUBLIC_STRIPE_SECRET_KEY!,
+    {
+      apiVersion: '2023-08-16',
+    }
+  );
 
   const fetchListings = async () => {
     try {
-      // Replace 'listings' with your actual table name
-      const { data, error } = await supabase.from('listings').select('*');
-
-      if (error) {
-        throw error;
-      }
-
-      console.log('data', data);
+      const listings = await fetch('/api/getListings', {
+        cache: 'no-cache',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        method: 'POST',
+        body: JSON.stringify({}),
+      });
+      const listingsJson = await listings.json();
+      console.log('listingsJson', listingsJson);
 
       const subscribedListings = await Promise.all(
-        data.map(async (listing: any) => {
+        listingsJson.map(async (listing: any) => {
           const isSubscribed = await isUserSubscribed(listing.userInfo.email);
-          // only return the listing if the user is subscribed
           if (isSubscribed) {
             return listing;
           } else {
@@ -42,43 +46,29 @@ const Page = (props: Props) => {
       const filteredListings = subscribedListings.filter(
         (listing: any) => listing !== null
       );
-      console.log('subscribedListings', filteredListings);
 
-      setListings(filteredListings || []);
+      setListings(filteredListings);
     } catch (error: any) {
       console.error('Error fetching data:', error.message);
     }
   };
 
-  const fetchStripe = async () => {
-    // const stripe = await loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLIC_KEY!);
-
-    const stripe = new Stripe(process.env.NEXT_PUBLIC_STRIPE_SECRET_KEY!, {
-      apiVersion: '2023-08-16',
-    });
-    setStripe(stripe as Stripe | null); // Use type assertion
-  };
-
   async function isUserSubscribed(email: string): Promise<boolean> {
-    console.log('email', email);
-
     try {
-      if (!stripe) {
+      if (!stripeActivation) {
         console.log('Stripe.js has not loaded yet.');
         return false;
       }
       // Retrieve the customer by email
-      const customers = await stripe.customers.list({ email: email });
+      const customers = await stripeActivation.customers.list({ email: email });
       const customer = customers.data[0]; // Assuming the first customer is the desired one
 
       if (customer) {
         // Retrieve the customer's subscriptions
-        const subscriptions = await stripe.subscriptions.list({
+        const subscriptions = await stripeActivation.subscriptions.list({
           customer: customer.id,
           limit: 1, // Assuming only checking the latest subscription
         });
-
-        console.log('subscriptions', subscriptions);
 
         return subscriptions.data.length > 0; // User is subscribed if there's at least one subscription
       } else {
@@ -93,10 +83,7 @@ const Page = (props: Props) => {
   }
 
   useEffect(() => {
-    if (state.session) {
-      fetchListings();
-      fetchStripe();
-    }
+    fetchListings();
   }, []);
 
   return (
@@ -121,11 +108,11 @@ const Page = (props: Props) => {
           </h1>
         </div>
 
-        <div className="bg-[#EADEDB]">
+        <div className="bg-[#EADEDB] h-max">
           <div className="m-auto justify-between max-w-[1000px] flex w-full flex-wrap">
             {listings &&
-              listings.map((listing: any) => (
-                <ListingCard key={listing.id} listingInfo={listing} />
+              listings.map((listing: any, index: number) => (
+                <ListingCard key={index} listingInfo={listing} />
               ))}
           </div>
         </div>

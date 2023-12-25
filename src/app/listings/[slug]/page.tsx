@@ -22,18 +22,20 @@ const Page = (props: Props) => {
   const fetchListings = async () => {
     try {
       // Replace 'listings' with your actual table name
-      const { data, error } = await supabase
-        .from('listings')
-        .select('*')
-        .eq('user_id', slug);
 
-      console.log('data', data);
+      const listings = await fetch('/api/getListings', {
+        body: JSON.stringify({ user_id: slug }),
+        cache: 'no-cache',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        method: 'POST',
+      });
+      const listingsJson = await listings.json();
 
-      if (error) {
-        throw error;
-      }
+      console.log('data', listingsJson);
 
-      const userInfo = data[0]?.userInfo;
+      const userInfo = listingsJson[0]?.userInfo;
       const dob = new Date(userInfo?.dob);
       const today = new Date();
       const age =
@@ -45,7 +47,7 @@ const Page = (props: Props) => {
 
       console.log('dob', age);
 
-      const updatedData = data.map((item: any) => ({
+      const updatedData = listingsJson.map((item: any) => ({
         ...item,
         userInfo: {
           ...item.userInfo,
@@ -54,7 +56,7 @@ const Page = (props: Props) => {
       }));
 
       setListings(updatedData);
-      setImageFiles(data[0]?.homeInfo?.listingImages);
+      setImageFiles(listingsJson[0]?.homeInfo?.listingImages);
     } catch (error: any) {
       console.error('Error fetching data:', error.message);
     }
@@ -102,7 +104,16 @@ const Page = (props: Props) => {
 
           <div className="mx-auto text-center">
             <div className="relative m-auto  h-[100px] w-[100px]">
-              <Image fill src="/profile/profile-pic-placeholder.png" alt="" />
+              <Image
+                fill
+                src={
+                  listings[0]?.userInfo?.profileImage
+                    ? listings[0]?.userInfo?.profileImage
+                    : '/placeholder.png'
+                }
+                className="rounded-full object-cover"
+                alt=""
+              />
             </div>
             <h3 className="text-xl">{listings[0]?.userInfo?.name}</h3>
             <p className="font-bold font-sans">
@@ -312,9 +323,9 @@ const Page = (props: Props) => {
           className={`w-full p-4 h-[40vh] ${mapsActive ? 'block' : 'hidden'}`}>
           {listings[0]?.homeInfo?.city && (
             <GoogleMapComponent
-              city={listings[0].homeInfo.city}
+              exactAddress={listings[0]?.homeInfo?.address}
               noSearch={true}
-              radius={100}
+              radius={300}
             />
           )}
         </div>

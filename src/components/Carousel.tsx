@@ -176,7 +176,8 @@ const CarouselPage = (props: Props) => {
               alt="image"
               fill
               priority
-              // placeholder="blur"
+              placeholder="blur"
+              blurDataURL="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAARgAAABYCAYAA"
             />
           </div>
         ))}

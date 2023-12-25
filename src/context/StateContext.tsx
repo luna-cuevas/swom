@@ -17,6 +17,8 @@ const initialState: StateType = {
   aboutYou: false,
   isSubscribed: false,
   loggedInUser: null,
+  stripe: null,
+  activeNavButtons: false,
 };
 
 // Define the types
@@ -29,6 +31,8 @@ type StateType = {
   aboutYou: boolean;
   isSubscribed: boolean;
   loggedInUser: any;
+  stripe: any;
+  activeNavButtons: boolean;
 };
 
 type StateContextType = {
@@ -45,6 +49,8 @@ const StateContext = createContext<StateContextType | undefined>(undefined);
 
 // Create the StateProvider component
 const StateProvider: React.FC<StateProviderProps> = ({ children }) => {
+  const isLocalStorageAvailable = typeof localStorage !== 'undefined';
+
   // Use individual local storage keys for each piece of state
   const localStorageKeys = {
     session: 'session',
@@ -55,6 +61,8 @@ const StateProvider: React.FC<StateProviderProps> = ({ children }) => {
     aboutYou: 'aboutYou',
     isSubscribed: 'isSubscribed',
     loggedInUser: 'loggedInUser',
+    stripe: 'stripe',
+    activeNavButtons: 'activeNavButton',
   };
 
   // Retrieve each piece of state from local storage on component mount (or use initialState)
@@ -87,6 +95,13 @@ const StateProvider: React.FC<StateProviderProps> = ({ children }) => {
       JSON.parse(
         localStorage.getItem(localStorageKeys.loggedInUser) || 'null'
       ) || initialState.loggedInUser,
+    stripe:
+      JSON.parse(localStorage.getItem(localStorageKeys.stripe) || 'null') ||
+      initialState.stripe,
+    activeNavButtons:
+      JSON.parse(
+        localStorage.getItem(localStorageKeys.activeNavButtons) || 'false'
+      ) || initialState.activeNavButtons,
   };
 
   // Use state with the initial value from local storage
@@ -94,33 +109,46 @@ const StateProvider: React.FC<StateProviderProps> = ({ children }) => {
 
   // Save each piece of state to local storage whenever it changes
   useEffect(() => {
-    localStorage.setItem(
-      localStorageKeys.session,
-      JSON.stringify(state.session)
-    );
-    localStorage.setItem(localStorageKeys.user, JSON.stringify(state.user));
-    localStorage.setItem(
-      localStorageKeys.showMobileMenu,
-      JSON.stringify(state.showMobileMenu)
-    );
-    localStorage.setItem(localStorageKeys.noUser, JSON.stringify(state.noUser));
-    localStorage.setItem(
-      localStorageKeys.imgUploadPopUp,
-      JSON.stringify(state.imgUploadPopUp)
-    );
-    localStorage.setItem(
-      localStorageKeys.aboutYou,
-      JSON.stringify(state.aboutYou)
-    );
-    localStorage.setItem(
-      localStorageKeys.isSubscribed,
-      JSON.stringify(state.isSubscribed)
-    );
-    localStorage.setItem(
-      localStorageKeys.loggedInUser,
-      JSON.stringify(state.loggedInUser)
-    );
-  }, [state, localStorageKeys]);
+    if (isLocalStorageAvailable) {
+      localStorage.setItem(
+        localStorageKeys.session,
+        JSON.stringify(state.session)
+      );
+      localStorage.setItem(localStorageKeys.user, JSON.stringify(state.user));
+      localStorage.setItem(
+        localStorageKeys.showMobileMenu,
+        JSON.stringify(state.showMobileMenu)
+      );
+      localStorage.setItem(
+        localStorageKeys.noUser,
+        JSON.stringify(state.noUser)
+      );
+      localStorage.setItem(
+        localStorageKeys.imgUploadPopUp,
+        JSON.stringify(state.imgUploadPopUp)
+      );
+      localStorage.setItem(
+        localStorageKeys.aboutYou,
+        JSON.stringify(state.aboutYou)
+      );
+      localStorage.setItem(
+        localStorageKeys.isSubscribed,
+        JSON.stringify(state.isSubscribed)
+      );
+      localStorage.setItem(
+        localStorageKeys.loggedInUser,
+        JSON.stringify(state.loggedInUser)
+      );
+      localStorage.setItem(
+        localStorageKeys.stripe,
+        JSON.stringify(state.stripe)
+      );
+      localStorage.setItem(
+        localStorageKeys.activeNavButtons,
+        JSON.stringify(state.activeNavButtons)
+      );
+    }
+  }, [state, localStorageKeys, isLocalStorageAvailable]);
 
   return (
     <StateContext.Provider value={{ state, setState }}>

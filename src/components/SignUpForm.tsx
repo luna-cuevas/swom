@@ -16,10 +16,10 @@ type Props = {};
 const SignUpForm = (props: Props) => {
   const supabase = supabaseClient();
   const [selectedPlan, setSelectedPlan] = useState({
-    plan: 'Monthly',
-    interval: 'month',
-    amount: 20,
-    planDescription: 'Subscribe for $20 per month',
+    plan: '1 year',
+    interval: 'year',
+    amount: 20000,
+    planDescription: 'Subscribe for $200 per year.',
   });
   const { state, setState } = useStateContext();
   const [stripe, setStripe] = useState<Stripe | null>(null);
@@ -27,7 +27,6 @@ const SignUpForm = (props: Props) => {
   const router = useRouter();
   const searchParams = useSearchParams();
   const sessionId = searchParams.get('session_id');
-  console.log('searchParams', sessionId);
 
   const {
     register,
@@ -77,7 +76,7 @@ const SignUpForm = (props: Props) => {
   const handleSubscription = async () => {
     if (stripe) {
       const body: CheckoutSubscriptionBody = {
-        interval: selectedPlan.interval as 'month' | 'year',
+        interval: selectedPlan.interval as 'year',
         amount: selectedPlan.amount,
         plan: selectedPlan.plan,
         planDescription: selectedPlan.planDescription,
@@ -130,6 +129,86 @@ const SignUpForm = (props: Props) => {
     return false;
   };
 
+  const stripeActivation = new Stripe(
+    process.env.NEXT_PUBLIC_STRIPE_SECRET_KEY!,
+    {
+      apiVersion: '2023-08-16',
+    }
+  );
+
+  const fetchStripe = async (email: string) => {
+    console.log('fetching stripe');
+
+    const isSubscribed = await isUserSubscribed(email, stripeActivation);
+
+    return isSubscribed;
+  };
+
+  async function isUserSubscribed(
+    email: string,
+    stripe: any
+  ): Promise<boolean> {
+    console.log('checking subscription status');
+    try {
+      if (!stripe) {
+        console.log('Stripe.js has not loaded yet.');
+        return false;
+      }
+      // Retrieve the customer by email
+      const customers = await stripe.customers.list({ email: email });
+      const customer = customers.data[0]; // Assuming the first customer is the desired one
+
+      if (customer) {
+        // Retrieve the customer's subscriptions
+        const subscriptions = await stripe.subscriptions.list({
+          customer: customer.id,
+          limit: 1, // Assuming only checking the latest subscription
+        });
+
+        return subscriptions.data.length > 0; // User is subscribed if there's at least one subscription
+      } else {
+        // Customer not found
+        console.log('Customer not found');
+        return false;
+      }
+    } catch (error) {
+      console.error('Error checking subscription status:', error);
+      throw error;
+    }
+  }
+
+  const fetchLoggedInUser = async (user: any) => {
+    console.log('fetching logged in user', user);
+
+    try {
+      // Make a GET request to the API route with the user ID as a query parameter
+      const response = await fetch(`/api/getUser`, {
+        headers: {
+          'Content-Type': 'application/json',
+          Accept: 'application/json',
+        },
+        method: 'POST',
+        body: JSON.stringify({ id: user.id }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to fetch user data');
+      }
+
+      const data = await response.json();
+
+      if (data) {
+        return data;
+      } else {
+        console.log('No data found for the user');
+        return null;
+      }
+    } catch (error: any) {
+      console.error('Error fetching user data:', error.message);
+      return null;
+    }
+  };
+
   const handleSignUp = async (
     name: string,
     email: string,
@@ -145,10 +224,15 @@ const SignUpForm = (props: Props) => {
       toast.error(error.message);
       return false;
     } else {
+      const loggedInUser = await fetchLoggedInUser(session.user);
+      const subbed = await fetchStripe(session.user.email ?? '');
       setState({
         ...state,
-        user: session?.user,
-        session: session,
+        session,
+        user: session.user,
+        loggedInUser: loggedInUser,
+        isSubscribed: subbed,
+        activeNavButtons: true,
       });
 
       toast.success('Signed up successfully');
@@ -194,26 +278,26 @@ const SignUpForm = (props: Props) => {
         <div className="flex my-8 justify-evenly">
           <div
             className={`${
-              selectedPlan.plan == 'Monthly'
+              selectedPlan.plan == '1 year'
                 ? ' border-[#7E8019] shadow-xl bg-[#ffffff]'
                 : 'border-gray-300'
             } border-4 rounded-md p-8 flex flex-col gap-2 items-start`}>
             <h2 className="text-xl font-bold text-gray-700">
-              Monthly Subscription
+              1 Year Subscription
             </h2>
-            <p className="text-gray-400">$20 per month</p>
+            <p className="text-gray-400">$200 per year</p>
             <button
               type="button"
               onClick={() =>
                 setSelectedPlan({
-                  plan: 'Monthly',
-                  interval: 'month',
-                  amount: 20,
-                  planDescription: 'Subscribe for $20 per month',
+                  plan: '1 year',
+                  interval: 'year',
+                  amount: 20000,
+                  planDescription: 'Subscribe for $200 per year.',
                 })
               }
               className={`border ${
-                selectedPlan.plan == 'Monthly' && 'bg-[#7E8019] text-white'
+                selectedPlan.plan == '1 year' && 'bg-[#7E8019] text-white'
               } border-violet-200 text-violet-500 rounded-md px-4 py-2 w-full hover:bg-violet-500 hover:text-violet-200 transition-colors`}>
               Select
             </button>
@@ -221,26 +305,26 @@ const SignUpForm = (props: Props) => {
 
           <div
             className={`${
-              selectedPlan.plan == 'Yearly'
+              selectedPlan.plan == '2 year'
                 ? 'border-[#7E8019] shadow-xl bg-[#ffffff]'
                 : 'border-gray-300'
             } border-4 rounded-md p-8 flex flex-col gap-2 items-start`}>
             <h2 className="text-xl font-bold text-gray-700">
-              Yearly Subscription
+              2 Year Subscription
             </h2>
-            <p className="text-gray-400">$200 per year</p>
+            <p className="text-gray-400">$350 every 2 years</p>
             <button
               type="button"
               onClick={() =>
                 setSelectedPlan({
-                  plan: 'Yearly',
+                  plan: '2 year',
                   interval: 'year',
-                  amount: 200,
-                  planDescription: 'Subscribe for $200 per year',
+                  amount: 35000,
+                  planDescription: 'Subscribe for $350 every 2 years.',
                 })
               }
               className={`border ${
-                selectedPlan.plan == 'Yearly' && 'bg-[#7E8019] text-white'
+                selectedPlan.plan == '2 year' && 'bg-[#7E8019] text-white'
               } border-violet-200 text-violet-500 rounded-md px-4 py-2 w-full hover:bg-violet-500 hover:text-violet-200 transition-colors`}>
               Select
             </button>

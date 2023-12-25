@@ -6,6 +6,8 @@ import { useStateContext } from '@/context/StateContext';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
+import Stripe from 'stripe';
 
 type Props = {
   setSignInActive: React.Dispatch<React.SetStateAction<boolean>>;
@@ -13,35 +15,107 @@ type Props = {
 
 const SignIn = (props: Props) => {
   const supabase = supabaseClient();
-  const [loading, setLoading] = React.useState(true);
   const { state, setState } = useStateContext();
+  const stripeActivation = new Stripe(
+    process.env.NEXT_PUBLIC_STRIPE_SECRET_KEY!,
+    {
+      apiVersion: '2023-08-16',
+    }
+  );
+
+  async function isUserSubscribed(
+    email: string,
+    stripe: any
+  ): Promise<boolean> {
+    console.log('checking subscription status');
+    try {
+      if (!stripe) {
+        console.log('Stripe.js has not loaded yet.');
+        return false;
+      }
+      // Retrieve the customer by email
+      const customers = await stripe.customers.list({ email: email });
+      const customer = customers.data[0]; // Assuming the first customer is the desired one
+
+      if (customer) {
+        // Retrieve the customer's subscriptions
+        const subscriptions = await stripe.subscriptions.list({
+          customer: customer.id,
+          limit: 1, // Assuming only checking the latest subscription
+        });
+
+        return subscriptions.data.length > 0; // User is subscribed if there's at least one subscription
+      } else {
+        // Customer not found
+        console.log('Customer not found');
+        return false;
+      }
+    } catch (error) {
+      console.error('Error checking subscription status:', error);
+      throw error;
+    }
+  }
 
   useEffect(() => {
     const { data: authListener } =
       supabase.auth.onAuthStateChange(handleAuthChange);
     // Simulate a delay for the loading animation
-    const timer = setTimeout(() => {
-      setLoading(false);
-    }, 500);
 
     return () => {
       authListener.subscription.unsubscribe();
-      clearTimeout(timer);
     };
   }, []);
+
+  const fetchLoggedInUser = async (user: any) => {
+    console.log('fetching logged in user', user);
+
+    try {
+      // Make a GET request to the API route with the user ID as a query parameter
+      const response = await fetch(`/api/getUser`, {
+        headers: {
+          'Content-Type': 'application/json',
+          Accept: 'application/json',
+        },
+        method: 'POST',
+        body: JSON.stringify({ id: user.id }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to fetch user data');
+      }
+
+      const data = await response.json();
+
+      if (data) {
+        return data;
+      } else {
+        console.log('No data found for the user');
+        return null;
+      }
+    } catch (error: any) {
+      console.error('Error fetching user data:', error.message);
+      return null;
+    }
+  };
 
   const handleAuthChange = async (event: any, session: any) => {
     console.log('session', session);
     if (event === 'SIGNED_IN' && session !== null) {
-      console.log('session', event);
-
+      console.log('session', session);
+      toast.success('Signed in successfully');
+      const loggedInUser = await fetchLoggedInUser(session.user);
+      const subbed = await isUserSubscribed(
+        session.user.email,
+        stripeActivation
+      );
       setState({
         ...state,
         session,
         user: session.user,
+        loggedInUser: loggedInUser,
+        isSubscribed: subbed,
+        activeNavButtons: true,
       });
-      console.log('session', session);
-      toast.success('Signed in successfully');
 
       props.setSignInActive(false);
     } else if (event === 'SIGNED_OUT') {

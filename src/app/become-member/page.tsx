@@ -46,6 +46,7 @@ const Page = (props: Props) => {
           cityVisit2: '',
           cityVisit3: '',
         },
+        openToOtherDestinations: 'false',
       },
       homeInfo: {
         title: '',
@@ -205,10 +206,19 @@ const Page = (props: Props) => {
   };
 
   const onError = (errors: any, e: any) => {
-    console.log(errors, e);
+    const printErrorMessages = (errorObject: any) => {
+      Object.entries(errorObject).forEach(([key, value]: [string, any]) => {
+        if (typeof value === 'object' && value !== null && !value.message) {
+          printErrorMessages(value);
+        } else {
+          console.log(value.message);
+          toast.error(value.message);
+        }
+      });
+    };
 
     if (errors) {
-      toast.error('Please fill out all fields');
+      printErrorMessages(errors);
     }
   };
 
@@ -270,7 +280,7 @@ const Page = (props: Props) => {
         <div className="">
           <form
             onSubmit={handleSubmit(onSubmit, onError)}
-            className=" max-w-[800px] gap-4 bg-[#F3EBE7] py-4 flex flex-col w-2/3 m-auto">
+            className=" max-w-[800px] gap-4 bg-[#F3EBE7] py-4 flex flex-col w-[90%] lg:w-2/3 m-auto">
             <div className="m-auto flex-col w-2/3 flex">
               <label htmlFor="name">Name</label>
               <input
@@ -635,6 +645,33 @@ const Page = (props: Props) => {
                     {...register('userInfo.openToOtherCities.cityVisit3')}
                   />
                 </div>
+                <div className="flex gap-4 mt-4">
+                  <label htmlFor="">Are you open to other destinations?</label>
+                  <div className="flex gap-2">
+                    <input
+                      className="bg-transparent checked:bg-[#7F8119] appearance-none border border-[#172544] rounded-xl p-[6px] my-auto"
+                      type="radio"
+                      value="true"
+                      {...register('userInfo.openToOtherDestinations', {
+                        required:
+                          'Please select if you are open to other destinations',
+                      })}
+                      id="true"
+                    />
+                    <label htmlFor="true">Yes</label>
+                    <input
+                      className="bg-transparent checked:bg-[#7F8119] appearance-none border border-[#172544] rounded-xl p-[6px] my-auto"
+                      type="radio"
+                      value="false"
+                      {...register('userInfo.openToOtherDestinations', {
+                        required:
+                          'Please select if you are open to other destinations',
+                      })}
+                      id="false"
+                    />
+                    <label htmlFor="false">No</label>
+                  </div>
+                </div>
               </div>
             </div>
             <div className="flex w-2/3 m-auto flex-wrap pb-8">
@@ -693,7 +730,7 @@ const Page = (props: Props) => {
                     {...register('amenities.pingpong')}
                     id="pingpong"
                   />
-                  <label className="" htmlFor="pinpong">
+                  <label className="" htmlFor="pingpong">
                     Ping pong
                   </label>
                 </div>

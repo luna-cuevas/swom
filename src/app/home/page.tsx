@@ -64,7 +64,7 @@ const Page = (props: Props) => {
             <div className="main_circle_text">
               <svg
                 viewBox="0 -4 100 100"
-                style={{ borderRadius: '50%;' }}
+                style={{ borderRadius: '50%' }}
                 width="200"
                 height="200">
                 <defs>
