@@ -325,9 +325,7 @@ const Page = (props: Props) => {
       }
     }
 
-    // if no errors uploading images, then update the user info on the database
-
-    const editListingData = await fetch('/api/listings/editListing', {
+    const editListingData = await fetch('/api/profile/editProfile', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -365,7 +363,7 @@ const Page = (props: Props) => {
       <form
         onSubmit={handleSubmit(onSubmit, onError)}
         className=" max-w-[1440px] mx-auto relative">
-        <div className="py-8  px-8 md:px-16 flex-col md:flex-row flex justify-center">
+        <div className="py-8  px-8 md:px-16 flex-col md:flex-row flex justify-between gap-4">
           <div className="md:w-1/4 my-4 flex justify-center text-center flex-col">
             {editUserInfo ? (
               <>
@@ -446,10 +444,10 @@ const Page = (props: Props) => {
                   </div>
                 </div>
 
-                <h2 className="font-serif text-4xl ">
+                <h2 className="font-serif break-all text-4xl ">
                   {getValues('userInfo.name')}
                 </h2>
-                <p className="font-sans my-1 font-bold uppercase tracking-[0.1rem]">
+                <p className="font-sans my-1 break-all font-bold uppercase tracking-[0.1rem]">
                   {getValues('userInfo.profession')}
                 </p>
                 <p className="font-sans  uppercase">

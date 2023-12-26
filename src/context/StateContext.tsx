@@ -49,7 +49,8 @@ const StateContext = createContext<StateContextType | undefined>(undefined);
 
 // Create the StateProvider component
 const StateProvider: React.FC<StateProviderProps> = ({ children }) => {
-  const isLocalStorageAvailable = typeof localStorage !== 'undefined';
+  const isLocalStorageAvailable =
+    typeof localStorage !== 'undefined' && typeof window !== 'undefined';
 
   // Use individual local storage keys for each piece of state
   const localStorageKeys = {
@@ -65,47 +66,51 @@ const StateProvider: React.FC<StateProviderProps> = ({ children }) => {
     activeNavButtons: 'activeNavButton',
   };
 
+  const [state, setState] = useState<StateType>(initialState);
+
   // Retrieve each piece of state from local storage on component mount (or use initialState)
-  const storedState: StateType = {
-    session:
-      JSON.parse(localStorage.getItem(localStorageKeys.session) || 'null') ||
-      initialState.session,
-    user:
-      JSON.parse(localStorage.getItem(localStorageKeys.user) || 'null') ||
-      initialState.user,
-    showMobileMenu:
-      JSON.parse(
-        localStorage.getItem(localStorageKeys.showMobileMenu) || 'false'
-      ) || initialState.showMobileMenu,
-    noUser:
-      JSON.parse(localStorage.getItem(localStorageKeys.noUser) || 'false') ||
-      initialState.noUser,
-    imgUploadPopUp:
-      JSON.parse(
-        localStorage.getItem(localStorageKeys.imgUploadPopUp) || 'false'
-      ) || initialState.imgUploadPopUp,
-    aboutYou:
-      JSON.parse(localStorage.getItem(localStorageKeys.aboutYou) || 'false') ||
-      initialState.aboutYou,
-    isSubscribed:
-      JSON.parse(
-        localStorage.getItem(localStorageKeys.isSubscribed) || 'false'
-      ) || initialState.isSubscribed,
-    loggedInUser:
-      JSON.parse(
-        localStorage.getItem(localStorageKeys.loggedInUser) || 'null'
-      ) || initialState.loggedInUser,
-    stripe:
-      JSON.parse(localStorage.getItem(localStorageKeys.stripe) || 'null') ||
-      initialState.stripe,
-    activeNavButtons:
-      JSON.parse(
-        localStorage.getItem(localStorageKeys.activeNavButtons) || 'false'
-      ) || initialState.activeNavButtons,
-  };
+  useEffect(() => {
+    setState({
+      session:
+        JSON.parse(localStorage.getItem(localStorageKeys.session) || 'null') ||
+        initialState.session,
+      user:
+        JSON.parse(localStorage.getItem(localStorageKeys.user) || 'null') ||
+        initialState.user,
+      showMobileMenu:
+        JSON.parse(
+          localStorage.getItem(localStorageKeys.showMobileMenu) || 'false'
+        ) || initialState.showMobileMenu,
+      noUser:
+        JSON.parse(localStorage.getItem(localStorageKeys.noUser) || 'false') ||
+        initialState.noUser,
+      imgUploadPopUp:
+        JSON.parse(
+          localStorage.getItem(localStorageKeys.imgUploadPopUp) || 'false'
+        ) || initialState.imgUploadPopUp,
+      aboutYou:
+        JSON.parse(
+          localStorage.getItem(localStorageKeys.aboutYou) || 'false'
+        ) || initialState.aboutYou,
+      isSubscribed:
+        JSON.parse(
+          localStorage.getItem(localStorageKeys.isSubscribed) || 'false'
+        ) || initialState.isSubscribed,
+      loggedInUser:
+        JSON.parse(
+          localStorage.getItem(localStorageKeys.loggedInUser) || 'null'
+        ) || initialState.loggedInUser,
+      stripe:
+        JSON.parse(localStorage.getItem(localStorageKeys.stripe) || 'null') ||
+        initialState.stripe,
+      activeNavButtons:
+        JSON.parse(
+          localStorage.getItem(localStorageKeys.activeNavButtons) || 'false'
+        ) || initialState.activeNavButtons,
+    });
+  }, []);
 
   // Use state with the initial value from local storage
-  const [state, setState] = useState<StateType>(storedState);
 
   // Save each piece of state to local storage whenever it changes
   useEffect(() => {
