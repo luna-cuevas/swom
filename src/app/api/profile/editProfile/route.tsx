@@ -2,7 +2,7 @@ import { supabaseClient } from '@/utils/supabaseClient';
 import { NextApiRequest, NextApiResponse } from 'next';
 import { NextResponse } from 'next/server';
 
-export async function POST(res: Response, req: Request) {
+export async function POST(req: Request, res: Response) {
   const body = await res.json();
   const supabase = supabaseClient();
   console.log('server body', body);
