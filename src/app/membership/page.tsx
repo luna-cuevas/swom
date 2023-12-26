@@ -1,10 +1,111 @@
+'use client';
+import { useStateContext } from '@/context/StateContext';
 import Image from 'next/image';
 import Link from 'next/link';
-import React from 'react';
+import { useRouter } from 'next/navigation';
+import React, { useEffect, useState } from 'react';
+import { toast, ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 type Props = {};
 
 const Page = (props: Props) => {
+  const { state, setState } = useStateContext();
+  const [subbedInfo, setSubbedInfo] = useState<any>(null);
+  const [cancelled, setCancelled] = useState<boolean>(false);
+  const router = useRouter();
+
+  const getSubscriptionInfo = async () => {
+    const subInfo = await fetch('/api/subscription/getSubscription', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ email: state.user.email }),
+    });
+    const subInfoData = await subInfo.json();
+    if (subInfoData) {
+      const membershipType =
+        subInfoData.current_period_end - subInfoData.current_period_start;
+      subInfoData.membershipType =
+        // if mebershipType is more than 1 year, then it's a 2 year membership else 1
+        membershipType > 31536000 && membershipType <= 31622400
+          ? 'One year membership'
+          : membershipType > 31622400
+          ? 'Twp year membership'
+          : 'One year membership';
+
+      const nextPayment = new Date(subInfoData.current_period_end * 1000);
+      subInfoData.nextPayment = nextPayment.toLocaleDateString('en-US', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric',
+      });
+
+      setSubbedInfo(subInfoData);
+    }
+  };
+
+  const handleCancelMembership = async () => {
+    const cancelMembership = await fetch(
+      '/api/subscription/cancelSubscription',
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ subscriptionId: subbedInfo.id }),
+      }
+    );
+    const cancelMembershipData = await cancelMembership.json();
+    if (cancelMembershipData) {
+      setCancelled(true);
+      console.log('cancelMembershipData', cancelMembershipData);
+      toast.success(
+        `Cancelled Membership ends ${new Date(
+          cancelMembershipData.cancel_at * 1000
+        ).toLocaleDateString('en-US', {
+          year: 'numeric',
+          month: 'long',
+          day: 'numeric',
+        })}`
+      );
+    } else {
+      console.log('cancelMembershipData', cancelMembershipData);
+      toast.error('Something went wrong, contact us for more information');
+    }
+  };
+
+  const handleUpdateMembership = async () => {
+    const updateMembership = await fetch('/api/subscription/updateMembership', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ email: state.user.email }),
+    });
+    const updateMembershipData = await updateMembership.json();
+    if (updateMembershipData) {
+      console.log('updateMembershipData', updateMembershipData);
+      router.push(updateMembershipData);
+    } else {
+      console.log('updateMembershipData', updateMembershipData);
+      toast.error('Something went wrong, contact us for more information');
+    }
+  };
+
+  useEffect(() => {
+    if (subbedInfo) {
+      console.log('subbedInfo', subbedInfo);
+    }
+  }, [subbedInfo]);
+
+  useEffect(() => {
+    if (state.user) {
+      getSubscriptionInfo();
+    }
+  }, [state.user, cancelled]);
+
   return (
     <main className="flex relative min-h-screen flex-col h-[120vh] sm:h-[100vh] md:h-fit overflow-hidden bg-[#17212D]">
       <div className="relative h-screen w-full">
@@ -52,13 +153,26 @@ const Page = (props: Props) => {
               <h3 className="text-sm uppercase mb-2 tracking-[0.3rem]">
                 MEMBERSHIP TYPE
               </h3>
-              <p className="text-base ">One year membership</p>
+              <p className="text-base ">
+                {subbedInfo && subbedInfo?.membershipType}
+              </p>
             </div>
             <div className="p-4 border-[1px] rounded-3xl border-[#6D7283]">
               <h3 className="text-sm text-[#E88527] uppercase mb-2 tracking-[0.3rem]">
-                Next payment
+                {subbedInfo?.cancel_at ? 'Subscription ends' : 'Next Payment'}
               </h3>
-              <p className="text-base">June 26, 2023</p>
+              <p className="text-base">
+                {subbedInfo?.cancel_at
+                  ? new Date(subbedInfo.cancel_at * 1000).toLocaleDateString(
+                      'en-US',
+                      {
+                        year: 'numeric',
+                        month: 'long',
+                        day: 'numeric',
+                      }
+                    )
+                  : subbedInfo && subbedInfo?.nextPayment}
+              </p>
             </div>
           </div>
         </div>
@@ -83,10 +197,25 @@ const Page = (props: Props) => {
         </div>
 
         <div className="flex gap-2 flex-wrap justify-center md:justify-start md:gap-8 my-6">
-          <button className="md:p-4 p-3 hover:bg-[#ff9f45] rounded-xl text-xs uppercase tracking-[0.3rem] bg-[#E88527] font-bold text-white">
-            Cancel Membership
+          <button
+            type="button"
+            disabled={subbedInfo?.cancel_at}
+            onClick={() => handleCancelMembership()}
+            className={`md:p-4 p-3  rounded-xl text-xs uppercase tracking-[0.3rem] ${
+              subbedInfo?.cancel_at
+                ? 'bg-[#bb7a3e]'
+                : 'bg-[#E88527] hover:bg-[#ff9f45]'
+            }  font-bold text-white`}>
+            {subbedInfo?.cancel_at
+              ? 'Membership Cancelled'
+              : 'Cancel Membership'}
           </button>
-          <button className="md:p-4 p-3 hover:bg-[#c7bfbe] rounded-xl text-xs uppercase tracking-[0.3rem] bg-[#DDD5D2] font-bold">
+          <button
+            type="button"
+            onClick={() => {
+              handleUpdateMembership();
+            }}
+            className="md:p-4 p-3 hover:bg-[#c7bfbe] rounded-xl text-xs uppercase tracking-[0.3rem] bg-[#DDD5D2] font-bold">
             Pay Now
           </button>
         </div>
@@ -107,6 +236,14 @@ const Page = (props: Props) => {
           </p>
         </div>
       </div>
+      <ToastContainer
+        position="bottom-center"
+        autoClose={5000}
+        newestOnTop={false}
+        closeOnClick
+        rtl={false}
+        pauseOnHover={false}
+      />
     </main>
   );
 };

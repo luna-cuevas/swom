@@ -2,7 +2,7 @@
 import React, { useEffect, useState } from 'react';
 import { set, useController, useForm } from 'react-hook-form';
 import { supabaseClient } from '@/utils/supabaseClient';
-import { CheckoutSubscriptionBody } from '@/app/api/subscription/route';
+import { CheckoutSubscriptionBody } from '@/app/api/subscription/makeSubscription/route';
 import { loadStripe } from '@stripe/stripe-js';
 import Stripe from 'stripe';
 import { useStateContext } from '@/context/StateContext';
@@ -84,7 +84,7 @@ const SignUpForm = (props: Props) => {
 
       try {
         // Make a post fetch API call to /checkout-session handler
-        const result = await fetch('/api/subscription', {
+        const result = await fetch('/api/subscription/makeSubscription', {
           method: 'post',
           body: JSON.stringify(body),
           headers: {

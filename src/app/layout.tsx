@@ -107,11 +107,11 @@ export default function RootLayout({
                   Loading...
                 </div>
               )} */}
-              <Navigation />
               <React.Suspense fallback={<div>Loading...</div>}>
+                <Navigation />
                 {children}
+                <Footer />
               </React.Suspense>
-              <Footer />
               <Script src="https://player.vimeo.com/api/player.js"></Script>
             </>
           </body>
