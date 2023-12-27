@@ -33,7 +33,7 @@ const Page = (props: Props) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCity, setSelectedCity] = useState(null);
   const [windowWidth, setWindowWidth] = useState(
-    window ? window.innerWidth : 0
+    typeof window !== 'undefined' ? window.innerWidth : 0
   );
 
   const {
@@ -119,13 +119,20 @@ const Page = (props: Props) => {
 
   useEffect(() => {
     const handleResize = () => {
-      setWindowWidth(window && window.innerWidth);
+      if (typeof window !== 'undefined') {
+        setWindowWidth(window.innerWidth);
+      }
     };
 
-    window && window.addEventListener('resize', handleResize);
-
+    if (typeof window !== 'undefined') {
+      window.addEventListener('resize', handleResize);
+    }
     // Cleanup
-    return () => window && window.removeEventListener('resize', handleResize);
+    return () => {
+      if (typeof window !== 'undefined') {
+        window.removeEventListener('resize', handleResize);
+      }
+    };
   }, []);
 
   const handleInputChange = (e: any) => {
