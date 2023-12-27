@@ -71,8 +71,8 @@ const Page: React.FC<Props> = (props) => {
               <div className="col-start-2">
                 <h1 className="text-7xl font-bold font-sans">1</h1>
                 <p className="text-2xl">
-                  Complete a straightforward form to apply, and we'll reach out
-                  to you after reviewing your application.
+                  Complete a straightforward form to apply, and we&apos;ll reach
+                  out to you after reviewing your application.
                 </p>
               </div>
               <div className="col-start-1 w-1/2 col-span-2">
@@ -94,8 +94,8 @@ const Page: React.FC<Props> = (props) => {
               <div className="col-start-1">
                 <h1 className="text-7xl font-bold font-sans">4</h1>
                 <p className="text-2xl">
-                  Finally, once you've agreed on dates and exchange details,
-                  you're all set to SWOM!
+                  Finally, once you&apos;ve agreed on dates and exchange
+                  details, you&apos;re all set to SWOM!
                 </p>
               </div>
             </div>
