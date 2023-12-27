@@ -115,7 +115,7 @@ const Page = (props: Props) => {
 
   return (
     <main className="pt-6  flex   flex-col bg-[#F2E9E7] min-h-screen">
-      <div className="w-3/4 h-fit pt-12 pb-4 max-w-[1000px] mx-auto mt-12 mb-4">
+      <div className="md:w-3/4 w-[90%] h-fit pt-12 pb-4 max-w-[1000px] mx-auto mt-12 mb-4">
         <GoogleMapComponent
           setIsSearching={setIsSearching}
           hideMap={!isSearching}
