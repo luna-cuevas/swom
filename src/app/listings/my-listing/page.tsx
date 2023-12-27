@@ -32,7 +32,9 @@ const Page = (props: Props) => {
   const router = useRouter();
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCity, setSelectedCity] = useState(null);
-  const [windowWidth, setWindowWidth] = useState(window.innerWidth);
+  const [windowWidth, setWindowWidth] = useState(
+    window ? window.innerWidth : 0
+  );
 
   const {
     register,
@@ -117,13 +119,13 @@ const Page = (props: Props) => {
 
   useEffect(() => {
     const handleResize = () => {
-      setWindowWidth(window.innerWidth);
+      setWindowWidth(window && window.innerWidth);
     };
 
-    window.addEventListener('resize', handleResize);
+    window && window.addEventListener('resize', handleResize);
 
     // Cleanup
-    return () => window.removeEventListener('resize', handleResize);
+    return () => window && window.removeEventListener('resize', handleResize);
   }, []);
 
   const handleInputChange = (e: any) => {
