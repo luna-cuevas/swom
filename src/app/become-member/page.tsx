@@ -280,51 +280,57 @@ const Page = (props: Props) => {
         <div className="">
           <form
             onSubmit={handleSubmit(onSubmit, onError)}
-            className=" max-w-[800px] gap-4 bg-[#F3EBE7] py-4 flex flex-col w-[90%] lg:w-2/3 m-auto">
-            <div className="m-auto flex-col w-2/3 flex">
-              <label htmlFor="name">Name</label>
-              <input
-                {...register('userInfo.name', {
-                  required: 'Please enter your name',
-                })}
-                className="w-full bg-transparent border-b border-[#172544] focus:outline-none"
-                type="text"
-                id="name"
-              />
+            className=" max-w-[1000px] gap-4 bg-[#F3EBE7] py-4 flex flex-col  m-auto">
+            <div className="flex md:flex-row flex-col gap-4 md:gap-12 w-2/3 mx-auto">
+              <div className="m-auto flex-col w-full flex">
+                <label htmlFor="name">Name</label>
+                <input
+                  {...register('userInfo.name', {
+                    required: 'Please enter your name',
+                  })}
+                  className="w-full bg-transparent border-b border-[#172544] focus:outline-none"
+                  type="text"
+                  id="name"
+                />
+              </div>
+              <div className="m-auto flex-col w-full flex">
+                <label htmlFor="email">Email</label>
+                <input
+                  {...register('userInfo.email', {
+                    required: 'Please enter your email',
+                  })}
+                  className="w-full bg-transparent border-b border-[#172544] focus:outline-none"
+                  type="email"
+                  id="email"
+                />
+              </div>
             </div>
-            <div className="m-auto flex-col w-2/3 flex">
-              <label htmlFor="email">Email</label>
-              <input
-                {...register('userInfo.email', {
-                  required: 'Please enter your email',
-                })}
-                className="w-full bg-transparent border-b border-[#172544] focus:outline-none"
-                type="email"
-                id="email"
-              />
+
+            <div className="flex md:flex-row flex-col gap-4 md:gap-12 w-2/3 mx-auto">
+              <div className="m-auto flex-col w-2/3 flex">
+                <label htmlFor="phone">Phone</label>
+                <input
+                  {...register('userInfo.phone', {
+                    required: 'Please enter your phone number',
+                  })}
+                  className="w-full bg-transparent border-b border-[#172544] focus:outline-none"
+                  type="tel"
+                  id="phone"
+                />
+              </div>
+              <div className="m-auto flex-col w-2/3 flex">
+                <label htmlFor="dob">What is your date of birth?</label>
+                <input
+                  {...register('userInfo.dob', {
+                    required: 'Please enter your date of birth',
+                  })}
+                  className="w-full bg-transparent border-b border-[#172544] focus:outline-none"
+                  type="date"
+                  id="dob"
+                />
+              </div>
             </div>
-            <div className="m-auto flex-col w-2/3 flex">
-              <label htmlFor="phone">Phone</label>
-              <input
-                {...register('userInfo.phone', {
-                  required: 'Please enter your phone number',
-                })}
-                className="w-full bg-transparent border-b border-[#172544] focus:outline-none"
-                type="tel"
-                id="phone"
-              />
-            </div>
-            <div className="m-auto flex-col w-2/3 flex">
-              <label htmlFor="dob">What is your date of birth?</label>
-              <input
-                {...register('userInfo.dob', {
-                  required: 'Please enter your date of birth',
-                })}
-                className="w-full bg-transparent border-b border-[#172544] focus:outline-none"
-                type="date"
-                id="dob"
-              />
-            </div>
+
             <div className="m-auto flex-col w-2/3 flex">
               <label htmlFor="profession">What do you do for a living?</label>
               <input
@@ -471,28 +477,32 @@ const Page = (props: Props) => {
                   <label htmlFor="otherProperty">Other</label>
                 </div>
               </div>
-              <div>
-                <label htmlFor="address">
-                  What is the exact address of the property?
-                </label>
-                <textarea
-                  id="address"
-                  {...register('homeInfo.address', {
-                    required: 'Please enter the address of the property',
-                  })}
-                  className="w-full bg-transparent border-b border-[#172544] focus:outline-none"
-                />
+              <div className="flex md:flex-row flex-col gap-4 md:gap-12 w-full mx-auto">
+                <div className="m-auto flex-col w-full flex">
+                  <label htmlFor="address">
+                    What is the exact address of the property?
+                  </label>
+                  <textarea
+                    rows={1}
+                    id="address"
+                    {...register('homeInfo.address', {
+                      required: 'Please enter the address of the property',
+                    })}
+                    className="w-full bg-transparent border-b border-[#172544] focus:outline-none"
+                  />
+                </div>
+                <div className=" flex-col w-full flex">
+                  <label htmlFor="city">What is your city?</label>
+                  <input
+                    id="city"
+                    {...register('homeInfo.city', {
+                      required: 'Please enter the city of the property',
+                    })}
+                    className="w-full bg-transparent border-b border-[#172544] focus:outline-none"
+                  />
+                </div>
               </div>
-              <div>
-                <label htmlFor="city">What is the city and state?</label>
-                <input
-                  id="city"
-                  {...register('homeInfo.city', {
-                    required: 'Please enter the city of the property',
-                  })}
-                  className="w-full bg-transparent border-b border-[#172544] focus:outline-none"
-                />
-              </div>
+
               <div>
                 <label htmlFor="">Is your property located in:</label>
                 <div className="flex gap-2 flex-wrap">

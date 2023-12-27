@@ -171,7 +171,7 @@ const CarouselPage = (props: Props) => {
             <Image
               className={`rounded-xl z-0 ${
                 props.contain ? 'object-contain' : 'object-cover'
-              } `}
+              } h-full`}
               src={image.src}
               alt="image"
               fill

@@ -71,34 +71,31 @@ const Page: React.FC<Props> = (props) => {
               <div className="col-start-2">
                 <h1 className="text-7xl font-bold font-sans">1</h1>
                 <p className="text-2xl">
-                  Apply by filling out the simple form. It will take you 6
-                  minutes. We will get in touch with you once we review your
-                  application.{' '}
+                  Complete a straightforward form to apply, and we'll reach out
+                  to you after reviewing your application.
                 </p>
               </div>
               <div className="col-start-1 w-1/2 col-span-2">
                 <h1 className="text-7xl font-bold font-sans">2</h1>
                 <p className="text-2xl">
-                  Once you have been granted a username and password you can
-                  sign in. You will then make a membership payment. After that
-                  you will be able to create a personal profile and listing
-                  following a few simple steps.
+                  Upon receiving your username and password, sign in, make the
+                  membership payment, and proceed to create your personal
+                  profile and listing with just a few straightforward steps.
                 </p>
               </div>
               <div className="col-start-2">
                 <h1 className="text-7xl font-bold font-sans">3</h1>
                 <p className="text-2xl">
-                  You can browse and discover SWOM homes from around the world.
-                  Get in touch with other members by using the messaging system
-                  and make your traveling dreams come true.
+                  Explore SWOM homes worldwide, connect with fellow members
+                  through the messaging system, and turn your travel dreams into
+                  reality.
                 </p>
               </div>
               <div className="col-start-1">
                 <h1 className="text-7xl font-bold font-sans">4</h1>
                 <p className="text-2xl">
-                  ...but not least, once you agree on dates and details of the
-                  exchange you are ready to SWOM!! (Verb. To travel the world
-                  swapping homes.)
+                  Finally, once you've agreed on dates and exchange details,
+                  you're all set to SWOM!
                 </p>
               </div>
             </div>

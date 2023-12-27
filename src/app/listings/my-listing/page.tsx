@@ -30,6 +30,9 @@ const Page = (props: Props) => {
   const [listings, setListings] = useState<any>([]);
   const [downloadedImages, setDownloadedImages] = useState<any>([]);
   const router = useRouter();
+  const [searchTerm, setSearchTerm] = useState('');
+  const [selectedCity, setSelectedCity] = useState(null);
+  const [windowWidth, setWindowWidth] = useState(window.innerWidth);
 
   const {
     register,
@@ -112,8 +115,16 @@ const Page = (props: Props) => {
     },
   });
 
-  const [searchTerm, setSearchTerm] = useState('');
-  const [selectedCity, setSelectedCity] = useState(null);
+  useEffect(() => {
+    const handleResize = () => {
+      setWindowWidth(window.innerWidth);
+    };
+
+    window.addEventListener('resize', handleResize);
+
+    // Cleanup
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   const handleInputChange = (e: any) => {
     const value = e.target.value;
@@ -363,8 +374,8 @@ const Page = (props: Props) => {
       <form
         onSubmit={handleSubmit(onSubmit, onError)}
         className=" max-w-[1440px] mx-auto relative">
-        <div className="py-8  px-8 md:px-16 flex-col md:flex-row flex justify-between gap-4">
-          <div className="md:w-1/4 my-4 flex justify-center text-center flex-col">
+        <div className="py-8  px-8 lg:px-16 flex-col lg:flex-row flex justify-between gap-4">
+          <div className="lg:w-[35%] my-4 flex justify-center text-center flex-col">
             {editUserInfo ? (
               <>
                 {profileImage.length > 0 ? (
@@ -456,7 +467,7 @@ const Page = (props: Props) => {
               </>
             )}
           </div>
-          <div className="md:w-3/4">
+          <div className="lg:w-[65%]">
             <div className="grid py-2 text-center grid-cols-5 border-b border-[#172544]">
               <h3>First Name</h3>
               <h3>Last Name</h3>
@@ -631,11 +642,14 @@ const Page = (props: Props) => {
 
                 <div className="relative w-[95%] mx-auto h-[30vh]">
                   <CarouselPage
-                    picturesPerSlide={3}
+                    picturesPerSlide={
+                      // check if mobile or desktop
+                      windowWidth > 1025 ? 4 : windowWidth > 768 ? 3 : 1
+                    }
                     selectedImage={selectedImage}
                     setSelectedImage={setSelectedImage}
                     overlay={false}
-                    contain={true}
+                    contain={false}
                     images={imageFiles.map((file) => ({
                       src: URL.createObjectURL(file),
                     }))}
@@ -661,11 +675,14 @@ const Page = (props: Props) => {
 
                 <div className="relative w-[95%] mx-auto h-[30vh]">
                   <CarouselPage
-                    picturesPerSlide={3}
+                    picturesPerSlide={
+                      // check if mobile or desktop
+                      windowWidth > 1025 ? 4 : windowWidth > 768 ? 3 : 1
+                    }
                     selectedImage={selectedImage}
                     setSelectedImage={setSelectedImage}
                     overlay={false}
-                    contain={true}
+                    contain={false}
                     images={downloadedImages.map((file: any) => ({
                       src: file,
                     }))}

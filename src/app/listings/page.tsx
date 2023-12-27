@@ -1,4 +1,5 @@
 'use client';
+import GoogleMapComponent from '@/components/GoogleMapComponent';
 import ListingCard from '@/components/ListingCard';
 import React, { useEffect, useState } from 'react';
 import Stripe from 'stripe';
@@ -7,15 +8,21 @@ type Props = {};
 
 const Page = (props: Props) => {
   const [listings, setListings] = useState<any>([]);
+  const [allListings, setAllListings] = useState<any>([]);
   const stripeActivation = new Stripe(
     process.env.NEXT_PUBLIC_STRIPE_SECRET_KEY!,
     {
       apiVersion: '2023-08-16',
     }
   );
+  const [isSearching, setIsSearching] = useState<boolean>(false);
+  const [whereIsIt, setWhereIsIt] = useState<string>('');
+  const [isIdle, setIsIdle] = useState<boolean>(false);
+  const [isLoading, setIsLoading] = useState<boolean>(false);
 
   const fetchListings = async () => {
     try {
+      setIsLoading(true);
       const listings = await fetch('/api/getListings', {
         cache: 'no-cache',
         headers: {
@@ -42,9 +49,28 @@ const Page = (props: Props) => {
         (listing: any) => listing !== null
       );
 
+      setAllListings(filteredListings);
       setListings(filteredListings);
+      setIsLoading(false);
     } catch (error: any) {
       console.error('Error fetching data:', error.message);
+    }
+  };
+
+  const filteredListings = async () => {
+    if (whereIsIt) {
+      const filteredListingsByLocation = allListings.filter((listing: any) => {
+        const city =
+          listing.homeInfo.city.split(', ').length > 1
+            ? listing.homeInfo.city.split(', ')[0].toLowerCase()
+            : listing.homeInfo.city.toLowerCase();
+        console.log('city', city);
+        console.log('whereIsIt', whereIsIt);
+        return city == whereIsIt.toLowerCase();
+      });
+      console.log('filteredListingsByLocation', filteredListingsByLocation);
+
+      setListings(filteredListingsByLocation);
     }
   };
 
@@ -81,34 +107,56 @@ const Page = (props: Props) => {
     fetchListings();
   }, []);
 
+  useEffect(() => {
+    filteredListings();
+  }, [isIdle, whereIsIt]);
+
+  console.log('listings', listings);
+
   return (
-    <main className="py-6  flex flex-col bg-[#F2E9E7] min-h-screen">
-      <form className="flex m-auto w-fit gap-4 my-10">
-        <input type="text" placeholder="Location" className="rounded-xl p-1" />
-        <button
-          type="submit"
-          className="bg-[#F28A38] px-2 py-1 rounded-xl text-white">
-          Search
-        </button>
-      </form>
-      <div className="flex flex-col mx-auto w-full my-8 justify-between">
-        <div className="flex">
-          <div className="m-auto">
+    <main className="pt-6  flex   flex-col bg-[#F2E9E7] min-h-screen">
+      <div className="w-3/4 h-fit pt-12 pb-4 max-w-[1000px] mx-auto mt-12 mb-4">
+        <GoogleMapComponent
+          setIsSearching={setIsSearching}
+          hideMap={!isSearching}
+          listings={listings && listings}
+          setWhereIsIt={setWhereIsIt}
+          setIsIdle={setIsIdle}
+        />
+      </div>
+      <div className="flex flex-col  flex-grow mx-auto w-full mt-8 justify-between">
+        <div className={`flex pb-8`}>
+          <div
+            className={`m-auto  ${
+              isSearching ? 'flex flex-col w-fit' : 'hidden'
+            }`}>
             <p className="text-2xl">Say hello to</p>
-            <h2 className="text-3xl">Lorem Ipsum</h2>
+            <h2 className="text-3xl capitalize">
+              {!isSearching
+                ? 'the world'
+                : whereIsIt && isIdle
+                ? whereIsIt
+                : ''}
+            </h2>
           </div>
-          <h1 className="text-3xl m-auto">
-            Let&apos;s discover <br />
-            your new adventure
+          <h1
+            className={`text-3xl m-auto ${isSearching ? 'text-center' : 'w-fit'}
+            `}>
+            Let&apos;s discover {isSearching && <br />}
+            your new adventure.
           </h1>
         </div>
-
-        <div className="bg-[#EADEDB] h-max">
+        <div className="bg-[#EADEDB] pt-8  flex-grow h-full ">
           <div className="m-auto justify-between max-w-[1000px] flex w-full flex-wrap">
-            {listings &&
+            {listings.length > 0 ? (
               listings.map((listing: any, index: number) => (
                 <ListingCard key={index} listingInfo={listing} />
-              ))}
+              ))
+            ) : isLoading ? (
+              <div className="m-auto">
+                <p className="text-xl">No listings found</p>
+              </div>
+            ) : null}
           </div>
         </div>
       </div>

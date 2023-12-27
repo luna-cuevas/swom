@@ -24,7 +24,7 @@ const Page = (props: Props) => {
       // Replace 'listings' with your actual table name
 
       const listings = await fetch('/api/getListings', {
-        body: JSON.stringify({ user_id: slug }),
+        body: JSON.stringify({ userId: slug }),
         cache: 'no-cache',
         headers: {
           'Content-Type': 'application/json',
@@ -126,7 +126,7 @@ const Page = (props: Props) => {
             </p>
             <Link
               href={`/messages?user=${listings[0]?.user_id}`}
-              className="bg-[#E78426] hover:bg-[#e78326d8] text-[#fff]  my-2 px-3 py-1 rounded-xl">
+              className="bg-[#E78426] w-fit hover:bg-[#e78326d8] text-[#fff] mx-auto  my-2 px-3 py-1 rounded-xl">
               Contact me
             </Link>
           </div>
@@ -321,7 +321,7 @@ const Page = (props: Props) => {
         </button>
         <div
           className={`w-full p-4 h-[40vh] ${mapsActive ? 'block' : 'hidden'}`}>
-          {listings[0]?.homeInfo?.city && (
+          {listings[0]?.homeInfo?.address && (
             <GoogleMapComponent
               exactAddress={listings[0]?.homeInfo?.address}
               noSearch={true}
