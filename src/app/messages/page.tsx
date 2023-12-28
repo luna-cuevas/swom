@@ -258,7 +258,7 @@ const Page = (props: Props) => {
                 />
               </svg>
             </button>
-            <h1 className="tracking-[0.3rem] w-full uppercase text-3xl bg-[#E5DEDB] py-6 pl-12">
+            <h1 className="tracking-[0.3rem] w-full uppercase text-3xl bg-[#E5DEDB] py-6 px-6">
               Messages
             </h1>
           </div>
@@ -284,7 +284,7 @@ const Page = (props: Props) => {
                     onClick={() =>
                       setSelectedConversation(convo.conversation_id)
                     }>
-                    <div className="relative w-[28px] mx-auto  justify-center align-middle flex my-auto h-[28px]">
+                    <div className="relative w-[28px] mx-auto xl:mx-0  justify-center align-middle flex my-auto h-[28px]">
                       <Image
                         src={
                           convo.members[
@@ -404,7 +404,7 @@ const Page = (props: Props) => {
                 )}
               </div>
 
-              <div className=" w-full px-2 h-[10%] px-2 flex justify-between md:px-10">
+              <div className=" w-full h-[10%] px-2 flex justify-between md:px-10">
                 <input
                   onChange={(e) => setNewMessage(e.target.value)}
                   className="w-[80%] h-full pl-2 placeholder:tracking-[0.3rem] focus-visible:outline-none bg-transparent border-t-2 border-[#E5DEDB]"
