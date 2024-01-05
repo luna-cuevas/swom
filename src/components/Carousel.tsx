@@ -1,7 +1,6 @@
 import Image from 'next/image';
 import Link from 'next/link';
-import React, { useState, useEffect, use } from 'react';
-import { supabaseClient } from '@/utils/supabaseClient';
+import React, { useState, useEffect } from 'react';
 import { useStateContext } from '@/context/StateContext';
 
 type Props = {
@@ -21,19 +20,19 @@ type Props = {
 
 const CarouselPage = (props: Props) => {
   const [currentSlide, setCurrentSlide] = useState(0);
-  const [user, setUser] = useState(null);
-  const supabase = supabaseClient();
   const { state, setState } = useStateContext();
 
-  const stateSession = state.session;
-
   useEffect(() => {
-    if (state.session && state.user) {
-      setUser(state.user);
-    } else {
-      setUser(null);
-    }
-  }, [stateSession]);
+    // Automatically change slides every 5 seconds
+    const intervalId = setInterval(() => {
+      nextSlide();
+    }, 10000);
+
+    return () => {
+      // Clear the interval to prevent memory leaks
+      clearInterval(intervalId);
+    };
+  }, [currentSlide]);
 
   const prevSlide = () => {
     setCurrentSlide((prev) =>
@@ -56,18 +55,6 @@ const CarouselPage = (props: Props) => {
       return 0;
     });
   };
-
-  useEffect(() => {
-    // Automatically change slides every 5 seconds
-    const intervalId = setInterval(() => {
-      nextSlide();
-    }, 10000);
-
-    return () => {
-      // Clear the interval to prevent memory leaks
-      clearInterval(intervalId);
-    };
-  }, [currentSlide]);
 
   // Function to handle image selection
   const handleImageSelection = (index: any) => {
@@ -147,7 +134,7 @@ const CarouselPage = (props: Props) => {
               {image.listingNum && !props.listingPage && (
                 <div className="absolute  top-[10%] -right-4 text-md ">
                   <div className="absolute  inset-0 transform skew-x-[10deg]  bg-[#f4ece7b3]" />
-                  {user == null ? (
+                  {state.user == null ? (
                     <div className="relative  py-4 px-8 text-[#172544]">
                       Let&apos;s meet your new favorite home. <br />
                       <strong>Listing No. {image.listingNum}</strong>
