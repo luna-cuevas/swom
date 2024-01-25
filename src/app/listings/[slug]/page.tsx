@@ -180,18 +180,24 @@ const Page = (props: Props) => {
           </div>
 
           <div className="flex relative h-[30vh] gap-4 my-4">
-            {imageFiles.length > 0 && (
-              <CarouselPage
-                picturesPerSlide={3}
-                selectedImage={selectedImage}
-                setSelectedImage={setSelectedImage}
-                overlay={false}
-                contain={false}
-                images={imageFiles.map((file) => ({
-                  src: file.toString(),
-                }))}
-              />
-            )}
+            {/* {imageFiles.length > 0 && ( */}
+            <CarouselPage
+              picturesPerSlide={3}
+              selectedImage={selectedImage}
+              setSelectedImage={setSelectedImage}
+              overlay={false}
+              contain={false}
+              images={
+                imageFiles.length > 0
+                  ? imageFiles.map((file) => ({
+                      src: file.toString(),
+                    }))
+                  : [1, 2].map((file) => ({
+                      src: '/placeholder.png',
+                    }))
+              }
+            />
+            {/* )} */}
           </div>
 
           <div className="flex border-t border-[#172544]">
@@ -321,12 +327,20 @@ const Page = (props: Props) => {
         </button>
         <div
           className={`w-full p-4 h-[40vh] ${mapsActive ? 'block' : 'hidden'}`}>
-          {listings[0]?.homeInfo?.address && (
+          {listings[0]?.homeInfo?.address ? (
             <GoogleMapComponent
               exactAddress={listings[0]?.homeInfo?.address}
               noSearch={true}
               radius={300}
             />
+          ) : listings[0]?.homeInfo?.city ? (
+            <GoogleMapComponent
+              city={listings[0]?.homeInfo?.city}
+              noSearch={true}
+              radius={300}
+            />
+          ) : (
+            ''
           )}
         </div>
       </div>

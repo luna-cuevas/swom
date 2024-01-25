@@ -1,5 +1,6 @@
-'use client';
+// 'use client';
 import Carousel from '@/components/Carousel';
+import { supabaseClient } from '@/utils/supabaseClient';
 import Image from 'next/image';
 import Link from 'next/link';
 import React from 'react';
@@ -7,6 +8,18 @@ import React from 'react';
 type Props = {};
 
 const Page = (props: Props) => {
+  const supabase = supabaseClient();
+
+  // const updatePassword = async () => {
+  //   const { data: user, error } = await supabase.auth.admin.updateUserById(
+  //     '9a43a220-5c8c-4333-9af1-60dd7b16dc8b',
+  //     { password: 'password' }
+  //   );
+  //   if (error) console.log(error);
+  //   else console.log(user);
+  // };
+  // updatePassword();
+
   return (
     <main
       style={{

@@ -48,6 +48,9 @@ export default function GoogleMapComponent(props: Props) {
   const [activeMarker, setActiveMarker] = useState<any>(null);
   const [zoomLevel, setZoomLevel] = useState<number>(0);
   const [map, setMap] = useState<any>(null);
+  const [inputValue, setInputValue] = useState<any>(
+    props.exactAddress || props.city || ''
+  );
 
   const mapContainerStyle: React.CSSProperties = {
     width: '100%',
@@ -99,8 +102,12 @@ export default function GoogleMapComponent(props: Props) {
         });
       }
 
-      if (props.exactAddress) {
+      if (props.exactAddress && !inputValue) {
         // Use geocoding for the exact address
+        console.log('props.exactAddress', props.exactAddress);
+        if (props.setIsSearching) {
+          props.setIsSearching(true);
+        }
         geocoder.geocode({ address: props.exactAddress }, (results, status) => {
           if (status === 'OK' && results != null) {
             const location = results[0].geometry.location;
@@ -112,7 +119,16 @@ export default function GoogleMapComponent(props: Props) {
         if (props.setWhereIsIt) {
           props.setWhereIsIt(props.exactAddress);
         }
-      } else if (location || props.city) {
+        if (props.setIsSearching) {
+          props.setIsSearching(false);
+        }
+      } else if ((location || props.city) && !inputValue) {
+        console.log('location', location);
+        console.log('props.city', props.city);
+        console.log('inputValue', inputValue);
+        if (props.setIsSearching) {
+          props.setIsSearching(true);
+        }
         // Get the latitude and longitude of the city
         geocoder.geocode(
           { address: location || props.city },
@@ -128,9 +144,47 @@ export default function GoogleMapComponent(props: Props) {
         if (props.setWhereIsIt) {
           props.setWhereIsIt(location);
         }
+        if (props.setIsSearching) {
+          props.setIsSearching(false);
+        }
+      } else if (inputValue) {
+        // Get the latitude and longitude of the exact address
+        console.log('inputValue', inputValue);
+        if (props.setIsSearching) {
+          props.setIsSearching(true);
+        }
+        geocoder.geocode({ address: inputValue }, (results, status) => {
+          if (status === 'OK' && results != null) {
+            const location = results[0].geometry.location;
+            console.log('location', location);
+            const lat = location.lat();
+            const lng = location.lng();
+            setCenter({ lat, lng });
+          } else {
+            console.error(
+              'Geocode was not successful for the following reason:',
+              status
+            );
+          }
+        });
+        if (props.setIsSearching) {
+          props.setIsSearching(false);
+        }
       }
     }
-  }, [location, props.city, props.exactAddress, isLoaded, props.setWhereIsIt]);
+  }, [
+    location,
+    props.city,
+    props.exactAddress,
+    isLoaded,
+    props.setWhereIsIt,
+    inputValue,
+  ]);
+
+  useEffect(() => {
+    // Update the local input state when the exactAddress prop changes
+    setInputValue(props.exactAddress || props.city);
+  }, [props.exactAddress, props.city]);
 
   if (!isLoaded) {
     return (
@@ -162,12 +216,11 @@ export default function GoogleMapComponent(props: Props) {
       {props.noSearch ? null : (
         <input
           className="w-full rounded-xl p-2 outline-none mb-2"
-          value={props.exactAddress || location}
+          value={inputValue}
           onChange={(e) => {
-            setLocation(e.target.value);
-            if (props.setIsSearching) {
-              props.setIsSearching(true);
-            }
+            setInputValue(e.target.value);
+            props.setWhereIsIt && props.setWhereIsIt(e.target.value);
+
             if (props.newLocation) {
               props.newLocation(e.target.value);
             }

@@ -3,7 +3,7 @@ import { NextApiRequest, NextApiResponse } from 'next';
 import { NextResponse } from 'next/server';
 
 export async function POST(req: Request, res: Response) {
-  const body = await res.json();
+  const body = await req.json();
   const supabase = supabaseClient();
   console.log('server body', body);
   const { data: getUser, error: getUserError } = await supabase

@@ -3,6 +3,8 @@ import React, { use, useEffect, useRef, useState } from 'react';
 import Image from 'next/image';
 import { useStateContext } from '@/context/StateContext';
 import { useSearchParams } from 'next/navigation';
+import Link from 'next/link';
+import { supabaseClient } from '@/utils/supabaseClient';
 
 type Props = {};
 
@@ -20,6 +22,8 @@ const Page = (props: Props) => {
   const messagesContainerRef = useRef<HTMLDivElement>(null);
   const [mobileNavMenu, setMobileNavMenu] = useState<boolean>(false);
   const [sendingMessage, setSendingMessage] = useState<boolean>(false);
+
+  const supabase = supabaseClient();
 
   const scrollToBottom = () => {
     if (messagesContainerRef.current) {
@@ -84,6 +88,13 @@ const Page = (props: Props) => {
       }
     }
   };
+
+  // create a function that checks new messages every 5 seconds only if selectedConversation is not null
+  if (selectedConversation !== null) {
+    setTimeout(() => {
+      fetchMessagesForSelectedConversation();
+    }, 5000);
+  }
 
   const createNewConversation = async () => {
     if (state.user !== null && state.loggedInUser !== null) {
@@ -370,23 +381,31 @@ const Page = (props: Props) => {
                                   ? 'ml-auto  opacity-100' // Align to the right if it's my message
                                   : 'mr-auto  opacity-100'
                               }`}>
-                              <div className="relative w-[30px] h-[30px] my-auto flex">
-                                <Image
-                                  src={
-                                    !selectedConvo.members[memberIndex]
-                                      .profileImage
-                                      ? '/profile/profile-pic-placeholder.png'
-                                      : message.sender_id == state.user.id
-                                      ? state.loggedInUser.profileImage
-                                      : selectedConvo?.members[memberIndex]
-                                          .profileImage
-                                  }
-                                  alt="hero"
-                                  fill
-                                  objectFit="cover"
-                                  className="rounded-full my-auto"
-                                />
-                              </div>
+                              <Link
+                                href={
+                                  message.sender_id == state.user.id
+                                    ? ''
+                                    : '/listings/' +
+                                      selectedConvo.members[memberIndex].id
+                                }>
+                                <div className="relative w-[30px] h-[30px] my-auto flex">
+                                  <Image
+                                    src={
+                                      !selectedConvo.members[memberIndex]
+                                        .profileImage
+                                        ? '/profile/profile-pic-placeholder.png'
+                                        : message.sender_id == state.user.id
+                                        ? state.loggedInUser.profileImage
+                                        : selectedConvo?.members[memberIndex]
+                                            .profileImage
+                                    }
+                                    alt="hero"
+                                    fill
+                                    objectFit="cover"
+                                    className="rounded-full my-auto"
+                                  />
+                                </div>
+                              </Link>
                               <p
                                 className={`my-auto py-2 font-sans md:text-lg px-10 rounded-3xl ${
                                   message?.sender_id === state.user?.id

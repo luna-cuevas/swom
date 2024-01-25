@@ -24,6 +24,7 @@ const Page = (props: Props) => {
   const [citySearchOpen, setCitySearchOpen] = useState(false);
   const [imageFiles, setImageFiles] = useState<File[]>([]);
   const supabase = supabaseClient();
+  const [isSearching, setIsSearching] = useState<boolean>(false);
   const [selectedImage, setSelectedImage] = useState(0); // Track selected image
   const aboutYourHomeRef = useRef<HTMLTextAreaElement | null>(null);
   const [whereIsIt, setWhereIsIt] = useState('');
@@ -35,6 +36,8 @@ const Page = (props: Props) => {
   const [windowWidth, setWindowWidth] = useState(
     typeof window !== 'undefined' ? window.innerWidth : 0
   );
+  const [showTooltip, setShowTooltip] = useState(false);
+  const [isLoaded, setIsLoaded] = useState(false);
 
   const {
     register,
@@ -180,6 +183,7 @@ const Page = (props: Props) => {
 
       setListings(listingsJson);
       console.log('listing', listingsJson);
+      setIsLoaded(true);
     } catch (error: any) {
       console.error('Error fetching data:', error.message);
     }
@@ -204,15 +208,14 @@ const Page = (props: Props) => {
   }, [watch('homeInfo.description')]);
 
   useEffect(() => {
-    setValue('homeInfo.whereIsIt', whereIsIt);
-    console.log(watch('homeInfo.whereIsIt'));
+    setValue('homeInfo.address', whereIsIt);
+    console.log(watch('homeInfo.address'));
   }, [whereIsIt]);
 
   useEffect(() => {
     if (state.user) {
       fetchListings();
       setUserName(state?.user?.email);
-      setValue('userInfo.name', state?.user?.user_metadata.name);
       setValue('userInfo.userName', state?.user?.email);
     }
   }, [state?.user]);
@@ -304,14 +307,24 @@ const Page = (props: Props) => {
         console.log('Uploaded image to Cloudinary:', result);
 
         // Include transformation parameters to reduce image size
-        const transformedUrl = `${result.secure_url.replace(
-          '/upload/',
-          '/upload/w_auto,c_scale,q_auto:low/'
-        )}`;
 
-        console.log('Transformed URL:', transformedUrl);
+        if (imageFile !== profileImage[0]) {
+          const transformedUrl = `${result.secure_url.replace(
+            '/upload/',
+            '/upload/w_auto,c_scale,q_auto:low,h_600,w_800/'
+          )}`;
+          console.log('Transformed URL:', transformedUrl);
 
-        return transformedUrl;
+          return transformedUrl;
+        } else {
+          const transformedUrl = `${result.secure_url.replace(
+            '/upload/',
+            '/upload/w_auto,c_scale,q_auto:low/'
+          )}`;
+          console.log('Transformed URL:', transformedUrl);
+
+          return transformedUrl;
+        }
       } catch (error) {
         console.error('Error uploading image to Cloudinary:', error);
         throw error;
@@ -323,7 +336,7 @@ const Page = (props: Props) => {
       const profileImageFile = profileImage[0];
       const profileImageUrl = await uploadImageToCloudinary(
         profileImageFile,
-        `${state.user?.id}/profileImage`
+        `${state.user.id}/profileImage`
       );
 
       // Use the Cloudinary URL directly
@@ -333,19 +346,22 @@ const Page = (props: Props) => {
     if (imageFiles && imageFiles.length > 0) {
       // Upload images to the listingImages bucket
       const uploadPromises = imageFiles.map((imageFile) =>
-        uploadImageToCloudinary(imageFile, `${state.user?.id}/listingImages`)
+        uploadImageToCloudinary(imageFile, `${state.user.id}/listingImages`)
       );
       const results = await Promise.all(uploadPromises);
 
       if (results.some((result) => result.length === 0)) {
         console.error('Error uploading listing images:', results);
+        return toast.error('Error uploading listing images');
       } else {
         data.homeInfo.listingImages = results;
         console.log('results', results);
       }
     }
 
-    const editListingData = await fetch('/api/profile/editProfile', {
+    console.log('data', data);
+
+    const editListingData = await fetch('/api/listings/editListing', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -380,20 +396,67 @@ const Page = (props: Props) => {
 
   return (
     <div className="bg-[#F7F1EE]">
-      <form
-        onSubmit={handleSubmit(onSubmit, onError)}
-        className=" max-w-[1440px] mx-auto relative">
-        <div className="py-8  px-8 lg:px-16 flex-col lg:flex-row flex justify-between gap-4">
-          <div className="lg:w-[35%] my-4 flex justify-center text-center flex-col">
-            {editUserInfo ? (
-              <>
-                {profileImage.length > 0 ? (
-                  <div className="relative w-[100px] mx-auto mb-4 h-[100px]">
+      {isLoaded ? (
+        <form
+          onSubmit={handleSubmit(onSubmit, onError)}
+          className=" max-w-[1200px] mx-auto relative">
+          <div className="py-8  px-8 lg:px-16 flex-col lg:flex-row flex justify-between gap-4">
+            <div className="lg:w-[35%] my-4 flex justify-center text-center flex-col">
+              {editUserInfo ? (
+                <>
+                  {profileImage.length > 0 ? (
+                    <div className="relative w-[100px] mx-auto mb-4 h-[100px]">
+                      <Image
+                        src={
+                          profileImage.length > 0
+                            ? URL.createObjectURL(profileImage[0])
+                            : '/placeholder.png'
+                        }
+                        alt="hero"
+                        fill
+                        objectPosition="center"
+                        // objectFit="cover"
+                        className="object-cover rounded-full"
+                      />
+                    </div>
+                  ) : (
+                    <ProfilePicDropZone setProfileImage={setProfileImage} />
+                  )}
+                  <div className="px-4 flex gap-2 flex-col">
+                    <input
+                      className="bg-transparent border-b border-[#172544] focus:outline-none"
+                      placeholder="Name"
+                      {...register('userInfo.name')}
+                    />
+                    <input
+                      className="bg-transparent border-b border-[#172544] focus:outline-none"
+                      placeholder="Profession"
+                      {...register('userInfo.profession')}
+                    />
+                    <input
+                      className="bg-transparent border-b border-[#172544] focus:outline-none"
+                      placeholder="Age"
+                      {...register('userInfo.age')}
+                    />
+                    {/* save button */}
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setEditUserInfo(!editUserInfo);
+                      }}>
+                      Close
+                    </button>
+                  </div>
+                </>
+              ) : (
+                <>
+                  <div className="relative w-[80px] my-4 mx-auto h-[80px]">
                     <Image
                       src={
                         profileImage.length > 0
                           ? URL.createObjectURL(profileImage[0])
-                          : '/placeholder.png'
+                          : listings[0]?.userInfo.profileImage ||
+                            '/placeholder.png'
                       }
                       alt="hero"
                       fill
@@ -401,371 +464,351 @@ const Page = (props: Props) => {
                       // objectFit="cover"
                       className="object-cover rounded-full"
                     />
+                    <div className="absolute bg-[#F87C1B] rounded-full w-[30px] -right-2 align-middle my-auto flex h-[30px]">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setEditUserInfo(!editUserInfo);
+                        }}>
+                        <Image
+                          fill
+                          // objectFit="contain"
+                          className="m-auto filter-invert object-contain"
+                          src="https://img.icons8.com/ios/50/000000/pencil-tip.png"
+                          alt=""
+                        />
+                      </button>
+                    </div>
                   </div>
-                ) : (
-                  <ProfilePicDropZone setProfileImage={setProfileImage} />
-                )}
-                <div className="px-4 flex gap-2 flex-col">
-                  <input
-                    className="bg-transparent border-b border-[#172544] focus:outline-none"
-                    placeholder="Name"
-                    {...register('userInfo.name')}
+
+                  <h2 className="font-serif break-all text-4xl ">
+                    {getValues('userInfo.name')}
+                  </h2>
+                  <p className="font-sans my-1 break-all font-bold uppercase tracking-[0.1rem]">
+                    {getValues('userInfo.profession')}
+                  </p>
+                  <p className="font-sans  uppercase">
+                    {getValues('userInfo.age') > 0
+                      ? `${getValues('userInfo.age')} years`
+                      : 'Unknown Age'}
+                  </p>
+                </>
+              )}
+            </div>
+            <div className="lg:w-[65%]">
+              <div className="grid py-2 text-center grid-cols-5 border-b border-[#172544]">
+                <h3>First Name</h3>
+                <h3>Last Name</h3>
+                <h3>User Name</h3>
+                <h3>Age</h3>
+                <h3>Profession</h3>
+              </div>
+              <div className="grid py-2 text-center grid-cols-5 border-b border-[#172544]">
+                <h3 className="flex-wrap break-all">
+                  {getValues('userInfo.name')
+                    ? getValues('userInfo.name').split(' ')[0]
+                    : 'First Name'}
+                </h3>
+                <h3 className="flex-wrap break-all">
+                  {getValues('userInfo.name')
+                    ? getValues('userInfo.name').split(' ')[1]
+                    : 'Last Name'}
+                </h3>
+                <h3 className="flex-wrap break-all">
+                  {userName ? userName.split('@')[0] : 'User Name'}
+                </h3>
+                <h3 className="flex-wrap break-all">
+                  {getValues('userInfo.age') > 0
+                    ? getValues('userInfo.age')
+                    : 'Unknown Age'}
+                </h3>
+                <h3 className="flex-wrap break-all">
+                  {getValues('userInfo.profession')
+                    ? getValues('userInfo.profession')
+                    : 'Profession'}
+                </h3>
+              </div>
+              <div className="flex justify-between py-2 border-b border-[#172544]">
+                <h2>About you</h2>
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    setState({ ...state, aboutYou: !state.aboutYou });
+                  }}>
+                  <div className="relative w-[30px] align-middle my-auto flex h-[30px]">
+                    <Image
+                      fill
+                      // objectFit="contain"
+                      className="m-auto object-contain"
+                      src="https://img.icons8.com/ios/50/000000/pencil-tip.png"
+                      alt=""
+                    />
+                  </div>
+                </button>
+              </div>
+              {state.aboutYou ? (
+                <div className="flex flex-col">
+                  <textarea
+                    {...register('userInfo.about_me')}
+                    placeholder="Tell us more about you."
+                    className="bg-transparent w-full mt-4 p-2 outline-none border-b border-[#c5c5c5]"
                   />
-                  <input
-                    className="bg-transparent border-b border-[#172544] focus:outline-none"
-                    placeholder="Profession"
-                    {...register('userInfo.profession')}
-                  />
-                  <input
-                    className="bg-transparent border-b border-[#172544] focus:outline-none"
-                    placeholder="Age"
-                    {...register('userInfo.age')}
-                  />
-                  {/* save button */}
                   <button
-                    type="button"
                     onClick={() => {
-                      setEditUserInfo(!editUserInfo);
-                    }}>
-                    Close
+                      setState({ ...state, aboutYou: !state.aboutYou });
+                    }}
+                    type="button"
+                    className="bg-[#FE8217] my-2 mx-auto text-white py-1 px-2 rounded-xl">
+                    Save
                   </button>
                 </div>
-              </>
-            ) : (
-              <>
-                <div className="relative w-[80px] my-4 mx-auto h-[80px]">
-                  <Image
-                    src={
-                      profileImage.length > 0
-                        ? URL.createObjectURL(profileImage[0])
-                        : listings[0]?.userInfo.profileImage ||
-                          '/placeholder.png'
-                    }
-                    alt="hero"
-                    fill
-                    objectPosition="center"
-                    // objectFit="cover"
-                    className="object-cover rounded-full"
+              ) : (
+                <p className="my-4">
+                  {getValues('userInfo.about_me') ||
+                    'Lorem ipsum dolor sit amet, consectetuer adipiscing elit, sed diam nonummy nibh euismod tincidunt ut laoreet dolore magna aliquam.'}
+                </p>
+              )}
+
+              <div className="flex flex-col md:flex-row gap-8 py-4 border-y border-[#172544]">
+                <h4 className="text-2xl font-serif italic">
+                  Where would you like to go?
+                </h4>
+
+                <div className="gap-4 flex">
+                  <input
+                    className="w-1/3 h-fit my-auto bg-transparent border-b border-[#172544] focus:outline-none"
+                    {...register('userInfo.openToOtherCities.cityVisit1')}
                   />
-                  <div className="absolute bg-[#F87C1B] rounded-full w-[30px] -right-2 align-middle my-auto flex h-[30px]">
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setEditUserInfo(!editUserInfo);
-                      }}>
-                      <Image
-                        fill
-                        // objectFit="contain"
-                        className="m-auto filter-invert object-contain"
-                        src="https://img.icons8.com/ios/50/000000/pencil-tip.png"
-                        alt=""
-                      />
-                    </button>
-                  </div>
+                  <input
+                    className="w-1/3 h-fit my-auto bg-transparent border-b border-[#172544] focus:outline-none"
+                    {...register('userInfo.openToOtherCities.cityVisit2')}
+                  />
+                  <input
+                    className="w-1/3 h-fit my-auto bg-transparent border-b border-[#172544] focus:outline-none"
+                    {...register('userInfo.openToOtherCities.cityVisit3')}
+                  />
                 </div>
+              </div>
 
-                <h2 className="font-serif break-all text-4xl ">
-                  {getValues('userInfo.name')}
-                </h2>
-                <p className="font-sans my-1 break-all font-bold uppercase tracking-[0.1rem]">
-                  {getValues('userInfo.profession')}
-                </p>
-                <p className="font-sans  uppercase">
-                  {getValues('userInfo.age')} years
-                </p>
-              </>
-            )}
+              <div className="flex flex-col justify-between py-4 ">
+                <h4 className="text-2xl font-serif italic">
+                  Open to other destinations?
+                </h4>
+                <div className="flex my-2">
+                  <input
+                    className="appearance-none h-fit my-auto bg-transparent checked:bg-[#7F8119] rounded-full border border-[#172544] p-2 mx-2"
+                    type="radio"
+                    id="yesRadio"
+                    value="true"
+                    {...register('userInfo.openToOtherDestinations')}
+                  />
+                  <label htmlFor="yesRadio">Yes</label>
+
+                  <input
+                    className="appearance-none ml-4 h-fit my-auto bg-transparent checked:bg-[#7F8119] rounded-full border border-[#172544] p-2 mx-2"
+                    type="radio"
+                    value="false"
+                    id="noRadio"
+                    {...register('userInfo.openToOtherDestinations')}
+                  />
+                  <label htmlFor="noRadio">No</label>
+                </div>
+              </div>
+            </div>
           </div>
-          <div className="lg:w-[65%]">
-            <div className="grid py-2 text-center grid-cols-5 border-b border-[#172544]">
-              <h3>First Name</h3>
-              <h3>Last Name</h3>
-              <h3>User Name</h3>
-              <h3>Age</h3>
-              <h3>Profession</h3>
-            </div>
-            <div className="grid py-2 text-center grid-cols-5 border-b border-[#172544]">
-              <h3>
-                {getValues('userInfo.name')
-                  ? getValues('userInfo.name').split(' ')[0]
-                  : 'First Name'}
-              </h3>
-              <h3>
-                {getValues('userInfo.name')
-                  ? getValues('userInfo.name').split(' ')[1]
-                  : 'Last Name'}
-              </h3>
-              <h3>{userName ? userName.split('@')[0] : 'User Name'}</h3>
-              <h3>
-                {getValues('userInfo.age') ? getValues('userInfo.age') : 'Age'}
-              </h3>
-              <h3>
-                {getValues('userInfo.profession')
-                  ? getValues('userInfo.profession')
-                  : 'Profession'}
-              </h3>
-            </div>
-            <div className="flex justify-between py-2 border-b border-[#172544]">
-              <h2>About you</h2>
 
-              <button
-                type="button"
-                onClick={() => {
-                  setState({ ...state, aboutYou: !state.aboutYou });
-                }}>
-                <div className="relative w-[30px] align-middle my-auto flex h-[30px]">
+          <div className="w-full flex flex-col px-8 md:px-16 m-auto">
+            <div className="flex my-4 flex-col md:flex-row border-y border-[#172544] py-4 justify-between">
+              <h2 className="text-xl">
+                {watch('homeInfo.city') ? getValues('homeInfo.city') : ''}
+              </h2>
+              <div className="flex gap-2 justify-evenly">
+                <div className="relative w-[20px] my-auto h-[20px]">
                   <Image
                     fill
                     // objectFit="contain"
-                    className="m-auto object-contain"
-                    src="https://img.icons8.com/ios/50/000000/pencil-tip.png"
+                    className="h-full object-contain"
+                    src="/logo-icons.png"
                     alt=""
                   />
                 </div>
-              </button>
-            </div>
-            {state.aboutYou ? (
-              <div className="flex flex-col">
-                <textarea
-                  {...register('userInfo.about_me')}
-                  placeholder="Tell us more about you."
-                  className="bg-transparent w-full mt-4 p-2 outline-none border-b border-[#c5c5c5]"
-                />
+                <h2 className="text-xl my-auto font-sans">
+                  Listing{' '}
+                  <span className="font-bold">
+                    {state?.user?.id?.slice(-6)}
+                  </span>
+                </h2>
                 <button
+                  className="ml-4 bg-[#FE8217] my-auto py-2 px-4 text-white rounded-xl relative"
                   onClick={() => {
-                    setState({ ...state, aboutYou: !state.aboutYou });
+                    setState({
+                      ...state,
+                      imgUploadPopUp: !state.imgUploadPopUp,
+                    });
                   }}
-                  type="button"
-                  className="bg-[#FE8217] my-2 mx-auto text-white py-1 px-2 rounded-xl">
-                  Save
+                  onMouseEnter={() => setShowTooltip(true)}
+                  onMouseLeave={() => setShowTooltip(false)}
+                  type="button">
+                  {!state.imgUploadPopUp
+                    ? 'Upload Photos'
+                    : 'Close Photo Upload'}
+                  {showTooltip && state.imgUploadPopUp && (
+                    <div className="absolute top-full z-[1000] w-full left-1/2 transform -translate-x-1/2 mt-2 px-2 py-1 bg-black text-white text-xs rounded">
+                      Press the save button on the bottom to save uploads.
+                    </div>
+                  )}
                 </button>
               </div>
-            ) : (
-              <p className="my-4">
-                {getValues('userInfo.about_me') ||
-                  'Lorem ipsum dolor sit amet, consectetuer adipiscing elit, sed diam nonummy nibh euismod tincidunt ut laoreet dolore magna aliquam.'}
-              </p>
+            </div>
+            {state.imgUploadPopUp && (
+              <div className=" z-50 h-fit w-full bg-white flex m-auto top-0 bottom-0 left-0 right-0">
+                <BecomeMemberDropzone
+                  imageFiles={imageFiles}
+                  setImageFiles={setImageFiles}
+                />
+              </div>
             )}
+            <div>
+              {imageFiles.length > 0 && !state.imgUploadPopUp && (
+                <>
+                  <div className="relative mt-8 mb-6 w-[95%] mx-auto h-[50vh]">
+                    <Image
+                      src={
+                        imageFiles[selectedImage]
+                          ? URL.createObjectURL(imageFiles[selectedImage])
+                          : '/placeholder.png'
+                      }
+                      alt=""
+                      className="rounded-3xl object-contain"
+                      fill
+                      objectPosition="center"
+                    />
+                  </div>
 
-            <div className="flex flex-col md:flex-row gap-8 py-4 border-y border-[#172544]">
-              <h4 className="text-2xl font-serif italic">
-                Where would you like to go?
-              </h4>
+                  <div className="relative w-[95%] mx-auto h-[30vh]">
+                    <CarouselPage
+                      picturesPerSlide={
+                        // check if mobile or desktop
+                        windowWidth > 1025 ? 4 : windowWidth > 768 ? 3 : 1
+                      }
+                      selectedImage={selectedImage}
+                      setSelectedImage={setSelectedImage}
+                      overlay={false}
+                      contain={false}
+                      images={imageFiles.map((file) => ({
+                        src: URL.createObjectURL(file),
+                      }))}
+                    />
+                  </div>
+                </>
+              )}
+              {downloadedImages?.length > 0 && imageFiles.length == 0 && (
+                <>
+                  <div className="relative mt-8 mb-6 w-[95%] mx-auto h-[50vh]">
+                    <Image
+                      src={
+                        downloadedImages[selectedImage]
+                          ? downloadedImages[selectedImage]
+                          : '/placeholder.png'
+                      }
+                      alt=""
+                      className="rounded-3xl object-contain"
+                      fill
+                      objectPosition="center"
+                    />
+                  </div>
 
-              <div className="gap-4 flex">
-                <input
-                  className="w-1/3 h-fit my-auto bg-transparent border-b border-[#172544] focus:outline-none"
-                  {...register('userInfo.openToOtherCities.cityVisit1')}
-                />
-                <input
-                  className="w-1/3 h-fit my-auto bg-transparent border-b border-[#172544] focus:outline-none"
-                  {...register('userInfo.openToOtherCities.cityVisit2')}
-                />
-                <input
-                  className="w-1/3 h-fit my-auto bg-transparent border-b border-[#172544] focus:outline-none"
-                  {...register('userInfo.openToOtherCities.cityVisit3')}
-                />
-              </div>
+                  <div className="relative w-[95%] mx-auto h-[30vh]">
+                    <CarouselPage
+                      picturesPerSlide={
+                        // check if mobile or desktop
+                        windowWidth > 1025 ? 4 : windowWidth > 768 ? 3 : 1
+                      }
+                      selectedImage={selectedImage}
+                      setSelectedImage={setSelectedImage}
+                      overlay={false}
+                      contain={false}
+                      images={
+                        downloadedImages.length > 0
+                          ? downloadedImages.map((file: any) => ({
+                              src: file,
+                            }))
+                          : [1, 2].map((file) => ({
+                              src: '/placeholder.png',
+                            }))
+                      }
+                    />
+                  </div>
+                </>
+              )}
             </div>
 
-            <div className="flex flex-col justify-between py-4 ">
-              <h4 className="text-2xl font-serif italic">
-                Open to other destinations?
-              </h4>
-              <div className="flex my-2">
-                <input
-                  className="appearance-none h-fit my-auto bg-transparent checked:bg-[#7F8119] rounded-full border border-[#172544] p-2 mx-2"
-                  type="radio"
-                  id="yesRadio"
-                  value="true"
-                  {...register('userInfo.openToOtherDestinations')}
-                />
-                <label htmlFor="yesRadio">Yes</label>
-
-                <input
-                  className="appearance-none ml-4 h-fit my-auto bg-transparent checked:bg-[#7F8119] rounded-full border border-[#172544] p-2 mx-2"
-                  type="radio"
-                  value="false"
-                  id="noRadio"
-                  {...register('userInfo.openToOtherDestinations')}
-                />
-                <label htmlFor="noRadio">No</label>
-              </div>
+            <div className="flex my-4 border-b border-[#172544] py-4 justify-between">
+              <h2 className="text-xl italic font-serif">Name of the city</h2>
             </div>
-          </div>
-        </div>
 
-        <div className="w-full flex flex-col px-8 md:px-16 m-auto">
-          <div className="flex my-4 flex-col md:flex-row border-y border-[#172544] py-4 justify-between">
-            <h2 className="text-xl">
-              {watch('homeInfo.city') ? getValues('homeInfo.city') : ''}
-            </h2>
-            <div className="flex gap-2 justify-evenly">
-              <div className="relative w-[20px] my-auto h-[20px]">
-                <Image
-                  fill
-                  // objectFit="contain"
-                  className="h-full object-contain"
-                  src="/logo-icons.png"
+            <div className="w-full relative flex p-2 my-4 rounded-xl border border-[#172544]">
+              <input
+                className="bg-transparent w-full outline-none"
+                type="text"
+                placeholder="What's the city?"
+                {...register('homeInfo.city')}
+                value={searchTerm}
+                onChange={handleInputChange}
+              />
+              <button type="button" onClick={handleSearch}>
+                {' '}
+                <img
+                  className="w-[20px] my-auto h-[20px]"
+                  src="/search-icon.svg"
                   alt=""
                 />
-              </div>
-              <h2 className="text-xl my-auto font-sans">
-                Listing{' '}
-                <span className="font-bold">{state?.user?.id?.slice(-6)}</span>
-              </h2>
-              <button
-                className="ml-4 bg-[#FE8217] my-auto py-2 px-4 text-white rounded-xl"
-                onClick={() => {
-                  setState({ ...state, imgUploadPopUp: !state.imgUploadPopUp });
-                }}
-                type="button">
-                Upload Photos
               </button>
+
+              {filteredCities.length > 0 && citySearchOpen && (
+                <ul className="absolute bg-white w-full p-2 top-full left-0 max-h-[200px] overflow-y-scroll">
+                  {filteredCities.map((city) => (
+                    <li
+                      key={city.id}
+                      onClick={() => handleCitySelect(city)}
+                      style={{ cursor: 'pointer' }}>
+                      {city.city}, {city.country}
+                    </li>
+                  ))}
+                </ul>
+              )}
             </div>
-          </div>
-          {state.imgUploadPopUp && (
-            <div className=" z-50 h-fit w-full bg-white flex m-auto top-0 bottom-0 left-0 right-0">
-              <BecomeMemberDropzone
-                imageFiles={imageFiles}
-                setImageFiles={setImageFiles}
-              />
+
+            {selectedCity != null && filteredCities.length !== 0 && (
+              <p className="font-sans text-sm my-6">
+                {(selectedCity as { description?: string | undefined })
+                  ?.description ?? 'No description available'}
+              </p>
+            )}
+            {filteredCities.length === 0 && (
+              <p className="font-sans text-sm my-6">No description available</p>
+            )}
+
+            <div className="flex my-4  border-y border-[#172544] py-4 justify-between">
+              <h2 className="text-xl italic font-serif">
+                Tell us about your home
+              </h2>
             </div>
-          )}
-          <div>
-            {imageFiles.length > 0 && !state.imgUploadPopUp && (
-              <>
-                <div className="relative mt-8 mb-6 w-[95%] mx-auto h-[50vh]">
-                  <Image
-                    src={
-                      imageFiles[selectedImage]
-                        ? URL.createObjectURL(imageFiles[selectedImage])
-                        : '/placeholder.png'
-                    }
-                    alt=""
-                    className="rounded-3xl object-contain"
-                    fill
-                    objectPosition="center"
-                  />
-                </div>
 
-                <div className="relative w-[95%] mx-auto h-[30vh]">
-                  <CarouselPage
-                    picturesPerSlide={
-                      // check if mobile or desktop
-                      windowWidth > 1025 ? 4 : windowWidth > 768 ? 3 : 1
-                    }
-                    selectedImage={selectedImage}
-                    setSelectedImage={setSelectedImage}
-                    overlay={false}
-                    contain={false}
-                    images={imageFiles.map((file) => ({
-                      src: URL.createObjectURL(file),
-                    }))}
-                  />
-                </div>
-              </>
-            )}
-            {downloadedImages?.length > 0 && imageFiles.length == 0 && (
-              <>
-                <div className="relative mt-8 mb-6 w-[95%] mx-auto h-[50vh]">
-                  <Image
-                    src={
-                      downloadedImages[selectedImage]
-                        ? downloadedImages[selectedImage]
-                        : '/placeholder.png'
-                    }
-                    alt=""
-                    className="rounded-3xl object-contain"
-                    fill
-                    objectPosition="center"
-                  />
-                </div>
-
-                <div className="relative w-[95%] mx-auto h-[30vh]">
-                  <CarouselPage
-                    picturesPerSlide={
-                      // check if mobile or desktop
-                      windowWidth > 1025 ? 4 : windowWidth > 768 ? 3 : 1
-                    }
-                    selectedImage={selectedImage}
-                    setSelectedImage={setSelectedImage}
-                    overlay={false}
-                    contain={false}
-                    images={downloadedImages.map((file: any) => ({
-                      src: file,
-                    }))}
-                  />
-                </div>
-              </>
-            )}
-          </div>
-
-          <div className="flex my-4 border-b border-[#172544] py-4 justify-between">
-            <h2 className="text-xl italic font-serif">Name of the city</h2>
-          </div>
-
-          <div className="w-full relative flex p-2 my-4 rounded-xl border border-[#172544]">
-            <input
-              className="bg-transparent w-full outline-none"
-              type="text"
-              placeholder="What's the city?"
-              {...register('homeInfo.city')}
-              value={searchTerm}
-              onChange={handleInputChange}
-            />
-            <button type="button" onClick={handleSearch}>
-              {' '}
-              <img
-                className="w-[20px] my-auto h-[20px]"
-                src="/search-icon.svg"
-                alt=""
-              />
-            </button>
-
-            {filteredCities.length > 0 && citySearchOpen && (
-              <ul className="absolute bg-white w-full p-2 top-full left-0 max-h-[200px] overflow-y-scroll">
-                {filteredCities.map((city) => (
-                  <li
-                    key={city.id}
-                    onClick={() => handleCitySelect(city)}
-                    style={{ cursor: 'pointer' }}>
-                    {city.city}, {city.country}
-                  </li>
-                ))}
-              </ul>
-            )}
-          </div>
-
-          {selectedCity != null && filteredCities.length !== 0 && (
-            <p className="font-sans text-sm my-6">
-              {(selectedCity as { description?: string | undefined })
-                ?.description ?? 'No description available'}
-            </p>
-          )}
-          {filteredCities.length === 0 && (
-            <p className="font-sans text-sm my-6">No description available</p>
-          )}
-
-          <div className="flex my-4  border-y border-[#172544] py-4 justify-between">
-            <h2 className="text-xl italic font-serif">
-              Tell us about your home
-            </h2>
-          </div>
-
-          <textarea
-            {...rest}
-            name="description"
-            ref={(e) => {
-              ref(e);
-              aboutYourHomeRef.current = e;
-            }}
-            onChange={(e) => {
-              setValue('homeInfo.description', e.target.value);
-            }}
-            value={watch('homeInfo.description')}
-            className="w-full h-fit max-h-[300px] my-4 p-2 bg-transparent outline-none border-b border-[#c5c5c5] resize-none"
-            placeholder="Villa linda is dolor sit amet, consectetuer adipiscing elit, sed diam
+            <textarea
+              {...rest}
+              name="description"
+              ref={(e) => {
+                ref(e);
+                aboutYourHomeRef.current = e;
+              }}
+              onChange={(e) => {
+                setValue('homeInfo.description', e.target.value);
+              }}
+              value={watch('homeInfo.description')}
+              className="w-full h-fit max-h-[300px] my-4 p-2 bg-transparent outline-none border-b border-[#c5c5c5] resize-none"
+              placeholder="Villa linda is dolor sit amet, consectetuer adipiscing elit, sed diam
           nonummy nibh euismod tincidunt ut laoreet dolore magna aliquam erat
           volutpat. Ut wisi enim ad minim veniam, quis nostrud exerci tation
           ullamcorper suscipit lobortis nisl ut aliquip ex ea commodo consequat.
@@ -773,491 +816,529 @@ const Page = (props: Props) => {
           consec- tetuer adipiscing elit, sed diam nonummy nibh euismod
           tincidunt ut laoreet dolore magna aliquam erat volutpat."></textarea>
 
-          <div className="px-8 py-4 flex flex-col md:flex-row border rounded-xl my-8 border-[#172544]">
-            <div className="flex flex-col text-center justify-center py-2 md:py-0 h-full md:w-1/3 border-b md:border-b-0 md:border-r border-[#172544]">
-              <label className="font-bold" htmlFor="property">
-                Type of property*
-              </label>
+            <div className="px-8 py-4 flex flex-col md:flex-row border rounded-xl my-8 border-[#172544]">
+              <div className="flex flex-col text-center justify-center py-2 md:py-0 h-full md:w-1/3 border-b md:border-b-0 md:border-r border-[#172544]">
+                <label className="font-bold" htmlFor="property">
+                  Type of property*
+                </label>
 
-              <select
-                {...register('homeInfo.property')}
-                className="w-fit m-auto bg-transparent outline-none p-2 my-2 rounded-lg border-[#172544] border"
-                id="property">
-                <option value="house">House</option>
-                <option value="apartment">Apartment</option>
-                <option value="condo">Condo</option>
-                <option value="townhouse">Townhouse</option>
-              </select>
+                <select
+                  {...register('homeInfo.property')}
+                  className="w-fit m-auto bg-transparent outline-none p-2 my-2 rounded-lg border-[#172544] border"
+                  id="property">
+                  <option value="house">House</option>
+                  <option value="apartment">Apartment</option>
+                  <option value="condo">Condo</option>
+                  <option value="townhouse">Townhouse</option>
+                  <option value="villa">Villa</option>
+                </select>
+              </div>
+
+              <div className="flex flex-col text-center justify-center h-full py-2 md:py-0 md:w-1/3 border-b md:border-b-0 md:border-r border-[#172544]">
+                <label className="font-bold" htmlFor="howManySleep">
+                  Bedrooms
+                </label>
+                <select
+                  className="w-fit m-auto bg-transparent outline-none p-2 my-2 rounded-lg border-[#172544] border"
+                  {...register('homeInfo.howManySleep')}
+                  id="howManySleep">
+                  <option value="1">1</option>
+                  <option value="2">2</option>
+                  <option value="3">3</option>
+                  <option value="4">4</option>
+                  <option value="5">5</option>
+                  <option value="6">6</option>
+                  <option value="7">7</option>
+                  <option value="+8">+8</option>
+                </select>
+              </div>
+
+              <div className="flex flex-col text-center justify-center h-full border-b  py-2 md:py-0 md:w-1/3 ">
+                <label className="font-bold" htmlFor="locatedIn">
+                  Property located in
+                </label>
+                <select
+                  className="w-fit m-auto bg-transparent outline-none p-2 my-2 rounded-lg border-[#172544] border"
+                  {...register('homeInfo.locatedIn')}
+                  id="locatedIn">
+                  <option value="condominium">a condominium</option>
+                  <option value="gated community">a gated community</option>
+                  <option value="neighborhood">a neighborhood</option>
+                  <option value="rural">a rural area</option>
+                </select>
+              </div>
             </div>
 
-            <div className="flex flex-col text-center justify-center h-full py-2 md:py-0 md:w-1/3 border-b md:border-b-0 md:border-r border-[#172544]">
-              <label className="font-bold" htmlFor="howManySleep">
-                Bedrooms
-              </label>
-              <select
-                className="w-fit m-auto bg-transparent outline-none p-2 my-2 rounded-lg border-[#172544] border"
-                {...register('homeInfo.howManySleep')}
-                id="howManySleep">
-                <option value="1">1</option>
-                <option value="2">2</option>
-                <option value="3">3</option>
-                <option value="4">4</option>
-                <option value="5+">5+</option>
-              </select>
+            <div className="px-8 py-4 flex flex-col md:flex-row border rounded-xl my-8 border-[#172544]">
+              <div className="flex flex-col py-2 md:py-0 text-center justify-center h-full md:w-1/3 border-b md:border-b-0 md:border-r border-[#172544]">
+                <label className="font-bold" htmlFor="mainOrSecond">
+                  Kind of property
+                </label>
+                <select
+                  className="w-fit m-auto bg-transparent outline-none p-2 my-2 rounded-lg border-[#172544] border"
+                  {...register('homeInfo.mainOrSecond')}
+                  id="mainOrSecond">
+                  <option value="main">Main property </option>
+                  <option value="second">Second property</option>
+                  {/* <option value="Third">Third property</option> */}
+                </select>
+              </div>
+
+              <div className="flex flex-col text-center py-2 md:py-0 justify-center h-full border-b md:w-1/3 md:border-b-0 md:border-r border-[#172544]">
+                <label className="font-bold" htmlFor="bathrooms">
+                  Bathrooms
+                </label>
+                <select
+                  className="w-fit m-auto bg-transparent outline-none p-2 my-2 rounded-lg border-[#172544] border"
+                  {...register('homeInfo.bathrooms')}
+                  id="bathrooms">
+                  <option value="1">1</option>
+                  <option value="2">2</option>
+                  <option value="3">3</option>
+                  <option value="4">4</option>
+                  <option value="5">5</option>
+                  <option value="6+">6+</option>
+                </select>
+              </div>
+
+              <div className="flex flex-col py-2 md:py-0 text-center justify-center h-full md:w-1/3 ">
+                <label className="font-bold" htmlFor="area">
+                  Area
+                </label>
+                <select
+                  className="w-fit m-auto bg-transparent outline-none p-2 my-2 rounded-lg border-[#172544] border"
+                  {...register('homeInfo.area')}
+                  id="area">
+                  <option value="60-100">60 - 100 m2</option>
+                  <option value="100-150">100 - 150 m2</option>
+                  <option value="150-200">150 - 200 m2</option>
+                  <option value="200-250">200 - 250 m2</option>
+                  <option value="250-300">250 - 300 m2</option>
+                  <option value="300-350">300 - 350 m2</option>
+                  <option value="350-400">350 - 400 m2</option>
+                  <option value="400-450">400 - 450 m2</option>
+                  <option value="450-500">450 - 500 m2</option>
+                  <option value="500-550">500 - 550 m2</option>
+                  <option value="550-600">550 - 600 m2</option>
+                </select>
+              </div>
+            </div>
+            <div className="flex my-4  border-y border-[#172544] py-4 flex-col">
+              <h2 className="text-xl italic font-serif">Where is it? </h2>
+              <p className="font-serif">
+                {' '}
+                Write down the exact address so google can identify the location
+                of your property.
+              </p>
             </div>
 
-            <div className="flex flex-col text-center justify-center h-full border-b  py-2 md:py-0 md:w-1/3 ">
-              <label className="font-bold" htmlFor="locatedIn">
-                Property located in
-              </label>
-              <select
-                className="w-fit m-auto bg-transparent outline-none p-2 my-2 rounded-lg border-[#172544] border"
-                {...register('homeInfo.locatedIn')}
-                id="locatedIn">
-                <option value="condominium">a condominium</option>
-                <option value="gated community">a gated community</option>
-                <option value="neighborhood">a neighborhood</option>
-                <option value="rural">a rural area</option>
-              </select>
+            <div className={`w-full h-[45vh] my-4 mb-8 rounded-xl`}>
+              {listings[0]?.homeInfo.address ? (
+                <GoogleMapComponent
+                  setIsSearching={setIsSearching}
+                  exactAddress={listings[0]?.homeInfo.address}
+                  setWhereIsIt={setWhereIsIt}
+                />
+              ) : (
+                <GoogleMapComponent
+                  setIsSearching={setIsSearching}
+                  city={listings[0]?.homeInfo.city}
+                  setWhereIsIt={setWhereIsIt}
+                />
+              )}
             </div>
+
+            <div className="flex my-4  border-y border-[#172544] py-4 justify-between">
+              <h2 className="text-xl italic font-serif">
+                Amenities and advantages
+              </h2>
+            </div>
+
+            <div className="flex flex-wrap pb-8">
+              <div className="md:w-1/5 w-1/2 gap-2 flex flex-col">
+                <div className="flex gap-2">
+                  <input
+                    className="bg-transparent checked:bg-[#7F8119] appearance-none border border-[#172544] rounded-xl p-[6px] my-auto"
+                    type="checkbox"
+                    {...register('amenities.bike')}
+                    id="bike"
+                  />
+                  <label className="" htmlFor="bike">
+                    Bike
+                  </label>
+                </div>
+                <div className="flex gap-2">
+                  <input
+                    className="bg-transparent checked:bg-[#7F8119] appearance-none border border-[#172544] rounded-xl p-[6px] my-auto"
+                    type="checkbox"
+                    {...register('amenities.car')}
+                    id="car"
+                  />
+                  <label className="" htmlFor="car">
+                    Car
+                  </label>
+                </div>
+
+                <div className="flex gap-2">
+                  <input
+                    className="bg-transparent checked:bg-[#7F8119] appearance-none border border-[#172544] rounded-xl p-[6px] my-auto"
+                    type="checkbox"
+                    {...register('amenities.tv')}
+                    id="tv"
+                  />
+                  <label className="" htmlFor="tv">
+                    TV
+                  </label>
+                </div>
+
+                <div className="flex gap-2">
+                  <input
+                    className="bg-transparent checked:bg-[#7F8119] appearance-none border border-[#172544] rounded-xl p-[6px] my-auto"
+                    type="checkbox"
+                    {...register('amenities.dishwasher')}
+                    id="dishwasher"
+                  />
+                  <label className="" htmlFor="dishwasher">
+                    Dishwasher
+                  </label>
+                </div>
+
+                <div className="flex gap-2">
+                  <input
+                    className="bg-transparent checked:bg-[#7F8119] appearance-none border border-[#172544] rounded-xl p-[6px] my-auto"
+                    type="checkbox"
+                    {...register('amenities.pingpong')}
+                    id="pingpong"
+                  />
+                  <label className="" htmlFor="pingpong">
+                    Ping pong
+                  </label>
+                </div>
+
+                <div className="flex gap-2">
+                  <input
+                    className="bg-transparent checked:bg-[#7F8119] appearance-none border border-[#172544] rounded-xl p-[6px] my-auto"
+                    type="checkbox"
+                    {...register('amenities.billiards')}
+                    id="billiards"
+                  />
+                  <label className="" htmlFor="billiards">
+                    Billiards
+                  </label>
+                </div>
+              </div>
+
+              <div className="md:w-1/5 w-1/2 gap-2 flex flex-col">
+                <div className="gap-2 flex">
+                  <input
+                    className="bg-transparent checked:bg-[#7F8119] appearance-none border border-[#172544] rounded-xl p-[6px] my-auto"
+                    type="checkbox"
+                    {...register('amenities.washer')}
+                    id="washer"
+                  />
+                  <label className="" htmlFor="washer">
+                    Washer
+                  </label>
+                </div>
+                <div className="flex gap-2">
+                  <input
+                    className="bg-transparent checked:bg-[#7F8119] appearance-none border border-[#172544] rounded-xl p-[6px] my-auto"
+                    type="checkbox"
+                    {...register('amenities.dryer')}
+                    id="dryer"
+                  />
+                  <label className="" htmlFor="dryer">
+                    Dryer
+                  </label>
+                </div>
+
+                <div className="flex gap-2">
+                  <input
+                    className="bg-transparent checked:bg-[#7F8119] appearance-none border border-[#172544] rounded-xl p-[6px] my-auto"
+                    type="checkbox"
+                    {...register('amenities.wifi')}
+                    id="wifi"
+                  />
+                  <label className="" htmlFor="wifi">
+                    Wifi
+                  </label>
+                </div>
+
+                <div className="flex gap-2">
+                  <input
+                    className="bg-transparent checked:bg-[#7F8119] appearance-none border border-[#172544] rounded-xl p-[6px] my-auto"
+                    type="checkbox"
+                    {...register('amenities.elevator')}
+                    id="elevator"
+                  />
+                  <label className="" htmlFor="elevator">
+                    Elevator
+                  </label>
+                </div>
+
+                <div className="flex gap-2">
+                  <input
+                    className="bg-transparent checked:bg-[#7F8119] appearance-none border border-[#172544] rounded-xl p-[6px] my-auto"
+                    type="checkbox"
+                    {...register('amenities.terrace')}
+                    id="terrace"
+                  />
+                  <label className="" htmlFor="terrace">
+                    Terrace
+                  </label>
+                </div>
+
+                <div className="flex gap-2">
+                  <input
+                    className="bg-transparent checked:bg-[#7F8119] appearance-none border border-[#172544] rounded-xl p-[6px] my-auto"
+                    type="checkbox"
+                    {...register('amenities.scooter')}
+                    id="scooter"
+                  />
+                  <label className="" htmlFor="scooter">
+                    Scooter
+                  </label>
+                </div>
+              </div>
+
+              <div className="md:w-1/5 w-1/2 gap-2 flex flex-col">
+                <div className="flex gap-2">
+                  <input
+                    className="bg-transparent checked:bg-[#7F8119] appearance-none border border-[#172544] rounded-xl p-[6px] my-auto"
+                    type="checkbox"
+                    {...register('amenities.bbq')}
+                    id="bbq"
+                  />
+                  <label className="" htmlFor="bbq">
+                    BBQ
+                  </label>
+                </div>
+                <div className="flex gap-2">
+                  <input
+                    className="bg-transparent checked:bg-[#7F8119] appearance-none border border-[#172544] rounded-xl p-[6px] my-auto"
+                    type="checkbox"
+                    {...register('amenities.computer')}
+                    id="computer"
+                  />
+                  <label className="" htmlFor="computer">
+                    Home Computer
+                  </label>
+                </div>
+
+                <div className="flex gap-2">
+                  <input
+                    className="bg-transparent checked:bg-[#7F8119] appearance-none border border-[#172544] rounded-xl p-[6px] my-auto"
+                    {...register('amenities.wcAccess')}
+                    type="checkbox"
+                    id="wc"
+                  />
+                  <label className="" htmlFor="wc">
+                    WC Access
+                  </label>
+                </div>
+
+                <div className="flex gap-2">
+                  <input
+                    className="bg-transparent checked:bg-[#7F8119] appearance-none border border-[#172544] rounded-xl p-[6px] my-auto"
+                    type="checkbox"
+                    {...register('amenities.pool')}
+                    id="pool"
+                  />
+                  <label className="" htmlFor="pool">
+                    Pool
+                  </label>
+                </div>
+
+                <div className="flex gap-2">
+                  <input
+                    className="bg-transparent checked:bg-[#7F8119] appearance-none border border-[#172544] rounded-xl p-[6px] my-auto"
+                    type="checkbox"
+                    {...register('amenities.playground')}
+                    id="playground"
+                  />
+                  <label className="" htmlFor="playground">
+                    Playground
+                  </label>
+                </div>
+
+                <div className="flex gap-2">
+                  <input
+                    className="bg-transparent checked:bg-[#7F8119] appearance-none border border-[#172544] rounded-xl p-[6px] my-auto"
+                    type="checkbox"
+                    {...register('amenities.babyGear')}
+                    id="babyGear"
+                  />
+                  <label className="" htmlFor="babyGear">
+                    Baby gear
+                  </label>
+                </div>
+              </div>
+
+              <div className="md:w-1/5 w-1/2 gap-2 flex flex-col">
+                <div className="flex gap-2">
+                  <input
+                    className="bg-transparent checked:bg-[#7F8119] appearance-none border border-[#172544] rounded-xl p-[6px] my-auto"
+                    type="checkbox"
+                    {...register('amenities.ac')}
+                    id="ac"
+                  />
+                  <label className="" htmlFor="ac">
+                    AC
+                  </label>
+                </div>
+                <div className="flex gap-2">
+                  <input
+                    className="bg-transparent checked:bg-[#7F8119] appearance-none border border-[#172544] rounded-xl p-[6px] my-auto"
+                    type="checkbox"
+                    {...register('amenities.fireplace')}
+                    id="fireplace"
+                  />
+                  <label className="" htmlFor="fireplace">
+                    Fireplace
+                  </label>
+                </div>
+
+                <div className="flex gap-2">
+                  <input
+                    className="bg-transparent checked:bg-[#7F8119] appearance-none border border-[#172544] rounded-xl p-[6px] my-auto"
+                    type="checkbox"
+                    {...register('amenities.parking')}
+                    id="parking"
+                  />
+                  <label className="" htmlFor="parking">
+                    Private parking
+                  </label>
+                </div>
+
+                <div className="flex gap-2">
+                  <input
+                    className="bg-transparent checked:bg-[#7F8119] appearance-none border border-[#172544] rounded-xl p-[6px] my-auto"
+                    type="checkbox"
+                    {...register('amenities.hotTub')}
+                    id="hotTub"
+                  />
+                  <label className="" htmlFor="hotTub">
+                    Hot tub
+                  </label>
+                </div>
+
+                <div className="flex gap-2">
+                  <input
+                    className="bg-transparent checked:bg-[#7F8119] appearance-none border border-[#172544] rounded-xl p-[6px] my-auto"
+                    type="checkbox"
+                    {...register('amenities.sauna')}
+                    id="sauna"
+                  />
+                  <label className="" htmlFor="sauna">
+                    Sauna
+                  </label>
+                </div>
+
+                <div className="flex gap-2">
+                  <input
+                    className="bg-transparent checked:bg-[#7F8119] appearance-none border border-[#172544] rounded-xl p-[6px] my-auto"
+                    type="checkbox"
+                    {...register('amenities.other')}
+                    id="other"
+                  />
+                  <label className="" htmlFor="other">
+                    Other...
+                  </label>
+                </div>
+              </div>
+
+              <div className="md:w-1/5 w-1/2 gap-2 flex flex-col">
+                <div className="flex gap-2">
+                  <input
+                    className="bg-transparent checked:bg-[#7F8119] appearance-none border border-[#172544] rounded-xl p-[6px] my-auto"
+                    type="checkbox"
+                    {...register('amenities.doorman')}
+                    id="doorman"
+                  />
+                  <label className="" htmlFor="doorman">
+                    Doorman
+                  </label>
+                </div>
+                <div className="flex gap-2">
+                  <input
+                    className="bg-transparent checked:bg-[#7F8119] appearance-none border border-[#172544] rounded-xl p-[6px] my-auto"
+                    type="checkbox"
+                    {...register('amenities.cleaningService')}
+                    id="cleaningService"
+                  />
+                  <label className="" htmlFor="cleaningService">
+                    Cleaning service
+                  </label>
+                </div>
+
+                <div className="flex gap-2">
+                  <input
+                    className="bg-transparent checked:bg-[#7F8119] appearance-none border border-[#172544] rounded-xl p-[6px] my-auto"
+                    type="checkbox"
+                    {...register('amenities.videoGames')}
+                    id="videoGames"
+                  />
+                  <label className="" htmlFor="videoGames">
+                    Video games
+                  </label>
+                </div>
+
+                <div className="flex gap-2">
+                  <input
+                    className="bg-transparent checked:bg-[#7F8119] appearance-none border border-[#172544] rounded-xl p-[6px] my-auto"
+                    type="checkbox"
+                    {...register('amenities.tennisCourt')}
+                    id="tennisCourt"
+                  />
+                  <label className="" htmlFor="tennisCourt">
+                    Tennis court
+                  </label>
+                </div>
+
+                <div className="flex gap-2">
+                  <input
+                    className="bg-transparent checked:bg-[#7F8119] appearance-none border border-[#172544] rounded-xl p-[6px] my-auto"
+                    type="checkbox"
+                    {...register('amenities.gym')}
+                    id="gym"
+                  />
+                  <label className="" htmlFor="gym">
+                    Gym
+                  </label>
+                </div>
+              </div>
+            </div>
+
+            <button
+              type="submit"
+              className="uppercase mb-8 mx-auto rounded-lg w-fit text-white text-lg px-4 font-extralight bg-[#F87C1B] py-2">
+              Save Changes
+            </button>
           </div>
-
-          <div className="px-8 py-4 flex flex-col md:flex-row border rounded-xl my-8 border-[#172544]">
-            <div className="flex flex-col py-2 md:py-0 text-center justify-center h-full md:w-1/3 border-b md:border-b-0 md:border-r border-[#172544]">
-              <label className="font-bold" htmlFor="mainOrSecond">
-                Kind of property
-              </label>
-              <select
-                className="w-fit m-auto bg-transparent outline-none p-2 my-2 rounded-lg border-[#172544] border"
-                {...register('homeInfo.mainOrSecond')}
-                id="mainOrSecond">
-                <option value="main">Main property </option>
-                <option value="second">Second property</option>
-                {/* <option value="Third">Third property</option> */}
-              </select>
-            </div>
-
-            <div className="flex flex-col text-center py-2 md:py-0 justify-center h-full border-b md:w-1/3 md:border-b-0 md:border-r border-[#172544]">
-              <label className="font-bold" htmlFor="bathrooms">
-                Bathrooms
-              </label>
-              <select
-                className="w-fit m-auto bg-transparent outline-none p-2 my-2 rounded-lg border-[#172544] border"
-                {...register('homeInfo.bathrooms')}
-                id="bathrooms">
-                <option value="1">1</option>
-                <option value="2">2</option>
-                <option value="3">3</option>
-                <option value="4+">4+</option>
-              </select>
-            </div>
-
-            <div className="flex flex-col py-2 md:py-0 text-center justify-center h-full md:w-1/3 ">
-              <label className="font-bold" htmlFor="area">
-                Area
-              </label>
-              <select
-                className="w-fit m-auto bg-transparent outline-none p-2 my-2 rounded-lg border-[#172544] border"
-                {...register('homeInfo.area')}
-                id="area">
-                <option value="60-100">60 - 100 m2</option>
-                <option value="100-150">100 - 150 m2</option>
-                <option value="150-200">150 - 200 m2</option>
-                <option value="200-250">200 - 250 m2</option>
-                <option value="250-300">250 - 300 m2</option>
-                <option value="300-350">300 - 350 m2</option>
-                <option value="350-400">350 - 400 m2</option>
-                <option value="400-450">400 - 450 m2</option>
-                <option value="450-500">450 - 500 m2</option>
-                <option value="500-550">500 - 550 m2</option>
-                <option value="550-600">550 - 600 m2</option>
-              </select>
-            </div>
-          </div>
-          <div className="flex my-4  border-y border-[#172544] py-4 flex-col">
-            <h2 className="text-xl italic font-serif">Where is it? </h2>
-            <p className="font-serif">
-              {' '}
-              Write down the exact address so google can identify the location
-              of your property.
-            </p>
-          </div>
-
-          <div className={`w-full h-[30vh] my-4 mb-8 rounded-xl`}>
-            <GoogleMapComponent
-              exactAddress={listings[0]?.homeInfo.address}
-              setWhereIsIt={setWhereIsIt}
+        </form>
+      ) : (
+        <div
+          role="status"
+          className=" flex min-h-screen m-auto h-fit w-fit my-auto mx-auto px-3 py-2 text-white rounded-xl">
+          <svg
+            aria-hidden="true"
+            className="m-auto w-[100px] h-[100px] text-gray-200 animate-spin dark:text-gray-600 fill-[#7F8119]"
+            viewBox="0 0 100 101"
+            fill="none"
+            xmlns="http://www.w3.org/2000/svg">
+            <path
+              d="M100 50.5908C100 78.2051 77.6142 100.591 50 100.591C22.3858 100.591 0 78.2051 0 50.5908C0 22.9766 22.3858 0.59082 50 0.59082C77.6142 0.59082 100 22.9766 100 50.5908ZM9.08144 50.5908C9.08144 73.1895 27.4013 91.5094 50 91.5094C72.5987 91.5094 90.9186 73.1895 90.9186 50.5908C90.9186 27.9921 72.5987 9.67226 50 9.67226C27.4013 9.67226 9.08144 27.9921 9.08144 50.5908Z"
+              fill="#fff"
             />
-          </div>
-
-          <div className="flex my-4  border-y border-[#172544] py-4 justify-between">
-            <h2 className="text-xl italic font-serif">
-              Amenities and advantages
-            </h2>
-          </div>
-
-          <div className="flex flex-wrap pb-8">
-            <div className="md:w-1/5 w-1/2 gap-2 flex flex-col">
-              <div className="flex gap-2">
-                <input
-                  className="bg-transparent checked:bg-[#7F8119] appearance-none border border-[#172544] rounded-xl p-[6px] my-auto"
-                  type="checkbox"
-                  {...register('amenities.bike')}
-                  id="bike"
-                />
-                <label className="" htmlFor="bike">
-                  Bike
-                </label>
-              </div>
-              <div className="flex gap-2">
-                <input
-                  className="bg-transparent checked:bg-[#7F8119] appearance-none border border-[#172544] rounded-xl p-[6px] my-auto"
-                  type="checkbox"
-                  {...register('amenities.car')}
-                  id="car"
-                />
-                <label className="" htmlFor="car">
-                  Car
-                </label>
-              </div>
-
-              <div className="flex gap-2">
-                <input
-                  className="bg-transparent checked:bg-[#7F8119] appearance-none border border-[#172544] rounded-xl p-[6px] my-auto"
-                  type="checkbox"
-                  {...register('amenities.tv')}
-                  id="tv"
-                />
-                <label className="" htmlFor="tv">
-                  TV
-                </label>
-              </div>
-
-              <div className="flex gap-2">
-                <input
-                  className="bg-transparent checked:bg-[#7F8119] appearance-none border border-[#172544] rounded-xl p-[6px] my-auto"
-                  type="checkbox"
-                  {...register('amenities.dishwasher')}
-                  id="dishwasher"
-                />
-                <label className="" htmlFor="dishwasher">
-                  Dishwasher
-                </label>
-              </div>
-
-              <div className="flex gap-2">
-                <input
-                  className="bg-transparent checked:bg-[#7F8119] appearance-none border border-[#172544] rounded-xl p-[6px] my-auto"
-                  type="checkbox"
-                  {...register('amenities.pingpong')}
-                  id="pingpong"
-                />
-                <label className="" htmlFor="pingpong">
-                  Ping pong
-                </label>
-              </div>
-
-              <div className="flex gap-2">
-                <input
-                  className="bg-transparent checked:bg-[#7F8119] appearance-none border border-[#172544] rounded-xl p-[6px] my-auto"
-                  type="checkbox"
-                  {...register('amenities.billiards')}
-                  id="billiards"
-                />
-                <label className="" htmlFor="billiards">
-                  Billiards
-                </label>
-              </div>
-            </div>
-
-            <div className="md:w-1/5 w-1/2 gap-2 flex flex-col">
-              <div className="gap-2 flex">
-                <input
-                  className="bg-transparent checked:bg-[#7F8119] appearance-none border border-[#172544] rounded-xl p-[6px] my-auto"
-                  type="checkbox"
-                  {...register('amenities.washer')}
-                  id="washer"
-                />
-                <label className="" htmlFor="washer">
-                  Washer
-                </label>
-              </div>
-              <div className="flex gap-2">
-                <input
-                  className="bg-transparent checked:bg-[#7F8119] appearance-none border border-[#172544] rounded-xl p-[6px] my-auto"
-                  type="checkbox"
-                  {...register('amenities.dryer')}
-                  id="dryer"
-                />
-                <label className="" htmlFor="dryer">
-                  Dryer
-                </label>
-              </div>
-
-              <div className="flex gap-2">
-                <input
-                  className="bg-transparent checked:bg-[#7F8119] appearance-none border border-[#172544] rounded-xl p-[6px] my-auto"
-                  type="checkbox"
-                  {...register('amenities.wifi')}
-                  id="wifi"
-                />
-                <label className="" htmlFor="wifi">
-                  Wifi
-                </label>
-              </div>
-
-              <div className="flex gap-2">
-                <input
-                  className="bg-transparent checked:bg-[#7F8119] appearance-none border border-[#172544] rounded-xl p-[6px] my-auto"
-                  type="checkbox"
-                  {...register('amenities.elevator')}
-                  id="elevator"
-                />
-                <label className="" htmlFor="elevator">
-                  Elevator
-                </label>
-              </div>
-
-              <div className="flex gap-2">
-                <input
-                  className="bg-transparent checked:bg-[#7F8119] appearance-none border border-[#172544] rounded-xl p-[6px] my-auto"
-                  type="checkbox"
-                  {...register('amenities.terrace')}
-                  id="terrace"
-                />
-                <label className="" htmlFor="terrace">
-                  Terrace
-                </label>
-              </div>
-
-              <div className="flex gap-2">
-                <input
-                  className="bg-transparent checked:bg-[#7F8119] appearance-none border border-[#172544] rounded-xl p-[6px] my-auto"
-                  type="checkbox"
-                  {...register('amenities.scooter')}
-                  id="scooter"
-                />
-                <label className="" htmlFor="scooter">
-                  Scooter
-                </label>
-              </div>
-            </div>
-
-            <div className="md:w-1/5 w-1/2 gap-2 flex flex-col">
-              <div className="flex gap-2">
-                <input
-                  className="bg-transparent checked:bg-[#7F8119] appearance-none border border-[#172544] rounded-xl p-[6px] my-auto"
-                  type="checkbox"
-                  {...register('amenities.bbq')}
-                  id="bbq"
-                />
-                <label className="" htmlFor="bbq">
-                  BBQ
-                </label>
-              </div>
-              <div className="flex gap-2">
-                <input
-                  className="bg-transparent checked:bg-[#7F8119] appearance-none border border-[#172544] rounded-xl p-[6px] my-auto"
-                  type="checkbox"
-                  {...register('amenities.computer')}
-                  id="computer"
-                />
-                <label className="" htmlFor="computer">
-                  Home Computer
-                </label>
-              </div>
-
-              <div className="flex gap-2">
-                <input
-                  className="bg-transparent checked:bg-[#7F8119] appearance-none border border-[#172544] rounded-xl p-[6px] my-auto"
-                  {...register('amenities.wcAccess')}
-                  type="checkbox"
-                  id="wc"
-                />
-                <label className="" htmlFor="wc">
-                  WC Access
-                </label>
-              </div>
-
-              <div className="flex gap-2">
-                <input
-                  className="bg-transparent checked:bg-[#7F8119] appearance-none border border-[#172544] rounded-xl p-[6px] my-auto"
-                  type="checkbox"
-                  {...register('amenities.pool')}
-                  id="pool"
-                />
-                <label className="" htmlFor="pool">
-                  Pool
-                </label>
-              </div>
-
-              <div className="flex gap-2">
-                <input
-                  className="bg-transparent checked:bg-[#7F8119] appearance-none border border-[#172544] rounded-xl p-[6px] my-auto"
-                  type="checkbox"
-                  {...register('amenities.playground')}
-                  id="playground"
-                />
-                <label className="" htmlFor="playground">
-                  Playground
-                </label>
-              </div>
-
-              <div className="flex gap-2">
-                <input
-                  className="bg-transparent checked:bg-[#7F8119] appearance-none border border-[#172544] rounded-xl p-[6px] my-auto"
-                  type="checkbox"
-                  {...register('amenities.babyGear')}
-                  id="babyGear"
-                />
-                <label className="" htmlFor="babyGear">
-                  Baby gear
-                </label>
-              </div>
-            </div>
-
-            <div className="md:w-1/5 w-1/2 gap-2 flex flex-col">
-              <div className="flex gap-2">
-                <input
-                  className="bg-transparent checked:bg-[#7F8119] appearance-none border border-[#172544] rounded-xl p-[6px] my-auto"
-                  type="checkbox"
-                  {...register('amenities.ac')}
-                  id="ac"
-                />
-                <label className="" htmlFor="ac">
-                  AC
-                </label>
-              </div>
-              <div className="flex gap-2">
-                <input
-                  className="bg-transparent checked:bg-[#7F8119] appearance-none border border-[#172544] rounded-xl p-[6px] my-auto"
-                  type="checkbox"
-                  {...register('amenities.fireplace')}
-                  id="fireplace"
-                />
-                <label className="" htmlFor="fireplace">
-                  Fireplace
-                </label>
-              </div>
-
-              <div className="flex gap-2">
-                <input
-                  className="bg-transparent checked:bg-[#7F8119] appearance-none border border-[#172544] rounded-xl p-[6px] my-auto"
-                  type="checkbox"
-                  {...register('amenities.parking')}
-                  id="parking"
-                />
-                <label className="" htmlFor="parking">
-                  Private parking
-                </label>
-              </div>
-
-              <div className="flex gap-2">
-                <input
-                  className="bg-transparent checked:bg-[#7F8119] appearance-none border border-[#172544] rounded-xl p-[6px] my-auto"
-                  type="checkbox"
-                  {...register('amenities.hotTub')}
-                  id="hotTub"
-                />
-                <label className="" htmlFor="hotTub">
-                  Hot tub
-                </label>
-              </div>
-
-              <div className="flex gap-2">
-                <input
-                  className="bg-transparent checked:bg-[#7F8119] appearance-none border border-[#172544] rounded-xl p-[6px] my-auto"
-                  type="checkbox"
-                  {...register('amenities.sauna')}
-                  id="sauna"
-                />
-                <label className="" htmlFor="sauna">
-                  Sauna
-                </label>
-              </div>
-
-              <div className="flex gap-2">
-                <input
-                  className="bg-transparent checked:bg-[#7F8119] appearance-none border border-[#172544] rounded-xl p-[6px] my-auto"
-                  type="checkbox"
-                  {...register('amenities.other')}
-                  id="other"
-                />
-                <label className="" htmlFor="other">
-                  Other...
-                </label>
-              </div>
-            </div>
-
-            <div className="md:w-1/5 w-1/2 gap-2 flex flex-col">
-              <div className="flex gap-2">
-                <input
-                  className="bg-transparent checked:bg-[#7F8119] appearance-none border border-[#172544] rounded-xl p-[6px] my-auto"
-                  type="checkbox"
-                  {...register('amenities.doorman')}
-                  id="doorman"
-                />
-                <label className="" htmlFor="doorman">
-                  Doorman
-                </label>
-              </div>
-              <div className="flex gap-2">
-                <input
-                  className="bg-transparent checked:bg-[#7F8119] appearance-none border border-[#172544] rounded-xl p-[6px] my-auto"
-                  type="checkbox"
-                  {...register('amenities.cleaningService')}
-                  id="cleaningService"
-                />
-                <label className="" htmlFor="cleaningService">
-                  Cleaning service
-                </label>
-              </div>
-
-              <div className="flex gap-2">
-                <input
-                  className="bg-transparent checked:bg-[#7F8119] appearance-none border border-[#172544] rounded-xl p-[6px] my-auto"
-                  type="checkbox"
-                  {...register('amenities.videoGames')}
-                  id="videoGames"
-                />
-                <label className="" htmlFor="videoGames">
-                  Video games
-                </label>
-              </div>
-
-              <div className="flex gap-2">
-                <input
-                  className="bg-transparent checked:bg-[#7F8119] appearance-none border border-[#172544] rounded-xl p-[6px] my-auto"
-                  type="checkbox"
-                  {...register('amenities.tennisCourt')}
-                  id="tennisCourt"
-                />
-                <label className="" htmlFor="tennisCourt">
-                  Tennis court
-                </label>
-              </div>
-
-              <div className="flex gap-2">
-                <input
-                  className="bg-transparent checked:bg-[#7F8119] appearance-none border border-[#172544] rounded-xl p-[6px] my-auto"
-                  type="checkbox"
-                  {...register('amenities.gym')}
-                  id="gym"
-                />
-                <label className="" htmlFor="gym">
-                  Gym
-                </label>
-              </div>
-            </div>
-          </div>
-
-          <button
-            type="submit"
-            className="uppercase mb-8 mx-auto rounded-lg w-fit text-white text-lg px-4 font-extralight bg-[#F87C1B] py-2">
-            Save Changes
-          </button>
+            <path
+              d="M93.9676 39.0409C96.393 38.4038 97.8624 35.9116 97.0079 33.5539C95.2932 28.8227 92.871 24.3692 89.8167 20.348C85.8452 15.1192 80.8826 10.7238 75.2124 7.41289C69.5422 4.10194 63.2754 1.94025 56.7698 1.05124C51.7666 0.367541 46.6976 0.446843 41.7345 1.27873C39.2613 1.69328 37.813 4.19778 38.4501 6.62326C39.0873 9.04874 41.5694 10.4717 44.0505 10.1071C47.8511 9.54855 51.7191 9.52689 55.5402 10.0491C60.8642 10.7766 65.9928 12.5457 70.6331 15.2552C75.2735 17.9648 79.3347 21.5619 82.5849 25.841C84.9175 28.9121 86.7997 32.2913 88.1811 35.8758C89.083 38.2158 91.5421 39.6781 93.9676 39.0409Z"
+              fill="currentFill"
+            />
+          </svg>
+          <span className="sr-only">Loading...</span>
         </div>
-      </form>
+      )}
+
       <ToastContainer
         position="bottom-right"
         autoClose={3000}

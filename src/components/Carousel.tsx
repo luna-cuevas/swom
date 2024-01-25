@@ -1,3 +1,4 @@
+'use client';
 import Image from 'next/image';
 import Link from 'next/link';
 import React, { useState, useEffect } from 'react';
@@ -159,7 +160,7 @@ const CarouselPage = (props: Props) => {
               className={`rounded-xl z-0 ${
                 props.contain ? 'object-contain' : 'object-cover'
               } h-full`}
-              src={image.src}
+              src={image.src ?? '/placeholder.png'}
               alt="image"
               fill
               priority

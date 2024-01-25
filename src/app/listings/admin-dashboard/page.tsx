@@ -28,6 +28,144 @@ const Dashboard: React.FC = () => {
 
   const supabase = supabaseClient();
 
+  const addUser = async () => {
+    const age = '';
+
+    const userInfo = {
+      name: 'Maria Fernanda Hoyos',
+      dob: '',
+      email: 'mafehoyosl@gmail.com',
+      phone: '+573115929616',
+      profession: 'Public Relations',
+      about_me: '',
+      children: 'sometimes',
+      recommended: 'Paula Ruiz',
+      openToOtherCities: {
+        cityVisit1: '',
+        cityVisit2: '',
+        cityVisit3: '',
+      },
+      openToOtherDestinations: 'yes',
+    };
+
+    const homeInfo = {
+      title: 'Casa 7 Infantes',
+      property: 'house',
+      description: 'Description',
+      locatedIn: 'stands free',
+      bathrooms: '4',
+      area: '300-350',
+      mainOrSecond: 'second',
+      address: '',
+      city: 'Cartagena, Colombia',
+      howManySleep: '7+',
+      listingImages: [
+        'https://drive.google.com/file/d/1FLC477hG4DtsR7DwZz0Esov2S3EevgSm/view?usp=drive_link',
+        'https://drive.google.com/file/d/1sGBNwCutiuCkE_KXIFw5RPlPWuqcl12c/view?usp=drive_link',
+        'https://drive.google.com/file/d/1F4n0QuatTMsyyM3wkO6pHKWZNaMFdkK9/view?usp=drive_link',
+        'https://drive.google.com/file/d/1X54gAW4LgCrQSr77BAskOvHLeFuNpYb_/view?usp=drive_link',
+        'https://drive.google.com/file/d/1yftLNnknqFIz5yPoKmAFNIL3aabcMDTL/view?usp=drive_link',
+        'https://drive.google.com/file/d/1phoCQ0yziJosfufYhQlhF62JlHRn_6ef/view?usp=drive_link',
+        'https://drive.google.com/file/d/1ArIABH18mFxfzBPfM7PcaffDUwfxBDit/view?usp=drive_link',
+        'https://drive.google.com/file/d/1UCLjtrQMIhMvMTLpOtbanIGltd15RA5F/view?usp=drive_link',
+        'https://drive.google.com/file/d/1ks9hXZEkAy-SLnnYedeB_DEO2bXLwmQm/view?usp=drive_link',
+        'https://drive.google.com/file/d/1rXm58NOLc94PrIjbeeJjs2JTVkOvkF6L/view?usp=drive_link',
+      ],
+    };
+
+    const amenities = {
+      bike: false,
+      car: false,
+      tv: true,
+      dishwasher: true,
+      pingpong: false,
+      billiards: false,
+      washer: true,
+      dryer: true,
+      wifi: false,
+      elevator: false,
+      terrace: false,
+      scooter: false,
+      bbq: false,
+      computer: false,
+      wcAccess: false,
+      pool: true,
+      playground: false,
+      babyGear: false,
+      ac: false,
+      fireplace: false,
+      parking: false,
+      hotTub: false,
+      sauna: false,
+      other: false,
+      doorman: false,
+      cleaningService: true,
+      videoGames: false,
+      tennisCourt: false,
+      gym: false,
+    };
+
+    // const { data: userCreationData, error: userCreationError } =
+    //   await supabase.auth.resetPasswordForEmail(email, {
+    //     redirectTo: 'http://localhost:3000/sign-up',
+    //   });
+
+    const { data: user, error } = await supabase.auth.signUp({
+      email: userInfo.email,
+      password: 'password',
+      options: {
+        emailRedirectTo: 'http://localhost:3000/sign-up',
+        data: {
+          name: userInfo.name,
+          dob: userInfo.dob,
+          phone: userInfo.phone,
+          role: 'member',
+        },
+      },
+    });
+
+    if (error) {
+      console.error('Error adding user:', error.message);
+    } else {
+      if (user.user) {
+        const { data: listingUpdate, error: listingError } = await supabase
+          .from('listings')
+          .insert({
+            user_id: user.user.id,
+            userInfo: userInfo,
+            homeInfo: homeInfo,
+            amenities: amenities,
+          });
+
+        const { data: appUserInfo, error: userError } = await supabase
+          .from('appUsers')
+          .insert({
+            id: user.user.id,
+            email: userInfo.email,
+            role: 'member',
+            name: userInfo.name,
+            profession: userInfo.profession,
+            age: age,
+          });
+
+        if (listingError || userError) {
+          console.error(
+            'Error adding listing or user data:',
+            (listingError && listingError.message) ||
+              (userError && userError.message)
+          );
+        } else {
+          console.log('listingData', listingUpdate);
+          console.log('appUserInfo', appUserInfo);
+        }
+      }
+    }
+  };
+
+  useEffect(() => {
+    addUser();
+  }, []);
+
   useEffect(() => {
     // Fetch listings that need approval from the 'needs_approval' table
     const fetchNeedsApprovalListings = async () => {
