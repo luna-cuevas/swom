@@ -29,6 +29,10 @@ const Navigation = (props: Props) => {
 
   useEffect(() => {
     console.log('state', state);
+
+    if (state && state.session == null) {
+      router.push('/home');
+    }
   }, [state]);
 
   const handleSignOut = async () => {

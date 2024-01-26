@@ -35,11 +35,6 @@ export default function RootLayout({
     clientSecret: process.env.NEXT_PUBLIC_STRIPE_SECRET_KEY,
   };
 
-  const localSession = localStorage.getItem('session');
-  if (localSession == 'null') {
-    router.push('/home');
-  }
-
   return (
     <html lang="en">
       <StateProvider>

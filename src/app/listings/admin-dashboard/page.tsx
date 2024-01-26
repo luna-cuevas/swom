@@ -28,132 +28,132 @@ const Dashboard: React.FC = () => {
 
   const supabase = supabaseClient();
 
-  const addUser = async () => {
-    const age = '';
+  // const addUser = async () => {
+  //   const age = '';
 
-    const userInfo = {
-      name: 'Ana Maria',
-      dob: '',
-      email: 'ana+1@swom.travel',
-      phone: '1234567890',
-      profession: 'Entrepreneur',
-      about_me: 'I am the owner and creator of Swom Travel',
-      children: 'never',
-      recommended: 'Ana Gomez',
-      openToOtherCities: {
-        cityVisit1: 'Mexico',
-        cityVisit2: 'Buenos Aires',
-        cityVisit3: 'Santiago',
-      },
-      openToOtherDestinations: 'true',
-    };
+  //   const userInfo = {
+  //     name: 'Ana Maria',
+  //     dob: '',
+  //     email: 'ana+1@swom.travel',
+  //     phone: '1234567890',
+  //     profession: 'Entrepreneur',
+  //     about_me: 'I am the owner and creator of Swom Travel',
+  //     children: 'never',
+  //     recommended: 'Ana Gomez',
+  //     openToOtherCities: {
+  //       cityVisit1: 'Mexico',
+  //       cityVisit2: 'Buenos Aires',
+  //       cityVisit3: 'Santiago',
+  //     },
+  //     openToOtherDestinations: 'true',
+  //   };
 
-    const homeInfo = {
-      title: 'Ana Maria House',
-      property: 'house',
-      description: 'Description',
-      locatedIn: 'gated community',
-      bathrooms: '3',
-      area: '200-250',
-      mainOrSecond: 'main',
-      address: '',
-      city: 'Medellin, Colombia',
-      howManySleep: '4',
-      listingImages: [],
-    };
+  //   const homeInfo = {
+  //     title: 'Ana Maria House',
+  //     property: 'house',
+  //     description: 'Description',
+  //     locatedIn: 'gated community',
+  //     bathrooms: '3',
+  //     area: '200-250',
+  //     mainOrSecond: 'main',
+  //     address: '',
+  //     city: 'Medellin, Colombia',
+  //     howManySleep: '4',
+  //     listingImages: [],
+  //   };
 
-    const amenities = {
-      bike: false,
-      car: false,
-      tv: true,
-      dishwasher: true,
-      pingpong: false,
-      billiards: false,
-      washer: true,
-      dryer: true,
-      wifi: true,
-      elevator: false,
-      terrace: true,
-      scooter: false,
-      bbq: true,
-      computer: false,
-      wcAccess: false,
-      pool: false,
-      playground: false,
-      babyGear: false,
-      ac: false,
-      fireplace: false,
-      parking: false,
-      hotTub: true,
-      sauna: false,
-      other: false,
-      doorman: true,
-      cleaningService: false,
-      videoGames: false,
-      tennisCourt: false,
-      gym: false,
-    };
+  //   const amenities = {
+  //     bike: false,
+  //     car: false,
+  //     tv: true,
+  //     dishwasher: true,
+  //     pingpong: false,
+  //     billiards: false,
+  //     washer: true,
+  //     dryer: true,
+  //     wifi: true,
+  //     elevator: false,
+  //     terrace: true,
+  //     scooter: false,
+  //     bbq: true,
+  //     computer: false,
+  //     wcAccess: false,
+  //     pool: false,
+  //     playground: false,
+  //     babyGear: false,
+  //     ac: false,
+  //     fireplace: false,
+  //     parking: false,
+  //     hotTub: true,
+  //     sauna: false,
+  //     other: false,
+  //     doorman: true,
+  //     cleaningService: false,
+  //     videoGames: false,
+  //     tennisCourt: false,
+  //     gym: false,
+  //   };
 
-    // const { data: userCreationData, error: userCreationError } =
-    //   await supabase.auth.resetPasswordForEmail(email, {
-    //     redirectTo: 'http://localhost:3000/sign-up',
-    //   });
+  //   // const { data: userCreationData, error: userCreationError } =
+  //   //   await supabase.auth.resetPasswordForEmail(email, {
+  //   //     redirectTo: 'http://localhost:3000/sign-up',
+  //   //   });
 
-    const { data: user, error } = await supabase.auth.signUp({
-      email: userInfo.email,
-      password: 'password',
-      options: {
-        emailRedirectTo: 'http://localhost:3000/sign-up',
-        data: {
-          name: userInfo.name,
-          dob: userInfo.dob,
-          phone: userInfo.phone,
-          role: 'member',
-        },
-      },
-    });
+  //   const { data: user, error } = await supabase.auth.signUp({
+  //     email: userInfo.email,
+  //     password: 'password',
+  //     options: {
+  //       emailRedirectTo: 'http://localhost:3000/sign-up',
+  //       data: {
+  //         name: userInfo.name,
+  //         dob: userInfo.dob,
+  //         phone: userInfo.phone,
+  //         role: 'member',
+  //       },
+  //     },
+  //   });
 
-    if (error) {
-      console.error('Error adding user:', error.message);
-    } else {
-      if (user.user) {
-        const { data: listingUpdate, error: listingError } = await supabase
-          .from('listings')
-          .insert({
-            user_id: user.user.id,
-            userInfo: userInfo,
-            homeInfo: homeInfo,
-            amenities: amenities,
-          });
+  //   if (error) {
+  //     console.error('Error adding user:', error.message);
+  //   } else {
+  //     if (user.user) {
+  //       const { data: listingUpdate, error: listingError } = await supabase
+  //         .from('listings')
+  //         .insert({
+  //           user_id: user.user.id,
+  //           userInfo: userInfo,
+  //           homeInfo: homeInfo,
+  //           amenities: amenities,
+  //         });
 
-        const { data: appUserInfo, error: userError } = await supabase
-          .from('appUsers')
-          .insert({
-            id: user.user.id,
-            email: userInfo.email,
-            role: 'member',
-            name: userInfo.name,
-            profession: userInfo.profession,
-            age: age,
-          });
+  //       const { data: appUserInfo, error: userError } = await supabase
+  //         .from('appUsers')
+  //         .insert({
+  //           id: user.user.id,
+  //           email: userInfo.email,
+  //           role: 'member',
+  //           name: userInfo.name,
+  //           profession: userInfo.profession,
+  //           age: age,
+  //         });
 
-        if (listingError || userError) {
-          console.error(
-            'Error adding listing or user data:',
-            (listingError && listingError.message) ||
-              (userError && userError.message)
-          );
-        } else {
-          console.log('listingData', listingUpdate);
-          console.log('appUserInfo', appUserInfo);
-        }
-      }
-    }
-  };
+  //       if (listingError || userError) {
+  //         console.error(
+  //           'Error adding listing or user data:',
+  //           (listingError && listingError.message) ||
+  //             (userError && userError.message)
+  //         );
+  //       } else {
+  //         console.log('listingData', listingUpdate);
+  //         console.log('appUserInfo', appUserInfo);
+  //       }
+  //     }
+  //   }
+  // };
 
-  useEffect(() => {
-    addUser();
-  }, []);
+  // useEffect(() => {
+  //   addUser();
+  // }, []);
 
   useEffect(() => {
     // Fetch listings that need approval from the 'needs_approval' table
