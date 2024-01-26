@@ -210,7 +210,7 @@ const Page = (props: Props) => {
                   src={
                     profileImage.length > 0
                       ? URL.createObjectURL(profileImage[0])
-                      : state?.loggedInUser?.profileImage
+                      : state?.loggedInUser?.profileImage || '/placeholder.png'
                   }
                   alt="hero"
                   fill
