@@ -92,7 +92,7 @@ const Page = (props: Props) => {
   };
 
   // create a function that checks new messages every 5 seconds only if selectedConversation is not null
-  if (selectedConversation !== null) {
+  if (selectedConversation !== null && conversations.length > 0) {
     setTimeout(() => {
       fetchMessagesForSelectedConversation();
     }, 5000);
@@ -127,22 +127,26 @@ const Page = (props: Props) => {
 
       const convoDataJson = await convoData.json();
 
-      if (convoDataJson.length === 0) {
+      if (
+        convoDataJson.length === 0 ||
+        !convoDataJson ||
+        convoDataJson == 'null'
+      ) {
         return console.error('Error creating new conversation:', convoDataJson);
       } else {
-        setSelectedConversation(
-          convoDataJson[0]?.conversation_id as unknown as number
-        );
+        fetchAllConversations();
 
-        // fetchAllConversations();
+        if (convoDataJson[0]?.conversation_id) {
+          setSelectedConversation(
+            convoDataJson[0]?.conversation_id as unknown as number
+          );
+        }
       }
     }
   };
 
   const checkIfConversationExists = async () => {
     if (state.user !== null && contactedUserID !== null) {
-      setIsCheckingConversation(true);
-
       const checkConvoData = await fetch('/api/messages/checkConvoExists', {
         body: JSON.stringify({
           1: { id: state.user.id },
@@ -151,22 +155,21 @@ const Page = (props: Props) => {
         method: 'POST',
       });
 
-      const convoData = await checkConvoData.json();
+      const checkConvoExistData = await checkConvoData.json();
 
-      console.log('convoData', convoData);
+      console.log('checkConvoExistData', checkConvoExistData);
 
-      if (convoData && convoData.length === 0) {
+      if (
+        checkConvoExistData.length === 0 ||
+        !checkConvoExistData ||
+        checkConvoExistData == 'null'
+      ) {
         console.log('creating new conversation');
-        createNewConversation();
+        return false;
       } else {
         console.log('setting selected conversation');
-        if (convoData.length > 0) {
-          setSelectedConversation(
-            convoData[0].conversation_id as unknown as number
-          );
-        }
+        return checkConvoExistData;
       }
-      setIsCheckingConversation(false);
     }
   };
 
@@ -212,19 +215,38 @@ const Page = (props: Props) => {
   }, [messages]);
 
   useEffect(() => {
-    if (
-      state.user !== null &&
-      contactedUserID !== null &&
-      state.loggedInUser !== null &&
-      !isCheckingConversation
-    ) {
-      checkIfConversationExists();
-    }
-  }, [contactedUserID, state.loggedInUser]);
+    let isMounted = true; // Flag to handle async operation
 
-  useEffect(() => {
-    fetchAllConversations();
-  }, []);
+    const initiateCheck = async () => {
+      if (
+        state.user !== null &&
+        contactedUserID !== null &&
+        state.loggedInUser !== null &&
+        isCheckingConversation === false
+      ) {
+        setIsCheckingConversation(true); // Start checking
+
+        const convoExist = await checkIfConversationExists();
+
+        if (convoExist !== false) {
+          if (convoExist) {
+            setConversations(convoExist);
+            setSelectedConversation(
+              convoExist[0].conversation_id as unknown as number
+            );
+          }
+        } else {
+          createNewConversation();
+        }
+      }
+    };
+    initiateCheck();
+    setIsCheckingConversation(false); // Stop checking
+
+    return () => {
+      isMounted = false; // Cleanup the flag when component unmounts
+    };
+  }, [state.user, contactedUserID, state.loggedInUser]);
 
   useEffect(() => {
     // const convoExists = fetchMessagesForSelectedConversation();

@@ -1,4 +1,5 @@
 // Import the necessary hooks from React
+import { supabaseClient } from '@/utils/supabaseClient';
 import React, {
   createContext,
   useContext,
@@ -6,6 +7,7 @@ import React, {
   ReactNode,
   useEffect,
 } from 'react';
+import Stripe from 'stripe';
 
 // Define your initial state
 const initialState: StateType = {
@@ -17,7 +19,6 @@ const initialState: StateType = {
   aboutYou: false,
   isSubscribed: false,
   loggedInUser: null,
-  stripe: null,
   activeNavButtons: false,
 };
 
@@ -31,7 +32,6 @@ type StateType = {
   aboutYou: boolean;
   isSubscribed: boolean;
   loggedInUser: any;
-  stripe: any;
   activeNavButtons: boolean;
 };
 
@@ -47,51 +47,119 @@ type StateProviderProps = {
 const StateContext = createContext<StateContextType | undefined>(undefined);
 
 const StateProvider: React.FC<StateProviderProps> = ({ children }) => {
-  const [state, setState] = useState<StateType>(initialState);
+  const [state, setState] = useState<StateType>({
+    ...initialState,
+  });
 
-  useEffect(() => {
-    const isLocalStorageAvailable =
-      typeof localStorage !== 'undefined' && typeof window !== 'undefined';
+  const supabase = supabaseClient();
+  const stripeActivation = new Stripe(
+    process.env.NEXT_PUBLIC_STRIPE_SECRET_KEY!,
+    {
+      apiVersion: '2023-08-16',
+    }
+  );
 
-    if (isLocalStorageAvailable) {
-      type localStorageStateType = {
-        session?: any;
-        user?: any;
-        showMobileMenu?: boolean;
-        noUser?: boolean;
-        imgUploadPopUp?: boolean;
-        aboutYou?: boolean;
-        isSubscribed?: boolean;
-        loggedInUser?: any;
-        stripe?: any;
-        activeNavButtons?: boolean;
-      };
+  async function isUserSubscribed(
+    email: string,
+    stripe: any
+  ): Promise<boolean> {
+    console.log('checking subscription status');
+    try {
+      if (!stripe) {
+        console.log('Stripe.js has not loaded yet.');
+        return false;
+      }
+      // Retrieve the customer by email
+      const customers = await stripe.customers.list({ email: email });
+      const customer = customers.data[0]; // Assuming the first customer is the desired one
 
-      let localStorageState: localStorageStateType = {};
-      let isStateUpdated = false;
+      if (customer) {
+        // Retrieve the customer's subscriptions
+        const subscriptions = await stripe.subscriptions.list({
+          customer: customer.id,
+          limit: 1, // Assuming only checking the latest subscription
+        });
 
-      Object.keys(initialState).forEach((key) => {
-        const item = localStorage.getItem(key);
-        if (item) {
-          const parsedItem = JSON.parse(item);
-          if (state[key as keyof StateType] !== parsedItem) {
-            Object.keys(initialState).forEach((key) => {
-              const item = localStorage.getItem(key);
-              if (item) {
-                const parsedItem = JSON.parse(item);
-                localStorageState[key as keyof localStorageStateType] =
-                  parsedItem;
-              }
-            });
-            isStateUpdated = true;
-          }
-        }
+        return subscriptions.data.length > 0; // User is subscribed if there's at least one subscription
+      } else {
+        // Customer not found
+        console.log('Customer not found');
+        return false;
+      }
+    } catch (error) {
+      console.error('Error checking subscription status:', error);
+      throw error;
+    }
+  }
+
+  const fetchLoggedInUser = async (user: any) => {
+    console.log('fetching logged in user', user);
+
+    try {
+      // Make a GET request to the API route with the user ID as a query parameter
+      const response = await fetch(`/api/getUser`, {
+        headers: {
+          'Content-Type': 'application/json',
+          Accept: 'application/json',
+        },
+        method: 'POST',
+        body: JSON.stringify({ id: user.id }),
       });
 
-      if (isStateUpdated) {
-        setState((prevState) => ({ ...prevState, ...localStorageState }));
+      if (!response.ok) {
+        throw new Error('Failed to fetch user data');
       }
+
+      const data = await response.json();
+
+      if (data) {
+        return data;
+      } else {
+        console.log('No data found for the user');
+        return null;
+      }
+    } catch (error: any) {
+      console.error('Error fetching user data:', error.message);
+      return null;
     }
+  };
+
+  useEffect(() => {
+    const handleAuthChange = async (event: any, session: any) => {
+      console.log('event', event);
+      console.log('session', session);
+      if (event === 'SIGNED_IN' || event == 'INITIAL_SESSION') {
+        console.log('sessting session', session);
+        const loggedInUser = await fetchLoggedInUser(session.user);
+        const subbed = await isUserSubscribed(
+          session.user.email,
+          stripeActivation
+        );
+        setState({
+          ...state,
+          session,
+          user: session.user,
+          loggedInUser: loggedInUser,
+          isSubscribed: subbed,
+          activeNavButtons: true,
+        });
+      } else if (event === 'SIGNED_OUT') {
+        console.log('session', event);
+        console.log('SignIn Failed');
+      }
+    };
+
+    // Subscribe to authentication changes
+    const { data: authListener } = supabase.auth.onAuthStateChange(
+      (event, session) => {
+        handleAuthChange(event, session);
+      }
+    );
+
+    // // Cleanup subscription on unmount
+    // return () => {
+    //   authListener?.subscription.unsubscribe();
+    // };
   }, []);
 
   useEffect(() => {

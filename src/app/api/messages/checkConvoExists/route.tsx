@@ -18,8 +18,6 @@ export async function POST(req: Request, res: Response) {
       throw error;
     }
 
-    console.log('check messages server', convoData);
-
     // Return the response as JSON
     return NextResponse.json(convoData);
   } catch (error: any) {

@@ -27,13 +27,13 @@ const Navigation = (props: Props) => {
   const router = useRouter();
   const navigation = usePathname();
 
-  useEffect(() => {
-    console.log('state', state);
+  // useEffect(() => {
+  //   console.log('state', state);
 
-    if (state && state.session == null) {
-      router.push('/home');
-    }
-  }, [state]);
+  //   if (state && state.session == null) {
+  //     router.push('/home');
+  //   }
+  // }, [state]);
 
   const handleSignOut = async () => {
     try {

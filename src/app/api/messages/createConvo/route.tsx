@@ -4,12 +4,14 @@ import { NextResponse } from 'next/server';
 export async function POST(req: Request, res: Response) {
   const supabase = supabaseClient();
   const body = await req.json();
-  console.log('server data', body);
+  console.log('body', body);
 
-  const { data: convoData, error } = await supabase
+  const { data: convoData, error: convoError } = await supabase
     .from('conversations')
-    .upsert([body])
+    .insert(body)
     .select('*');
+
+  console.log('convoData', convoData);
 
   if (convoData) {
     const { data: messagesData, error: messagesError } = await supabase
@@ -21,13 +23,17 @@ export async function POST(req: Request, res: Response) {
       ])
       .select('*');
     if (messagesData) {
-      return NextResponse.json(convoData);
+      return NextResponse.json({
+        res,
+        data: { convoData, messagesData },
+        error: messagesError,
+      });
     } else {
       return NextResponse.json({ res, error: 'error with messageData' });
     }
   }
 
-  if (error) {
-    return NextResponse.json({ res, error: 'errir with convoData' });
+  if (convoError) {
+    return NextResponse.json({ res, error: convoError });
   }
 }
