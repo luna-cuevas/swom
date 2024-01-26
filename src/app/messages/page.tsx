@@ -65,6 +65,7 @@ const Page = (props: Props) => {
       } else {
         console.log('allConvosDataJson', allConvosDataJson);
         setConversations(allConvosDataJson || []);
+        setSelectedConversation(allConvosDataJson[0].conversation_id);
       }
     }
   };
@@ -164,7 +165,6 @@ const Page = (props: Props) => {
         !checkConvoExistData ||
         checkConvoExistData == 'null'
       ) {
-        console.log('creating new conversation');
         return false;
       } else {
         console.log('setting selected conversation');
@@ -238,6 +238,8 @@ const Page = (props: Props) => {
             );
           }
         } else {
+          console.log('creating new conversation');
+
           createNewConversation();
         }
       }
@@ -249,6 +251,11 @@ const Page = (props: Props) => {
       isMounted = false; // Cleanup the flag when component unmounts
     };
   }, [state.user, contactedUserID, state.loggedInUser]);
+
+  useEffect(() => {
+    console.log('fetchingAll conversations');
+    fetchAllConversations();
+  }, [state.user]);
 
   useEffect(() => {
     // const convoExists = fetchMessagesForSelectedConversation();
