@@ -128,7 +128,7 @@ const StateProvider: React.FC<StateProviderProps> = ({ children }) => {
     const handleAuthChange = async (event: any, session: any) => {
       console.log('event', event);
       console.log('session', session);
-      if (event === 'SIGNED_IN' || event == 'INITIAL_SESSION') {
+      if (event === 'SIGNED_IN' || (event == 'INITIAL_SESSION' && session)) {
         console.log('sessting session', session);
         const loggedInUser = await fetchLoggedInUser(session.user);
         const subbed = await isUserSubscribed(
