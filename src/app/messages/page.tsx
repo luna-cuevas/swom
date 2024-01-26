@@ -275,7 +275,7 @@ const Page = (props: Props) => {
           />
         </div>
 
-        <div className="bg-[#F7F1EE]  overflow-hidden my-auto h-[80vh] w-full md:w-10/12 sm:rounded-r-2xl lg:rounded-r-[6rem] z-20 relative">
+        <div className="bg-[#F7F1EE]  overflow-auto my-auto h-[80vh] w-full md:w-10/12 sm:rounded-r-2xl lg:rounded-r-[6rem] z-20 relative">
           <div className="relative flex w-full">
             <button
               type="button"
@@ -303,15 +303,15 @@ const Page = (props: Props) => {
               Messages
             </h1>
           </div>
-          <div className="flex h-[95%]">
+          <div className="flex h-[85%]">
             <div
-              className={` overflow-hidden transition-all duration-200 ease-in-out w-full ${
+              className={`h-full overflow-y-scroll py-2 transition-all duration-200 ease-in-out w-full ${
                 mobileNavMenu ? 'max-w-[35%]  border-r-2' : 'max-w-0'
               } md:max-w-[30%] md:border-r-2 h-auto  border-[#172544] flex- flex-col`}>
               <h2 className="tracking-[0.3rem] w-full text-center mx-auto flex py-4 border-b-2 border-inherit uppercase md:text-xl gap-2 md:gap-4 pl-[8%]">
                 <span className="m-auto w-fit font-sans font-bold">Inbox</span>
               </h2>
-              <ul className="">
+              <ul className="h-full">
                 {conversations.map((convo) => (
                   <li
                     key={convo.conversation_id} // Assuming conversation_id is the unique identifier
@@ -358,7 +358,7 @@ const Page = (props: Props) => {
               className={`
             ${mobileNavMenu ? 'max-w-[65%] md:w-2/3' : 'max-w-full md:w-full'}
             w-full transition-all ease-in-out duration-200`}>
-              <div className="h-[80%] ">
+              <div className="">
                 {selectedConversation !== null && (
                   <>
                     <h3 className="flex gap-4 flex-wrap justify-center tracking-[0.3rem] px-[8%] py-4 border-b-2 border-[#172544] uppercase md:text-xl">
