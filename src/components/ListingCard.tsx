@@ -9,9 +9,9 @@ type Props = {
 
 const ListingCard = (props: Props) => {
   const { state, setState } = useStateContext();
-  const formattedImages = props.listingInfo.homeInfo.listingImages.map(
+  const formattedImages = props.listingInfo?.homeInfo.listingImages.map(
     (image: any) => {
-      return { src: image, listingNum: props.listingInfo.user_id.slice(-5) };
+      return { src: image, listingNum: props.listingInfo?.user_id.slice(-5) };
     }
   );
 
@@ -28,8 +28,8 @@ const ListingCard = (props: Props) => {
       <div className="flex-col flex flex-grow">
         <div className="border-b border-[#172544] pb-2 my-2 flex justify-between align-middle">
           <div>
-            <h1 className="text-xl">{props.listingInfo.homeInfo.title}</h1>
-            <p className="">{props.listingInfo.homeInfo.city}</p>
+            <h1 className="text-xl">{props.listingInfo?.homeInfo.title}</h1>
+            <p className="">{props.listingInfo?.homeInfo.city}</p>
           </div>
           <div className="flex">
             <button>
@@ -46,18 +46,18 @@ const ListingCard = (props: Props) => {
           </div>
         </div>
         <p className="break-all flex-1 flex-grow">
-          {props.listingInfo.homeInfo.description.slice(0, 200)}...
+          {props.listingInfo?.homeInfo.description.slice(0, 200)}...
         </p>
         <div className="flex  justify-between">
           <p>Did you love it? &gt;&gt;&gt;</p>
           <Link
             href={
-              state?.loggedInUser?.email !== props.listingInfo.userInfo.email
+              state?.loggedInUser?.email !== props.listingInfo?.userInfo.email
                 ? `/listings/${props.listingInfo.user_id}`
                 : `listings/my-listing`
             }
             className="bg-[#F28A38] py-1 px-2 rounded-xl text-white text-sm">
-            {state?.loggedInUser?.email !== props.listingInfo.userInfo.email
+            {state?.loggedInUser?.email !== props.listingInfo?.userInfo.email
               ? 'View Listing'
               : 'Edit Listing'}
           </Link>

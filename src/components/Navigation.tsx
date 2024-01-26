@@ -141,7 +141,7 @@ const Navigation = (props: Props) => {
           theme="light"
         />
 
-        <Menu>
+        {/* <Menu>
           <MenuHandler>
             <Button className="bg-[#fff] shadow-none m-0 p-0">
               <Image
@@ -164,7 +164,7 @@ const Navigation = (props: Props) => {
             <MenuItem>Menu Item 2</MenuItem>
             <MenuItem>Menu Item 3</MenuItem>
           </MenuList>
-        </Menu>
+        </Menu> */}
       </div>
 
       {signInActive && <SignIn setSignInActive={setSignInActive} />}
@@ -252,7 +252,7 @@ const Navigation = (props: Props) => {
           </button>
         )}
 
-        <Menu>
+        {/* <Menu>
           <MenuHandler>
             <Button className="bg-[#fff] mx-auto shadow-none">
               <Image
@@ -268,14 +268,14 @@ const Navigation = (props: Props) => {
               type="text"
               label="Search"
               containerProps={{
-                className: 'mb-4',
+                classNsame: 'mb-4',
               }}
             />
             <MenuItem>Menu Item 1</MenuItem>
             <MenuItem>Menu Item 2</MenuItem>
             <MenuItem>Menu Item 3</MenuItem>
           </MenuList>
-        </Menu>
+        </Menu> */}
       </div>
     </nav>
   );

@@ -24,6 +24,7 @@ export default function RootLayout({
 }) {
   const [loading, setLoading] = useState(true);
   const pathname = usePathname();
+  const router = useRouter();
 
   const stripePromise = loadStripe(
     process.env.NEXT_PUBLIC_STRIPE_PUBLIC_KEY as string
@@ -34,13 +35,10 @@ export default function RootLayout({
     clientSecret: process.env.NEXT_PUBLIC_STRIPE_SECRET_KEY,
   };
 
-  // useEffect(() => {
-  //   setLoading(true);
-  //   const timer = setTimeout(() => {
-  //     setLoading(false);
-  //   }, 1000);
-  //   return () => clearTimeout(timer);
-  // }, [pathname]);
+  const localSession = localStorage.getItem('session');
+  if (localSession == 'null') {
+    router.push('/home');
+  }
 
   return (
     <html lang="en">

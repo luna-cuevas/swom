@@ -107,7 +107,7 @@ const CarouselPage = (props: Props) => {
         className={`relative h-full gap-8 flex w-full ${
           props.roundedLeft && 'rounded-l-xl'
         } ${props.roundedRight && 'rounded-r-xl'}`}>
-        {props.images.map((image, index) => (
+        {props.images?.map((image, index) => (
           <div
             key={index}
             onClick={() => handleImageSelection(index)} // Add click handler

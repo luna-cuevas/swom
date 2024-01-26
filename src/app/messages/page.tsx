@@ -22,6 +22,8 @@ const Page = (props: Props) => {
   const messagesContainerRef = useRef<HTMLDivElement>(null);
   const [mobileNavMenu, setMobileNavMenu] = useState<boolean>(false);
   const [sendingMessage, setSendingMessage] = useState<boolean>(false);
+  const [isCheckingConversation, setIsCheckingConversation] =
+    useState<boolean>(false);
 
   const supabase = supabaseClient();
 
@@ -125,20 +127,22 @@ const Page = (props: Props) => {
 
       const convoDataJson = await convoData.json();
 
-      if (!convoDataJson) {
+      if (convoDataJson.length === 0) {
         return console.error('Error creating new conversation:', convoDataJson);
       } else {
         setSelectedConversation(
-          convoDataJson[0].conversation_id as unknown as number
+          convoDataJson[0]?.conversation_id as unknown as number
         );
 
-        fetchAllConversations();
+        // fetchAllConversations();
       }
     }
   };
 
   const checkIfConversationExists = async () => {
     if (state.user !== null && contactedUserID !== null) {
+      setIsCheckingConversation(true);
+
       const checkConvoData = await fetch('/api/messages/checkConvoExists', {
         body: JSON.stringify({
           1: { id: state.user.id },
@@ -149,19 +153,20 @@ const Page = (props: Props) => {
 
       const convoData = await checkConvoData.json();
 
-      if (!convoData) {
-        console.error('Error checking if conversation exists:', convoData);
+      console.log('convoData', convoData);
+
+      if (convoData && convoData.length === 0) {
+        console.log('creating new conversation');
+        createNewConversation();
       } else {
-        if (convoData && convoData.length === 0) {
-          createNewConversation();
-        } else {
-          if (convoData) {
-            setSelectedConversation(
-              convoData[0].conversation_id as unknown as number
-            );
-          }
+        console.log('setting selected conversation');
+        if (convoData.length > 0) {
+          setSelectedConversation(
+            convoData[0].conversation_id as unknown as number
+          );
         }
       }
+      setIsCheckingConversation(false);
     }
   };
 
@@ -210,11 +215,12 @@ const Page = (props: Props) => {
     if (
       state.user !== null &&
       contactedUserID !== null &&
-      state.loggedInUser !== null
+      state.loggedInUser !== null &&
+      !isCheckingConversation
     ) {
       checkIfConversationExists();
     }
-  }, [state.user, contactedUserID, state.loggedInUser]);
+  }, [contactedUserID, state.loggedInUser]);
 
   useEffect(() => {
     fetchAllConversations();

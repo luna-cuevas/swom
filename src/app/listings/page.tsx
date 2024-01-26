@@ -18,7 +18,7 @@ const Page = (props: Props) => {
   const [isSearching, setIsSearching] = useState<boolean>(false);
   const [whereIsIt, setWhereIsIt] = useState<string>('');
   const [isIdle, setIsIdle] = useState<boolean>(false);
-  const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [isLoading, setIsLoading] = useState<boolean>(true);
 
   useEffect(() => {
     fetchListings();
@@ -77,34 +77,50 @@ const Page = (props: Props) => {
     }
   };
 
-  async function isUserSubscribed(email: string): Promise<boolean> {
+  // ... [rest of your imports and component code]
+
+  // Utility function to sleep for a given number of milliseconds
+  const sleep = (ms: number) =>
+    new Promise((resolve) => setTimeout(resolve, ms));
+
+  async function isUserSubscribed(
+    email: string,
+    attempts = 3,
+    delay = 1000
+  ): Promise<boolean> {
+    if (attempts <= 0) {
+      throw new Error('Maximum retry attempts reached');
+    }
+
     try {
       if (!stripeActivation) {
         console.log('Stripe.js has not loaded yet.');
         return false;
       }
-      // Retrieve the customer by email
+
       const customers = await stripeActivation.customers.list({ email: email });
-      const customer = customers.data[0]; // Assuming the first customer is the desired one
+      const customer = customers.data[0];
 
       if (customer) {
-        // Retrieve the customer's subscriptions
         const subscriptions = await stripeActivation.subscriptions.list({
           customer: customer.id,
-          limit: 1, // Assuming only checking the latest subscription
+          limit: 1,
         });
 
-        return subscriptions.data.length > 0; // User is subscribed if there's at least one subscription
+        return subscriptions.data.length > 0;
       } else {
-        // Customer not found
         console.log('Customer not found');
         return false;
       }
     } catch (error) {
-      console.error('Error checking subscription status:', error);
-      throw error;
+      // Wait for delay milliseconds and then retry
+      console.log(`Retrying in ${delay}ms...`);
+      await sleep(delay);
+      return isUserSubscribed(email, attempts - 1, delay * 2);
     }
   }
+
+  // ... [rest of your component code]
 
   useEffect(() => {
     filteredListings();
@@ -144,29 +160,31 @@ const Page = (props: Props) => {
           <div className="md:w-3/4 w-[90%] h-fit pt-12 pb-4 max-w-[1000px] mx-auto mt-12 mb-4">
             <GoogleMapComponent
               setIsSearching={setIsSearching}
-              hideMap={!isSearching}
+              hideMap={whereIsIt.length === 0}
               listings={listings && listings}
               setWhereIsIt={setWhereIsIt}
-              setIsIdle={setIsIdle}
+              // setIsIdle={setIsIdle}
             />
           </div>
           <div className="flex flex-col  flex-grow mx-auto w-full mt-8 justify-between">
             <div className={`flex pb-8`}>
               <div
                 className={`m-auto  ${
-                  !isSearching && whereIsIt ? 'flex flex-col w-fit' : 'hidden'
+                  isSearching || whereIsIt.length > 0
+                    ? 'flex flex-col w-fit'
+                    : 'hidden'
                 }`}>
                 <p className="text-2xl">Say hello to</p>
                 <h2 className="text-3xl capitalize">
-                  {!whereIsIt && isSearching ? 'the world' : whereIsIt}
+                  {isSearching ? 'the world' : whereIsIt}
                 </h2>
               </div>
               <h1
                 className={`text-3xl m-auto ${
-                  isSearching ? 'text-center' : 'w-fit'
+                  !isSearching && whereIsIt.length == 0 ? 'text-center' : ''
                 }
             `}>
-                Let&apos;s discover {isSearching && <br />}
+                Let&apos;s discover <br />
                 your new adventure.
               </h1>
             </div>
