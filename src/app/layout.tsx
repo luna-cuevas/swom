@@ -11,7 +11,7 @@ import { loadStripe } from '@stripe/stripe-js';
 import { useEffect, useState } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import React from 'react';
-
+import { Analytics } from '@vercel/analytics/react';
 import { SpeedInsights } from '@vercel/speed-insights/next';
 
 // export const metadata: Metadata = {
@@ -99,6 +99,7 @@ export default function RootLayout({
                 <Navigation />
                 {children}
                 <SpeedInsights />
+                <Analytics />
                 <Footer />
               </React.Suspense>
               <Script src="https://player.vimeo.com/api/player.js"></Script>
