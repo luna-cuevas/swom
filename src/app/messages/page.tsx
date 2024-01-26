@@ -94,7 +94,9 @@ const Page = (props: Props) => {
   // create a function that checks new messages every 5 seconds only if selectedConversation is not null
   if (selectedConversation !== null && conversations.length > 0) {
     setTimeout(() => {
-      fetchMessagesForSelectedConversation();
+      if (messages.length > 0) {
+        fetchMessagesForSelectedConversation();
+      }
     }, 5000);
   }
 
@@ -134,8 +136,6 @@ const Page = (props: Props) => {
       ) {
         return console.error('Error creating new conversation:', convoDataJson);
       } else {
-        fetchAllConversations();
-
         if (convoDataJson[0]?.conversation_id) {
           setSelectedConversation(
             convoDataJson[0]?.conversation_id as unknown as number
@@ -230,6 +230,8 @@ const Page = (props: Props) => {
 
         if (convoExist !== false) {
           if (convoExist) {
+            fetchAllConversations();
+
             setConversations(convoExist);
             setSelectedConversation(
               convoExist[0].conversation_id as unknown as number
