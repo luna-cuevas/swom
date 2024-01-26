@@ -164,11 +164,12 @@ export default function GoogleMapComponent(props: Props) {
   }, [props.exactAddress, props.city]);
 
   // Debounce function
-  const debounce = (func, delay) => {
-    let timer;
-    return function (...args) {
-      clearTimeout(timer);
+  const debounce = (func: (...args: any[]) => void, delay: number) => {
+    let timer: any;
+    return function (...args: any[]) {
+      clearTimeout(timer as any);
       timer = setTimeout(() => {
+        // @ts-ignore
         func.apply(this, args);
       }, delay);
     };
