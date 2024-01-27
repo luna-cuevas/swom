@@ -7,6 +7,7 @@ import GoogleMapComponent from '@/components/GoogleMapComponent';
 import { supabaseClient } from '../../../utils/supabaseClient';
 import cityData from '@/data/citiesDescriptions.json';
 import Link from 'next/link';
+import { useStateContext } from '@/context/StateContext';
 
 type Props = {};
 
@@ -16,6 +17,7 @@ const Page = (props: Props) => {
   const [mapsActive, setMapsActive] = useState(true);
   const [listings, setListings] = useState<any>([]);
   const supabase = supabaseClient();
+  const { state, setState } = useStateContext();
   const [imageFiles, setImageFiles] = useState<any[]>([]);
   const [selectedImage, setSelectedImage] = useState(0); // Track selected image
 
@@ -126,7 +128,7 @@ const Page = (props: Props) => {
                   : ''}
               </p>
               <Link
-                href={`/messages?user=${listings[0]?.user_id}`}
+                href={`/messages?contactedUser=${listings[0]?.user_id}&userId=${state.user.id}`}
                 className="bg-[#E78426] w-fit hover:bg-[#e78326d8] text-[#fff] mx-auto  my-2 px-3 py-1 rounded-xl">
                 Contact me
               </Link>

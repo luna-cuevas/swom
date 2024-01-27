@@ -8,11 +8,12 @@ import { StateProvider } from '@/context/StateContext';
 import CookieConsent from 'react-cookie-consent';
 import { Elements } from '@stripe/react-stripe-js';
 import { loadStripe } from '@stripe/stripe-js';
-import { useEffect, useState } from 'react';
+import { Suspense, useEffect, useState } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import React from 'react';
 import { Analytics } from '@vercel/analytics/react';
 import { SpeedInsights } from '@vercel/speed-insights/next';
+import Loading from './loading';
 
 // export const metadata: Metadata = {
 //   title: 'Create Next App',
@@ -95,13 +96,13 @@ export default function RootLayout({
         <Elements stripe={stripePromise}>
           <body className="relative">
             <>
-              <React.Suspense fallback={<div>Loading...</div>}>
-                <Navigation />
+              <Navigation />
+              <Suspense fallback={<Loading />}>
                 {children}
                 <SpeedInsights />
                 <Analytics />
-                <Footer />
-              </React.Suspense>
+              </Suspense>
+              <Footer />
               <Script src="https://player.vimeo.com/api/player.js"></Script>
             </>
           </body>
