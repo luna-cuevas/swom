@@ -133,6 +133,7 @@ const Messages = (props: Props) => {
   };
 
   const fetchMessagesForSelectedConversation = async () => {
+    console.log('fetching messages for selected conversation');
     if (selectedConversation !== null) {
       const messagesData = await fetch('/api/messages/fetchMessages', {
         method: 'POST',
@@ -142,6 +143,7 @@ const Messages = (props: Props) => {
         body: JSON.stringify({ id: selectedConversation }),
       });
       const messagesDataJson = await messagesData.json();
+      console.log('messagesDataJson', messagesDataJson);
 
       if (!messagesDataJson) {
         console.error('Error fetching messages:', messagesDataJson);
@@ -345,7 +347,7 @@ const Messages = (props: Props) => {
                 }`}
                 onClick={() => setSelectedConversation(convo.conversation_id)}>
                 <div className="relative w-[28px] mx-auto xl:mx-0  justify-center align-middle flex my-auto h-[28px]">
-                  <Image
+                  {/* <Image
                     src={
                       convo.members[
                         convo.members[1].id == state.user?.id ? 2 : 1
@@ -359,7 +361,7 @@ const Messages = (props: Props) => {
                     className="rounded-full flex mx-auto"
                     fill
                     objectFit="cover"
-                  />
+                  /> */}
                 </div>
                 <span className="my-auto text-center xl:text-left">
                   {
@@ -381,7 +383,7 @@ const Messages = (props: Props) => {
               <>
                 <h3 className="flex gap-4 flex-wrap justify-center tracking-[0.3rem] px-[8%] py-4 border-b-2 border-[#172544] uppercase md:text-xl">
                   <div className={`relative w-[28px] my-auto   flex h-[28px]`}>
-                    <Image
+                    {/* <Image
                       src={
                         conversations?.find(
                           (convo) =>
@@ -407,7 +409,7 @@ const Messages = (props: Props) => {
                       fill
                       objectFit="cover"
                       className="rounded-full my-auto"
-                    />
+                    /> */}
                   </div>
                   <span className="my-auto w-fit text-center md:text-left font-serif break-all">
                     {selectedConvo?.members[memberIndex]?.name}
@@ -435,7 +437,7 @@ const Messages = (props: Props) => {
                                   selectedConvo.members[memberIndex].id
                             }>
                             <div className="relative w-[30px] h-[30px] my-auto flex">
-                              <Image
+                              {/* <Image
                                 src={
                                   !selectedConvo.members[memberIndex]
                                     .profileImage
@@ -449,7 +451,7 @@ const Messages = (props: Props) => {
                                 fill
                                 objectFit="cover"
                                 className="rounded-full my-auto"
-                              />
+                              /> */}
                             </div>
                           </Link>
                           <p
