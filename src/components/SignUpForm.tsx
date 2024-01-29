@@ -303,7 +303,7 @@ const SignUpForm = (props: Props) => {
             </button>
           </div>
 
-          <div
+          {/* <div
             className={`${
               selectedPlan.plan == '2 year'
                 ? 'border-[#7E8019] shadow-xl bg-[#ffffff]'
@@ -328,7 +328,7 @@ const SignUpForm = (props: Props) => {
               } border-violet-200 text-violet-500 rounded-md px-4 py-2 w-full hover:bg-violet-500 hover:text-violet-200 transition-colors`}>
               Select
             </button>
-          </div>
+          </div> */}
         </div>
       )}
 

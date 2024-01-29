@@ -13,9 +13,19 @@ export async function POST(req: Request) {
   const { data: res, error } = await supabase.auth.admin.inviteUserByEmail(
     email,
     {
-      data: { role: 'planner' },
-      redirectTo: `http://localhost:3000/auth/callback?next=/update-password`,
+      data: { role: 'client' },
+      redirectTo: `http://localhost:3000/sign-up`,
     }
   );
+
+  // const { data: res, error: error } = await supabase.auth.signUp(
+  //   {
+  //     email: email,
+  //     password: 'password',
+  //     options: {
+  //       data: { role: 'client' },
+  //     },
+  //   }
+  // );
   return NextResponse.json({ res, error });
 }

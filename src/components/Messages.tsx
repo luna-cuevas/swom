@@ -1,5 +1,6 @@
 'use client';
 import { useStateContext } from '@/context/StateContext';
+import { supabaseClient } from '@/utils/supabaseClient';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
@@ -20,7 +21,7 @@ const Messages = (props: Props) => {
   const [sendingMessage, setSendingMessage] = useState<boolean>(false);
   const [isCheckingConversation, setIsCheckingConversation] =
     useState<boolean>(true);
-
+  const supabase = supabaseClient();
   const [selectedConversation, setSelectedConversation] = useState<any>(null);
 
   let selectedConvo = conversations?.find(
@@ -71,7 +72,7 @@ const Messages = (props: Props) => {
       console.log('fetchingAll conversations');
       fetchAllConversations();
     }
-  }, []);
+  }, [state.user]);
 
   useEffect(() => {
     // const convoExists = fetchMessagesForSelectedConversation();
@@ -82,7 +83,7 @@ const Messages = (props: Props) => {
 
   useEffect(() => {
     fetchMessagesForSelectedConversation();
-  }, [selectedConversation, newMessage]);
+  }, [selectedConversation, sendingMessage]);
 
   const scrollToBottom = () => {
     if (messagesContainerRef.current) {
@@ -119,6 +120,8 @@ const Messages = (props: Props) => {
       const allConvosDataJson = await allConvosData.json();
 
       if (allConvosDataJson.length === 0 || !allConvosDataJson) {
+        console.log('allConvosDataJson', allConvosDataJson);
+
         setConversations([]);
         setIsCheckingConversation(false);
       } else {
@@ -127,6 +130,7 @@ const Messages = (props: Props) => {
         if (!contactedUserID) {
           setSelectedConversation(allConvosDataJson[0].conversation_id);
         }
+        fetchMessagesForSelectedConversation();
         setIsCheckingConversation(false);
       }
     }
@@ -156,14 +160,16 @@ const Messages = (props: Props) => {
     }
   };
 
-  // create a function that checks new messages every 5 seconds only if selectedConversation is not null
-  if (selectedConversation !== null && conversations.length > 0) {
-    setTimeout(() => {
-      if (messages.length > 0) {
-        fetchMessagesForSelectedConversation();
-      }
-    }, 5000);
-  }
+  useEffect(() => {
+    console.log('subscribing to messages');
+    supabase
+      .channel('messages-1')
+      .on('postgres_changes', { event: '*', schema: 'public' }, (payload) => {
+        console.log('payload', payload);
+        setMessages((prevMessages) => [...prevMessages, payload.new]);
+      })
+      .subscribe();
+  }, [selectedConversation]);
 
   const createNewConversation = async () => {
     if (state.user !== null && state.loggedInUser !== null) {
@@ -262,10 +268,11 @@ const Messages = (props: Props) => {
       if (!sendMessageDataJson) {
         console.error('Error sending message:', sendMessageDataJson);
       } else {
-        setMessages([
-          ...messages,
-          sendMessageDataJson && sendMessageDataJson[0],
-        ]);
+        // setMessages([
+        //   ...messages,
+        //   sendMessageDataJson && sendMessageDataJson[0],
+        // ]);
+        // fetchMessagesForSelectedConversation();
         setNewMessage(''); // Clear the input field after sending the message
         setSendingMessage(false);
       }

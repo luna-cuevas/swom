@@ -127,3 +127,9 @@ a {
   position: relative;
   background-color: #7f8119;
 }
+
+.studio {
+  * {
+    color: white;
+  }
+}

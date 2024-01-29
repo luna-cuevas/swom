@@ -14,7 +14,7 @@ import config from '../../../../sanity.config';
 
 export default function StudioPage() {
   return (
-    <div className="!text-white">
+    <div className="!text-white studio">
       <NextStudio config={config} />
     </div>
   );
