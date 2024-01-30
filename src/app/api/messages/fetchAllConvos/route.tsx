@@ -19,8 +19,19 @@ export async function POST(req: Request, res: Response) {
       2: { id: stateId.id },
     });
 
+  // i want to organize the data based on their "created_at" field
+
   if (error || error2) {
     throw error;
   }
-  return NextResponse.json([...position1Data, ...position2Data]);
+
+  const combinedData = [...position1Data, ...position2Data];
+
+  // Sorting the combined array based on the 'created_at' field
+  combinedData.sort(
+    (a, b) =>
+      new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
+  );
+
+  return NextResponse.json(combinedData);
 }

@@ -151,10 +151,6 @@ const Dashboard: React.FC = () => {
   //   }
   // };
 
-  // useEffect(() => {
-  //   addUser();
-  // }, []);
-
   useEffect(() => {
     // Fetch listings that need approval from the 'needs_approval' table
     const fetchNeedsApprovalListings = async () => {
@@ -222,8 +218,7 @@ const Dashboard: React.FC = () => {
     try {
       const { data: userCreationData, error: userCreationError } =
         await supabase.auth.resetPasswordForEmail(listingObj.userInfo.email, {
-          redirectTo:
-            'http://localhost:3000/auth/callback?next=/update-password',
+          redirectTo: 'http://localhost:3000/sign-up',
         });
 
       const {

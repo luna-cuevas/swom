@@ -18,7 +18,7 @@ type Props = {};
 
 const Page = (props: Props) => {
   const [editUserInfo, setEditUserInfo] = useState(false);
-  const [userName, setUserName] = useState('');
+  // const [userName, setUserName] = useState('');
   const { state, setState } = useStateContext();
   const [profileImage, setProfileImage] = useState<File[]>([]);
   const [citySearchOpen, setCitySearchOpen] = useState(false);
@@ -53,7 +53,7 @@ const Page = (props: Props) => {
       userInfo: {
         profileImage: '',
         name: '',
-        userName: '',
+        // userName: '',
         dob: '',
         email: '',
         phone: '',
@@ -218,8 +218,8 @@ const Page = (props: Props) => {
   useEffect(() => {
     if (state.user) {
       fetchListings();
-      setUserName(state?.user?.email);
-      setValue('userInfo.userName', state?.user?.email);
+      // setUserName(state?.user?.email);
+      // setValue('userInfo.userName', state?.user?.email);
     }
   }, [state?.user]);
 
@@ -518,9 +518,9 @@ const Page = (props: Props) => {
                     ? getValues('userInfo.name').split(' ')[1]
                     : 'Last Name'}
                 </h3>
-                <h3 className="flex-wrap break-all">
+                {/* <h3 className="flex-wrap break-all">
                   {userName ? userName.split('@')[0] : 'User Name'}
-                </h3>
+                </h3> */}
                 <h3 className="flex-wrap break-all">
                   {getValues('userInfo.age') > 0
                     ? getValues('userInfo.age')

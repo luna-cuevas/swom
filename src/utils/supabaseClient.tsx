@@ -12,6 +12,9 @@ export const supabaseClient = () => {
           autoRefreshToken: true,
           detectSessionInUrl: true,
         },
+        realtime: {
+          heartbeatIntervalMs: 5000,
+        },
       }
     );
   }

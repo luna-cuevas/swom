@@ -10,14 +10,6 @@ import 'react-toastify/dist/ReactToastify.css';
 
 type Props = {};
 
-const profileDummyData = {
-  name: 'FirstName LastName',
-  email: 'example@email.com',
-  username: 'username',
-  password: 'password',
-  profileImage: '/profile/profile-pic-placeholder.png',
-};
-
 const Page = (props: Props) => {
   const { state, setState } = useStateContext();
   const [profileImage, setProfileImage] = useState<File[]>([]);
@@ -41,7 +33,7 @@ const Page = (props: Props) => {
       firstName: '',
       lastName: '',
       emailAddress: '',
-      userName: '',
+      // userName: '',
       newPassword: '',
       confirmPassword: '',
     },
@@ -170,7 +162,7 @@ const Page = (props: Props) => {
       setValue('firstName', state.loggedInUser?.name.split(' ')[0]);
       setValue('lastName', state.loggedInUser?.name.split(' ')[1]);
       setValue('emailAddress', state.loggedInUser?.email);
-      setValue('userName', state.loggedInUser?.email.split('@')[0]);
+      // setValue('userName', state.loggedInUser?.email.split('@')[0]);
     }
   }, [state.loggedInUser]);
 
@@ -284,7 +276,7 @@ const Page = (props: Props) => {
             </div>
 
             <div className="flex flex-col md:flex-row gap-6">
-              <div className="">
+              {/* <div className="">
                 <label
                   className="tracking-widest font-bold uppercase text-sm"
                   htmlFor="">
@@ -295,7 +287,7 @@ const Page = (props: Props) => {
                   className="w-full focus-visible:outline-none bg-transparent border-b-[1px] border-[#172544]"
                   type="text"
                 />
-              </div>
+              </div> */}
               <div className="">
                 <label
                   className="tracking-widest font-bold uppercase text-sm"

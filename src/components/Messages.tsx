@@ -18,6 +18,7 @@ const Messages = (props: Props) => {
   const [newMessage, setNewMessage] = useState<string>(''); // New state to handle the input message
   const { state, setState } = useStateContext();
   const messagesContainerRef = useRef<HTMLDivElement>(null);
+  const inboxRef = useRef<HTMLDivElement>(null);
   const [sendingMessage, setSendingMessage] = useState<boolean>(false);
   const [isCheckingConversation, setIsCheckingConversation] =
     useState<boolean>(true);
@@ -90,6 +91,9 @@ const Messages = (props: Props) => {
       messagesContainerRef.current.scrollTop =
         messagesContainerRef.current.scrollHeight;
     }
+    if (inboxRef.current && conversations.length > 7) {
+      inboxRef.current.scrollTop = inboxRef.current.scrollHeight;
+    }
   };
 
   const fetchContactedUserInfo = async () => {
@@ -160,17 +164,6 @@ const Messages = (props: Props) => {
     }
   };
 
-  useEffect(() => {
-    console.log('subscribing to messages');
-    supabase
-      .channel('messages-1')
-      .on('postgres_changes', { event: '*', schema: 'public' }, (payload) => {
-        console.log('payload', payload);
-        setMessages((prevMessages) => [...prevMessages, payload.new]);
-      })
-      .subscribe();
-  }, [selectedConversation]);
-
   const createNewConversation = async () => {
     if (state.user !== null && state.loggedInUser !== null) {
       setIsCheckingConversation(true);
@@ -216,6 +209,7 @@ const Messages = (props: Props) => {
           convoDataJson.data.convoData[0].conversation_id
         );
         setIsCheckingConversation(false);
+        scrollToBottom();
       }
     }
   };
@@ -247,6 +241,26 @@ const Messages = (props: Props) => {
     }
   };
 
+  useEffect(() => {
+    console.log('subscribing to messages');
+    supabase
+      .channel(`${selectedConversation}`)
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'messages',
+        },
+        (payload) => {
+          setMessages((payload.new as { [key: string]: any }).messagesObj);
+        }
+      )
+      .subscribe((status) => {
+        console.log({ status });
+      });
+  }, [selectedConversation]);
+
   const sendMessage = async () => {
     if (selectedConversation !== null && newMessage.trim() !== '') {
       setSendingMessage(true);
@@ -268,11 +282,6 @@ const Messages = (props: Props) => {
       if (!sendMessageDataJson) {
         console.error('Error sending message:', sendMessageDataJson);
       } else {
-        // setMessages([
-        //   ...messages,
-        //   sendMessageDataJson && sendMessageDataJson[0],
-        // ]);
-        // fetchMessagesForSelectedConversation();
         setNewMessage(''); // Clear the input field after sending the message
         setSendingMessage(false);
       }
@@ -335,7 +344,8 @@ const Messages = (props: Props) => {
       </div>
       <div className="flex h-[85%]">
         <div
-          className={`h-full overflow-y-scroll py-2 transition-all duration-200 ease-in-out w-full ${
+          ref={inboxRef}
+          className={`h-full overflow-y-auto py-2 transition-all duration-200 ease-in-out w-full ${
             mobileNavMenu ? 'max-w-[35%]  border-r-2' : 'max-w-0'
           } md:max-w-[30%] md:border-r-2 h-auto  border-[#172544] flex- flex-col`}>
           <h2 className="tracking-[0.3rem] w-full text-center mx-auto flex py-4 border-b-2 border-inherit uppercase md:text-xl gap-2 md:gap-4 pl-[8%]">
@@ -354,7 +364,7 @@ const Messages = (props: Props) => {
                 }`}
                 onClick={() => setSelectedConversation(convo.conversation_id)}>
                 <div className="relative w-[28px] mx-auto xl:mx-0  justify-center align-middle flex my-auto h-[28px]">
-                  {/* <Image
+                  <Image
                     src={
                       convo.members[
                         convo.members[1].id == state.user?.id ? 2 : 1
@@ -368,11 +378,11 @@ const Messages = (props: Props) => {
                     className="rounded-full flex mx-auto"
                     fill
                     objectFit="cover"
-                  /> */}
+                  />
                 </div>
                 <span className="my-auto text-center xl:text-left">
                   {
-                    convo.members[convo.members[1].id == state.user.id ? 2 : 1]
+                    convo.members[convo.members[1].id == state.user?.id ? 2 : 1]
                       .name
                   }
                 </span>
@@ -388,63 +398,76 @@ const Messages = (props: Props) => {
           <div className="">
             {selectedConversation !== null && (
               <>
-                <h3 className="flex gap-4 flex-wrap justify-center tracking-[0.3rem] px-[8%] py-4 border-b-2 border-[#172544] uppercase md:text-xl">
-                  <div className={`relative w-[28px] my-auto   flex h-[28px]`}>
-                    {/* <Image
-                      src={
-                        conversations?.find(
-                          (convo) =>
-                            convo.conversation_id === selectedConversation
-                        )?.members[
-                          selectedConvo?.members[memberIndex].id ==
-                          state.user.id
-                            ? 2
-                            : 1
-                        ]?.profileImage
-                          ? conversations?.find(
-                              (convo) =>
-                                convo.conversation_id === selectedConversation
-                            )?.members[
-                              selectedConvo?.members[memberIndex].id ==
-                              state.user.id
-                                ? 2
-                                : 1
-                            ]?.profileImage // Assuming convoPic is a property of the second member
-                          : '/profile/profile-pic-placeholder.png'
-                      }
-                      alt="hero"
-                      fill
-                      objectFit="cover"
-                      className="rounded-full my-auto"
-                    /> */}
+                <div className="flex flex-wrap justify-center tracking-[0.3rem] px-[4%] py-4 border-b-2 border-[#172544] uppercase md:text-xl">
+                  <div className="flex gap-4 flex-1 justify-center">
+                    <div
+                      className={`relative w-[28px] my-auto   flex h-[28px]`}>
+                      <Image
+                        src={
+                          conversations?.find(
+                            (convo) =>
+                              convo.conversation_id === selectedConversation
+                          )?.members[
+                            selectedConvo?.members[memberIndex].id ==
+                            state.user.id
+                              ? 2
+                              : 1
+                          ]?.profileImage
+                            ? conversations?.find(
+                                (convo) =>
+                                  convo.conversation_id === selectedConversation
+                              )?.members[
+                                selectedConvo?.members[memberIndex].id ==
+                                state.user.id
+                                  ? 2
+                                  : 1
+                              ]?.profileImage // Assuming convoPic is a property of the second member
+                            : '/profile/profile-pic-placeholder.png'
+                        }
+                        alt="hero"
+                        fill
+                        objectFit="cover"
+                        className="rounded-full my-auto"
+                      />
+                    </div>
+                    <span className="my-auto w-fit text-center md:text-left font-serif break-all">
+                      {selectedConvo?.members[memberIndex]?.name}
+                    </span>
                   </div>
-                  <span className="my-auto w-fit text-center md:text-left font-serif break-all">
-                    {selectedConvo?.members[memberIndex]?.name}
-                  </span>
-                </h3>
+                  <Link
+                    type="button"
+                    className="bg-[#E88527] hover:bg-[#e88427ca] text-base tracking-normal capitalize h-fit w-fit my-auto px-2 py-1 text-white rounded-xl "
+                    href={
+                      selectedConvo?.members[memberIndex].id != state.user?.id
+                        ? '/listings/' + selectedConvo?.members[memberIndex].id
+                        : ''
+                    }>
+                    View Listing
+                  </Link>
+                </div>
 
                 <div
                   ref={messagesContainerRef}
                   className=" overflow-y-auto h-[50vh] py-6 px-2 md:px-10">
                   <div className="">
                     <ul className="flex flex-col gap-6 ">
-                      {messages.map((message, index) => (
+                      {messages?.map((message, index) => (
                         <li
                           key={index}
                           className={` flex opacity-0 transition-all justify-end duration-75 ease-in-out  gap-4 ${
-                            message.sender_id == state.user.id
+                            message.sender_id == state.user?.id
                               ? 'ml-auto  opacity-100' // Align to the right if it's my message
                               : 'mr-auto  opacity-100'
                           }`}>
                           <Link
                             href={
-                              message.sender_id == state.user.id
+                              message.sender_id == state.user?.id
                                 ? ''
                                 : '/listings/' +
                                   selectedConvo.members[memberIndex].id
                             }>
                             <div className="relative w-[30px] h-[30px] my-auto flex">
-                              {/* <Image
+                              <Image
                                 src={
                                   !selectedConvo.members[memberIndex]
                                     .profileImage
@@ -458,7 +481,7 @@ const Messages = (props: Props) => {
                                 fill
                                 objectFit="cover"
                                 className="rounded-full my-auto"
-                              /> */}
+                              />
                             </div>
                           </Link>
                           <p

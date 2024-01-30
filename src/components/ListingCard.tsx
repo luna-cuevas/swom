@@ -1,7 +1,9 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import CarouselPage from './Carousel';
 import Link from 'next/link';
 import { useStateContext } from '@/context/StateContext';
+import { supabaseClient } from '@/utils/supabaseClient';
+import Image from 'next/image';
 
 type Props = {
   listingInfo: any;
@@ -14,53 +16,137 @@ const ListingCard = (props: Props) => {
       return { src: image, listingNum: props.listingInfo?.user_id.slice(-5) };
     }
   );
+  const [favorite, setFavorite] = React.useState({
+    favorite: false,
+    listingId: '',
+  });
+  const supabase = supabaseClient();
+
+  const checkIfLiked = async (listingId: string) => {
+    const { data: allLiked, error: allLikedError } = await supabase
+      .from('appUsers')
+      .select('favorites')
+      .eq('id', state?.loggedInUser?.id);
+
+    console.log('allLiked', allLiked);
+
+    if (allLikedError) {
+      console.log(allLikedError);
+    }
+
+    const checkIfLiked =
+      allLiked &&
+      allLiked[0]?.favorites?.some(
+        (favorite: any) => favorite.listingId === listingId
+      );
+
+    return checkIfLiked;
+  };
+
+  const allLikedListings = async () => {
+    const { data: allLiked, error: allLikedError } = await supabase
+      .from('appUsers')
+      .select('favorites')
+      .eq('id', state?.loggedInUser?.id);
+
+    console.log('allLiked', allLiked);
+
+    if (allLikedError) {
+      console.log(allLikedError);
+    }
+
+    if (allLiked) {
+      allLiked[0]?.favorites?.map((favorite: any) => {
+        if (favorite.listingId === props.listingInfo.user_id) {
+          setFavorite({ favorite: true, listingId: props.listingInfo.user_id });
+        }
+      });
+    }
+  };
+
+  useEffect(() => {
+    allLikedListings();
+  }, []);
+
+  const handleFavorite = async (listingId: any) => {
+    if (state?.loggedInUser?.email) {
+      // fetch all liked listings first and then check if the listing is already liked
+      const isLiked = await checkIfLiked(listingId);
+
+      const { data: allLiked, error: allLikedError } = await supabase
+        .from('appUsers')
+        .select('favorites')
+        .eq('id', state?.loggedInUser?.id);
+
+      let combinedFavorites = (allLiked && allLiked[0]?.favorites) || [];
+
+      if (isLiked) {
+        // If already liked, remove it from the favorites
+        combinedFavorites = combinedFavorites.filter(
+          (favorite: any) => favorite.listingId !== listingId
+        );
+      } else {
+        // If not liked, add it to the favorites
+        combinedFavorites = [...combinedFavorites, { listingId: listingId }];
+      }
+
+      const { data, error } = await supabase
+        .from('appUsers')
+        .upsert({
+          id: state?.loggedInUser?.id,
+          favorites: combinedFavorites,
+        })
+        .eq('id', state?.loggedInUser?.id)
+        .select('*');
+
+      if (!error) {
+        // Update local state
+        setFavorite({ favorite: !isLiked, listingId: listingId });
+      }
+    }
+  };
 
   return (
-    <div className="rounded-xl p-[10px] flex-col md:m-2 bg-white relative flex h-auto min-h-[40vh] my-2 m-auto w-[90%] md:w-[45%]">
-      <div className="min-h-[25vh]">
-        <CarouselPage
-          images={formattedImages}
-          picturesPerSlide={1}
-          contain={false}
-          listingPage={true}
-        />
+    <div className="rounded-xl p-[16px] flex-col md:m-2 bg-white relative flex h-auto my-2 m-auto w-[90%] md:w-[45%]">
+      <div className="h-[25vh] relative">
+        <Link href={`/listings/${props.listingInfo?.user_id}`}>
+          <Image
+            src={props.listingInfo?.homeInfo.listingImages[0]}
+            alt="listing image"
+            layout="fill"
+            objectFit="cover"
+            className="rounded-xl"
+          />
+        </Link>
       </div>
-      <div className="flex-col flex flex-grow">
-        <div className="border-b border-[#172544] pb-2 my-2 flex justify-between align-middle">
-          <div>
+      <div className="flex-col flex">
+        <div className="pt-2 mt-2 flex justify-between align-middle">
+          <Link
+            href={`/listings/${props.listingInfo?.user_id}`}
+            className="cursor-pointer flex-col flex">
             <h1 className="text-xl">{props.listingInfo?.homeInfo.title}</h1>
             <p className="">{props.listingInfo?.homeInfo.city}</p>
-          </div>
+          </Link>
           <div className="flex">
-            <button>
+            <button
+              onClick={() => {
+                handleFavorite(props.listingInfo.user_id);
+              }}>
               <svg
-                className="m-auto"
-                width="24"
-                height="24"
-                xmlns="http://www.w3.org/2000/svg"
-                fillRule="evenodd"
-                clipRule="evenodd">
-                <path d="M12 21.593c-5.63-5.539-11-10.297-11-14.402 0-3.791 3.068-5.191 5.281-5.191 1.312 0 4.151.501 5.719 4.457 1.59-3.968 4.464-4.447 5.726-4.447 2.54 0 5.274 1.621 5.274 5.181 0 4.069-5.136 8.625-11 14.402m5.726-20.583c-2.203 0-4.446 1.042-5.726 3.238-1.285-2.206-3.522-3.248-5.719-3.248-3.183 0-6.281 2.187-6.281 6.191 0 4.661 5.571 9.429 12 15.809 6.43-6.38 12-11.148 12-15.809 0-4.011-3.095-6.181-6.274-6.181" />
+                stroke={
+                  favorite.favorite === true ? '#F28A38' : 'rgba(0, 0, 0, 0.5)'
+                }
+                fill={
+                  favorite.favorite === true ? '#F28A38' : 'rgba(0, 0, 0, 0.5)'
+                }
+                width="20px"
+                height="20px"
+                viewBox="0 0 24 24"
+                xmlns="http://www.w3.org/2000/svg">
+                <path d="M14 20.408c-.492.308-.903.546-1.192.709-.153.086-.308.17-.463.252h-.002a.75.75 0 01-.686 0 16.709 16.709 0 01-.465-.252 31.147 31.147 0 01-4.803-3.34C3.8 15.572 1 12.331 1 8.513 1 5.052 3.829 2.5 6.736 2.5 9.03 2.5 10.881 3.726 12 5.605 13.12 3.726 14.97 2.5 17.264 2.5 20.17 2.5 23 5.052 23 8.514c0 3.818-2.801 7.06-5.389 9.262A31.146 31.146 0 0114 20.408z" />
               </svg>
             </button>
           </div>
-        </div>
-        <p className="break-all flex-1 flex-grow">
-          {props.listingInfo?.homeInfo.description.slice(0, 200)}...
-        </p>
-        <div className="flex  justify-between">
-          <p>Did you love it? &gt;&gt;&gt;</p>
-          <Link
-            href={
-              state?.loggedInUser?.email !== props.listingInfo?.userInfo.email
-                ? `/listings/${props.listingInfo.user_id}`
-                : `listings/my-listing`
-            }
-            className="bg-[#F28A38] py-1 px-2 rounded-xl text-white text-sm">
-            {state?.loggedInUser?.email !== props.listingInfo?.userInfo.email
-              ? 'View Listing'
-              : 'Edit Listing'}
-          </Link>
         </div>
       </div>
     </div>
