@@ -1,5 +1,5 @@
 'use client';
-import React, { useEffect, useState } from 'react';
+import React, { use, useEffect, useState } from 'react';
 import { set, useController, useForm } from 'react-hook-form';
 import { supabaseClient } from '@/utils/supabaseClient';
 import { CheckoutSubscriptionBody } from '@/app/api/subscription/makeSubscription/route';
@@ -47,6 +47,12 @@ const SignUpForm = (props: Props) => {
     fetchStripe();
   }, []);
 
+  useEffect(() => {
+    if (state.user?.email) {
+      setValue('email', state.user?.email);
+    }
+  }, [state.user]);
+
   const onSubmit = (data: any) => {
     const fullName = data.firstName + ' ' + data.lastName;
     if (!subScreen) {
@@ -62,7 +68,7 @@ const SignUpForm = (props: Props) => {
     // check if  search params has session_id
     if (sessionId) {
       console.log('subscription result', sessionId);
-      setState({ ...state, isSubscribed: true });
+      setState({ ...state, isSubscribed: true, activeNavButtons: true });
       toast.success('Subscribed successfully');
       // navigate to the listings/my-listing page
       router.push('/home');
@@ -76,10 +82,10 @@ const SignUpForm = (props: Props) => {
   const handleSubscription = async () => {
     if (stripe) {
       const body: CheckoutSubscriptionBody = {
-        interval: selectedPlan.interval as 'year',
-        amount: selectedPlan.amount,
-        plan: selectedPlan.plan,
-        planDescription: selectedPlan.planDescription,
+        interval: 'year',
+        amount: 20000,
+        plan: '1 year',
+        planDescription: 'Subscribe for $200 per year.',
       };
 
       try {
@@ -225,14 +231,11 @@ const SignUpForm = (props: Props) => {
       return false;
     } else {
       const loggedInUser = await fetchLoggedInUser(session.user);
-      const subbed = await fetchStripe(session.user.email ?? '');
       setState({
         ...state,
         session,
         user: session.user,
         loggedInUser: loggedInUser,
-        isSubscribed: subbed,
-        activeNavButtons: true,
       });
 
       toast.success('Signed up successfully');
@@ -243,26 +246,12 @@ const SignUpForm = (props: Props) => {
   return (
     <form
       onSubmit={handleSubmit(onSubmit, onError)}
-      className="w-11/12 md:w-2/3 max-w-[800px] flex flex-col my-12 m-auto border-4 bg-gray-100 border-[#c9c9c9] rounded-xl p-12">
-      {/* <div className="gap-8 mb-4 flex justify-between">
-        <input
-          type="text"
-          className="border-2 w-1/2 focus:outline-none p-2 text-lg rounded-lg"
-          placeholder="First Name"
-          {...register('firstName', { required: true })}
-        />
-        <input
-          type="text"
-          className="border-2 w-1/2 focus:outline-none p-2 text-lg rounded-lg"
-          placeholder="Last Name"
-          {...register('lastName', { required: true })}
-        />
-      </div> */}
-
+      className="w-11/12  md:w-2/3 max-w-[800px] flex flex-col my-12 m-auto border-4 bg-gray-100 border-[#c9c9c9] rounded-xl p-12">
       {!subScreen ? (
         <div className="gap-8 mb-8 flex justify-between">
           <input
             type="email"
+            disabled={state.user?.email ? true : false}
             className="border-2 w-full focus:outline-none p-2 text-lg rounded-lg"
             placeholder="Email"
             {...register('email', { required: true })}
@@ -277,58 +266,14 @@ const SignUpForm = (props: Props) => {
       ) : (
         <div className="flex my-8 justify-evenly">
           <div
-            className={`${
-              selectedPlan.plan == '1 year'
-                ? ' border-[#7E8019] shadow-xl bg-[#ffffff]'
-                : 'border-gray-300'
-            } border-4 rounded-md p-8 flex flex-col gap-2 items-start`}>
-            <h2 className="text-xl font-bold text-gray-700">
+            className={`rounded-md  text-center p-8 flex flex-col gap-2 items-start`}>
+            <h2 className="text-2xl font-bold text-gray-700">
               1 Year Subscription
             </h2>
-            <p className="text-gray-400">$200 per year</p>
-            <button
-              type="button"
-              onClick={() =>
-                setSelectedPlan({
-                  plan: '1 year',
-                  interval: 'year',
-                  amount: 20000,
-                  planDescription: 'Subscribe for $200 per year.',
-                })
-              }
-              className={`border ${
-                selectedPlan.plan == '1 year' && 'bg-[#7E8019] text-white'
-              } border-violet-200 text-violet-500 rounded-md px-4 py-2 w-full hover:bg-violet-500 hover:text-violet-200 transition-colors`}>
-              Select
-            </button>
+            <p className="text-gray-800 text-center w-fit mx-auto text-lg">
+              $200 per year
+            </p>
           </div>
-
-          {/* <div
-            className={`${
-              selectedPlan.plan == '2 year'
-                ? 'border-[#7E8019] shadow-xl bg-[#ffffff]'
-                : 'border-gray-300'
-            } border-4 rounded-md p-8 flex flex-col gap-2 items-start`}>
-            <h2 className="text-xl font-bold text-gray-700">
-              2 Year Subscription
-            </h2>
-            <p className="text-gray-400">$350 every 2 years</p>
-            <button
-              type="button"
-              onClick={() =>
-                setSelectedPlan({
-                  plan: '2 year',
-                  interval: 'year',
-                  amount: 35000,
-                  planDescription: 'Subscribe for $350 every 2 years.',
-                })
-              }
-              className={`border ${
-                selectedPlan.plan == '2 year' && 'bg-[#7E8019] text-white'
-              } border-violet-200 text-violet-500 rounded-md px-4 py-2 w-full hover:bg-violet-500 hover:text-violet-200 transition-colors`}>
-              Select
-            </button>
-          </div> */}
         </div>
       )}
 

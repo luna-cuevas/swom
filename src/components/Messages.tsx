@@ -313,7 +313,7 @@ const Messages = (props: Props) => {
     );
   }
 
-  return (
+  return conversations.length > 0 ? (
     <>
       <div className="relative flex w-full">
         <button
@@ -393,8 +393,8 @@ const Messages = (props: Props) => {
 
         <div
           className={`
-            ${mobileNavMenu ? 'max-w-[65%] md:w-2/3' : 'max-w-full md:w-full'}
-            w-full transition-all ease-in-out duration-200`}>
+              ${mobileNavMenu ? 'max-w-[65%] md:w-2/3' : 'max-w-full md:w-full'}
+              w-full transition-all ease-in-out duration-200`}>
           <div className="">
             {selectedConversation !== null && (
               <>
@@ -543,6 +543,13 @@ const Messages = (props: Props) => {
         </div>
       </div>
     </>
+  ) : (
+    <div className="flex flex-col h-full justify-center items-center">
+      <h1 className="text-2xl font-bold">No messages yet</h1>
+      <p className="text-lg">
+        You can start a conversation by clicking on a listing
+      </p>
+    </div>
   );
 };
 

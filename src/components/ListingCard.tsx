@@ -7,71 +7,19 @@ import Image from 'next/image';
 
 type Props = {
   listingInfo: any;
+  setListings: any;
+  setAllListings: any;
 };
 
 const ListingCard = (props: Props) => {
   const { state, setState } = useStateContext();
-  const formattedImages = props.listingInfo?.homeInfo.listingImages.map(
-    (image: any) => {
-      return { src: image, listingNum: props.listingInfo?.user_id.slice(-5) };
-    }
-  );
-  const [favorite, setFavorite] = React.useState({
-    favorite: false,
-    listingId: '',
-  });
+
   const supabase = supabaseClient();
-
-  const checkIfLiked = async (listingId: string) => {
-    const { data: allLiked, error: allLikedError } = await supabase
-      .from('appUsers')
-      .select('favorites')
-      .eq('id', state?.loggedInUser?.id);
-
-    console.log('allLiked', allLiked);
-
-    if (allLikedError) {
-      console.log(allLikedError);
-    }
-
-    const checkIfLiked =
-      allLiked &&
-      allLiked[0]?.favorites?.some(
-        (favorite: any) => favorite.listingId === listingId
-      );
-
-    return checkIfLiked;
-  };
-
-  const allLikedListings = async () => {
-    const { data: allLiked, error: allLikedError } = await supabase
-      .from('appUsers')
-      .select('favorites')
-      .eq('id', state?.loggedInUser?.id);
-
-    console.log('allLiked', allLiked);
-
-    if (allLikedError) {
-      console.log(allLikedError);
-    }
-
-    if (allLiked) {
-      allLiked[0]?.favorites?.map((favorite: any) => {
-        if (favorite.listingId === props.listingInfo.user_id) {
-          setFavorite({ favorite: true, listingId: props.listingInfo.user_id });
-        }
-      });
-    }
-  };
-
-  useEffect(() => {
-    allLikedListings();
-  }, []);
 
   const handleFavorite = async (listingId: any) => {
     if (state?.loggedInUser?.email) {
       // fetch all liked listings first and then check if the listing is already liked
-      const isLiked = await checkIfLiked(listingId);
+      const isLiked = props.listingInfo.favorite === true ? true : false;
 
       const { data: allLiked, error: allLikedError } = await supabase
         .from('appUsers')
@@ -85,6 +33,14 @@ const ListingCard = (props: Props) => {
         combinedFavorites = combinedFavorites.filter(
           (favorite: any) => favorite.listingId !== listingId
         );
+        props.setListings((prev: any) => {
+          return prev.map((listing: any) => {
+            if (listing.user_id === listingId) {
+              return { ...listing, favorite: false };
+            }
+            return listing;
+          });
+        });
       } else {
         // If not liked, add it to the favorites
         combinedFavorites = [...combinedFavorites, { listingId: listingId }];
@@ -101,7 +57,22 @@ const ListingCard = (props: Props) => {
 
       if (!error) {
         // Update local state
-        setFavorite({ favorite: !isLiked, listingId: listingId });
+        props.setListings((prev: any) => {
+          return prev.map((listing: any) => {
+            if (listing.user_id === listingId) {
+              return { ...listing, favorite: !isLiked };
+            }
+            return listing;
+          });
+        });
+        props.setAllListings((prev: any) => {
+          return prev.map((listing: any) => {
+            if (listing.user_id === listingId) {
+              return { ...listing, favorite: !isLiked };
+            }
+            return listing;
+          });
+        });
       }
     }
   };
@@ -134,10 +105,14 @@ const ListingCard = (props: Props) => {
               }}>
               <svg
                 stroke={
-                  favorite.favorite === true ? '#F28A38' : 'rgba(0, 0, 0, 0.5)'
+                  props.listingInfo.favorite === true
+                    ? '#7F8119'
+                    : 'rgb(0, 0, 0)'
                 }
                 fill={
-                  favorite.favorite === true ? '#F28A38' : 'rgba(0, 0, 0, 0.5)'
+                  props.listingInfo.favorite === true
+                    ? '#7F8119'
+                    : 'transparent'
                 }
                 width="20px"
                 height="20px"

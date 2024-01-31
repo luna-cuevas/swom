@@ -1,6 +1,8 @@
 'use client';
 import GoogleMapComponent from '@/components/GoogleMapComponent';
 import ListingCard from '@/components/ListingCard';
+import { useStateContext } from '@/context/StateContext';
+import { supabaseClient } from '@/utils/supabaseClient';
 import React, { useEffect, useState } from 'react';
 import Stripe from 'stripe';
 
@@ -9,6 +11,14 @@ type Props = {};
 const Page = (props: Props) => {
   const [listings, setListings] = useState<any>([]);
   const [allListings, setAllListings] = useState<any>([]);
+  const [favorite, setFavorite] = useState(
+    [] as {
+      favorite: boolean;
+      listingId: string;
+    }[]
+  );
+
+  console.log(favorite);
   const stripeActivation = new Stripe(
     process.env.NEXT_PUBLIC_STRIPE_SECRET_KEY!,
     {
@@ -19,10 +29,54 @@ const Page = (props: Props) => {
   const [whereIsIt, setWhereIsIt] = useState<string>('');
   const [isIdle, setIsIdle] = useState<boolean>(false);
   const [isLoading, setIsLoading] = useState<boolean>(true);
+  const supabase = supabaseClient();
+  const { state, setState } = useStateContext();
 
   useEffect(() => {
     fetchListings();
   }, []);
+
+  const allLikedListings = async () => {
+    const { data: allLiked, error: allLikedError } = await supabase
+      .from('appUsers')
+      .select('favorites')
+      .eq('id', state.loggedInUser.id);
+
+    console.log('allLiked', allLiked);
+
+    if (allLikedError) {
+      console.log('fetch liked listings error:', allLikedError);
+    }
+
+    if (allLiked) {
+      // setListing all liked listings
+      allLiked[0]?.favorites.map((favorite: any) => {
+        setListings((prev: any) => {
+          return prev.map((listing: any) => {
+            if (listing.user_id === favorite.listingId) {
+              return { ...listing, favorite: true };
+            }
+            return listing;
+          });
+        });
+        setAllListings((prev: any) => {
+          return prev.map((listing: any) => {
+            if (listing.user_id === favorite.listingId) {
+              return { ...listing, favorite: true };
+            }
+            return listing;
+          });
+        });
+      });
+    }
+  };
+
+  useEffect(() => {
+    if (state.loggedInUser && allListings) {
+      allLikedListings();
+      console.log('liked', favorite);
+    }
+  }, [allListings, state.loggedInUser]);
 
   const fetchListings = async () => {
     try {
@@ -189,10 +243,45 @@ const Page = (props: Props) => {
               </h1>
             </div>
             <div className="bg-[#EADEDB] pt-8  flex-grow h-full ">
+              {listings.length > 0 && (
+                <div className="m-auto gap-4 mb-4 justify-end max-w-[1000px] flex w-full flex-wrap">
+                  <button
+                    onClick={() => {
+                      if (whereIsIt.length > 0) {
+                        filteredListings();
+                      } else {
+                        setListings(allListings);
+                      }
+                    }}
+                    className=" w-fit hover:bg-[#686926] bg-[#7F8119] text-white px-2 py-1 rounded-md">
+                    All Listings
+                  </button>
+                  {/* favorites */}
+                  {listings.filter((listing: any) => listing.favorite === true)
+                    .length > 0 && (
+                    <button
+                      onClick={() =>
+                        setListings(
+                          listings.filter(
+                            (listing: any) => listing.favorite === true
+                          )
+                        )
+                      }
+                      className=" w-fit hover:bg-[#686926] bg-[#7F8119] text-white px-2 py-1 rounded-md">
+                      Favorites
+                    </button>
+                  )}
+                </div>
+              )}
               <div className="m-auto justify-between max-w-[1000px] flex w-full flex-wrap">
                 {listings.length > 0 ? (
                   listings.map((listing: any, index: number) => (
-                    <ListingCard key={index} listingInfo={listing} />
+                    <ListingCard
+                      setListings={setListings}
+                      setAllListings={setAllListings}
+                      key={index}
+                      listingInfo={listing}
+                    />
                   ))
                 ) : (
                   <div className="m-auto">

@@ -1,5 +1,5 @@
 import { useStateContext } from '@/context/StateContext';
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useDropzone } from 'react-dropzone';
 import { DragDropContext, Draggable, Droppable } from 'react-beautiful-dnd';
 import { ToastContainer, toast } from 'react-toastify';
@@ -9,10 +9,34 @@ import 'react-toastify/dist/ReactToastify.css';
 type Props = {
   setImageFiles: React.Dispatch<React.SetStateAction<File[]>>;
   imageFiles: File[];
+  downloadURLs?: string[];
 };
 
 const BecomeMemberDropzone: React.FC<Props> = (props) => {
   const { state, setState } = useStateContext();
+
+  useEffect(() => {
+    const convertURLsToFileObjects = async () => {
+      const filePromises =
+        props.downloadURLs &&
+        props.downloadURLs.map(async (url) => {
+          const response = await fetch(url);
+          const blob = await response.blob();
+          return new File([blob], url.split('/').pop() || 'downloaded', {
+            type: blob.type,
+          });
+        });
+
+      if (filePromises) {
+        const files = await Promise.all(filePromises);
+        props.setImageFiles(files);
+        setOrderedImageFiles(files);
+      }
+    };
+
+    convertURLsToFileObjects();
+  }, [props.downloadURLs]);
+
   const [orderedImageFiles, setOrderedImageFiles] = useState<File[]>(
     props.imageFiles
   );
@@ -43,8 +67,6 @@ const BecomeMemberDropzone: React.FC<Props> = (props) => {
       setOrderedImageFiles(updatedImageFiles);
     },
   });
-
-  console.log('orderedImageFiles', orderedImageFiles);
 
   // Function to handle reordering
   const handleOnDragEnd = (result: any) => {
@@ -100,15 +122,15 @@ const BecomeMemberDropzone: React.FC<Props> = (props) => {
                 className=" flex flex-wrap justify-center w-fit gap-2 m-auto overflow-hidden">
                 {orderedImageFiles.map((file, index) => (
                   <Draggable
-                    key={file.name}
-                    draggableId={file.name}
+                    key={index}
+                    draggableId={index.toString()}
                     index={index}>
                     {(provided: any) => (
                       <div
                         ref={provided.innerRef}
                         {...provided.draggableProps}
                         {...provided.dragHandleProps}
-                        className="w-1/3 flex relative">
+                        className="w-1/4 flex relative">
                         <img
                           src={URL.createObjectURL(file)}
                           alt={`Uploaded Image ${index + 1}`}

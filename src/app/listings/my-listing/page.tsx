@@ -426,22 +426,18 @@ const Page = (props: Props) => {
                   ) : (
                     <ProfilePicDropZone setProfileImage={setProfileImage} />
                   )}
-                  <div className="px-4 flex gap-2 flex-col">
+                  <div className="px-4 py-4 flex gap-2 flex-col">
                     <input
-                      className="bg-transparent border-b border-[#172544] focus:outline-none"
+                      className="bg-transparent px-4 border-b border-[#172544] focus:outline-none"
                       placeholder="Name"
                       {...register('userInfo.name')}
                     />
                     <input
-                      className="bg-transparent border-b border-[#172544] focus:outline-none"
+                      className="bg-transparent px-4 border-b border-[#172544] focus:outline-none"
                       placeholder="Profession"
                       {...register('userInfo.profession')}
                     />
-                    <input
-                      className="bg-transparent border-b border-[#172544] focus:outline-none"
-                      placeholder="Age"
-                      {...register('userInfo.age')}
-                    />
+
                     {/* save button */}
                     <button
                       type="button"
@@ -491,23 +487,17 @@ const Page = (props: Props) => {
                   <p className="font-sans my-1 break-all font-bold uppercase tracking-[0.1rem]">
                     {getValues('userInfo.profession')}
                   </p>
-                  <p className="font-sans  uppercase">
-                    {getValues('userInfo.age') > 0
-                      ? `${getValues('userInfo.age')} years`
-                      : 'Unknown Age'}
-                  </p>
                 </>
               )}
             </div>
             <div className="lg:w-[65%]">
-              <div className="grid py-2 text-center grid-cols-5 border-b border-[#172544]">
+              <div className="grid py-2 text-center grid-cols-4 border-b border-[#172544]">
                 <h3>First Name</h3>
                 <h3>Last Name</h3>
-                <h3>User Name</h3>
                 <h3>Age</h3>
                 <h3>Profession</h3>
               </div>
-              <div className="grid py-2 text-center grid-cols-5 border-b border-[#172544]">
+              <div className="grid py-2 text-center grid-cols-4 border-b border-[#172544]">
                 <h3 className="flex-wrap break-all">
                   {getValues('userInfo.name')
                     ? getValues('userInfo.name').split(' ')[0]
@@ -669,6 +659,7 @@ const Page = (props: Props) => {
               <div className=" z-50 h-fit w-full bg-white flex m-auto top-0 bottom-0 left-0 right-0">
                 <BecomeMemberDropzone
                   imageFiles={imageFiles}
+                  downloadURLs={downloadedImages}
                   setImageFiles={setImageFiles}
                 />
               </div>
@@ -707,45 +698,47 @@ const Page = (props: Props) => {
                   </div>
                 </>
               )}
-              {downloadedImages?.length > 0 && imageFiles.length == 0 && (
-                <>
-                  <div className="relative mt-8 mb-6 w-[95%] mx-auto h-[50vh]">
-                    <Image
-                      src={
-                        downloadedImages[selectedImage]
-                          ? downloadedImages[selectedImage]
-                          : '/placeholder.png'
-                      }
-                      alt=""
-                      className="rounded-3xl object-contain"
-                      fill
-                      objectPosition="center"
-                    />
-                  </div>
+              {downloadedImages?.length > 0 &&
+                imageFiles.length == 0 &&
+                !state.imgUploadPopUp && (
+                  <>
+                    <div className="relative mt-8 mb-6 w-[95%] mx-auto h-[50vh]">
+                      <Image
+                        src={
+                          downloadedImages[selectedImage]
+                            ? downloadedImages[selectedImage]
+                            : '/placeholder.png'
+                        }
+                        alt=""
+                        className="rounded-3xl object-contain"
+                        fill
+                        objectPosition="center"
+                      />
+                    </div>
 
-                  <div className="relative w-[95%] mx-auto h-[30vh]">
-                    <CarouselPage
-                      picturesPerSlide={
-                        // check if mobile or desktop
-                        windowWidth > 1025 ? 4 : windowWidth > 768 ? 3 : 1
-                      }
-                      selectedImage={selectedImage}
-                      setSelectedImage={setSelectedImage}
-                      overlay={false}
-                      contain={false}
-                      images={
-                        downloadedImages.length > 0
-                          ? downloadedImages.map((file: any) => ({
-                              src: file,
-                            }))
-                          : [1, 2].map((file) => ({
-                              src: '/placeholder.png',
-                            }))
-                      }
-                    />
-                  </div>
-                </>
-              )}
+                    <div className="relative w-[95%] mx-auto h-[30vh]">
+                      <CarouselPage
+                        picturesPerSlide={
+                          // check if mobile or desktop
+                          windowWidth > 1025 ? 4 : windowWidth > 768 ? 3 : 1
+                        }
+                        selectedImage={selectedImage}
+                        setSelectedImage={setSelectedImage}
+                        overlay={false}
+                        contain={false}
+                        images={
+                          downloadedImages.length > 0
+                            ? downloadedImages.map((file: any) => ({
+                                src: file,
+                              }))
+                            : [1, 2].map((file) => ({
+                                src: '/placeholder.png',
+                              }))
+                        }
+                      />
+                    </div>
+                  </>
+                )}
             </div>
 
             <div className="flex my-4 border-b border-[#172544] py-4 justify-between">

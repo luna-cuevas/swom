@@ -28,7 +28,7 @@ const Page = (props: Props) => {
   const {
     register,
     handleSubmit,
-
+    setValue,
     formState: { errors },
   } = useForm({
     defaultValues: {
@@ -222,6 +222,27 @@ const Page = (props: Props) => {
     }
   };
 
+  const formatPhoneNumber = (phoneNumber: string) => {
+    const cleaned = phoneNumber.replace(/\D/g, '');
+    let formattedNumber = '';
+
+    for (let i = 0; i < cleaned.length; i++) {
+      if (i === 0) formattedNumber += '+';
+      if (i === 1) formattedNumber += ' (';
+      if (i === 4) formattedNumber += ') ';
+      if (i === 7) formattedNumber += '-';
+
+      formattedNumber += cleaned[i];
+    }
+
+    return formattedNumber.substring(0, 17);
+  };
+
+  const handlePhoneInputChange = (e: React.FocusEvent<HTMLInputElement>) => {
+    const formattedNumber = formatPhoneNumber(e.target.value);
+    setValue('userInfo.phone', formattedNumber);
+  };
+
   return (
     <main className="md:min-h-screen relative flex flex-col">
       <div className="flex w-full relative  bg-[#F3EBE7] md:h-[75vh]">
@@ -312,11 +333,21 @@ const Page = (props: Props) => {
                 <input
                   {...register('userInfo.phone', {
                     required: 'Please enter your phone number',
+                    pattern: {
+                      value: /^\+\d{1} \(\d{3}\) \d{3}-\d{4}$/, // Update this regex based on your formatting
+                      message:
+                        'Please enter a valid phone number with country code',
+                    },
                   })}
+                  onChange={handlePhoneInputChange}
                   className="w-full bg-transparent border-b border-[#172544] focus:outline-none"
                   type="tel"
+                  placeholder="+1 (555) 555-5555"
                   id="phone"
                 />
+                {errors.userInfo?.phone && (
+                  <p>{errors.userInfo.phone.message}</p>
+                )}
               </div>
               <div className="m-auto flex-col w-2/3 flex">
                 <label htmlFor="dob">What is your date of birth?</label>
@@ -683,6 +714,9 @@ const Page = (props: Props) => {
                   </div>
                 </div>
               </div>
+            </div>
+            <div className="m-auto flex-col w-2/3 flex">
+              <label htmlFor="">What amenities does your property have?</label>
             </div>
             <div className="flex w-2/3 m-auto flex-wrap pb-8">
               <div className="w-1/3 gap-2 flex flex-col">
