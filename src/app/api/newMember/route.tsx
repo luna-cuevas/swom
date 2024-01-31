@@ -6,6 +6,7 @@ export async function POST(req: Request) {
   const data = await req.json();
   console.log('data', data);
   const { email } = data;
+  const isDev = process.env.NODE_ENV === 'development';
 
   const supabase = supabaseClient();
 
@@ -14,7 +15,9 @@ export async function POST(req: Request) {
     email,
     {
       data: { role: 'client' },
-      redirectTo: `http://localhost:3000/sign-up`,
+      redirectTo: isDev
+        ? `http://localhost:3000/sign-up`
+        : 'https://swom.travel/sign-up',
     }
   );
 

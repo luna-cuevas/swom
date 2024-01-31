@@ -28,6 +28,8 @@ const Dashboard: React.FC = () => {
 
   const supabase = supabaseClient();
 
+  const isDev = process.env.NODE_ENV === 'development';
+
   // const addUser = async () => {
   //   const age = '';
 
@@ -218,7 +220,9 @@ const Dashboard: React.FC = () => {
     try {
       const { data: userCreationData, error: userCreationError } =
         await supabase.auth.resetPasswordForEmail(listingObj.userInfo.email, {
-          redirectTo: 'http://localhost:3000/sign-up',
+          redirectTo: isDev
+            ? 'http://localhost:3000/sign-up'
+            : 'https://swomtravel.com/sign-up',
         });
 
       const {
