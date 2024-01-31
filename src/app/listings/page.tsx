@@ -50,7 +50,7 @@ const Page = (props: Props) => {
 
     if (allLiked) {
       // setListing all liked listings
-      allLiked[0]?.favorites.map((favorite: any) => {
+      allLiked[0]?.favorites?.map((favorite: any) => {
         setListings((prev: any) => {
           return prev.map((listing: any) => {
             if (listing.user_id === favorite.listingId) {

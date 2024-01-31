@@ -100,7 +100,9 @@ const Navigation = (props: Props) => {
               MY LISTING
             </Link>
             {state.user?.email ===
-              ('s.cuevas14@gmail.com' || 'anamariagomezc@gmail.com') && (
+              ('s.cuevas14@gmail.com' ||
+                'anamariagomezc@gmail.com' ||
+                'ana@swom.travel') && (
               <Link className="m-auto text-sm" href="/listings/admin-dashboard">
                 APPROVAL DASHBOARD
               </Link>
@@ -225,7 +227,9 @@ const Navigation = (props: Props) => {
               MY LISTING
             </Link>
             {state.user?.email ===
-              ('s.cuevas14@gmail.com' || 'anamariagomezc@gmail.com') && (
+              ('s.cuevas14@gmail.com' ||
+                'anamariagomezc@gmail.com' ||
+                'ana@swom.travel') && (
               <Link className="m-auto" href="/listings/admin-dashboard">
                 APPROVAL DASHBOARD
               </Link>

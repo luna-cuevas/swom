@@ -12,7 +12,7 @@ const Page = (props: Props) => {
 
   // const updatePassword = async () => {
   //   const { data: user, error } = await supabase.auth.admin.updateUserById(
-  //     '9a43a220-5c8c-4333-9af1-60dd7b16dc8b',
+  //     'f9afa7b8-8005-454e-a74e-8e71670e2ce3',
   //     { password: 'password' }
   //   );
   //   if (error) console.log(error);
