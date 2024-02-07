@@ -4,6 +4,8 @@ import Link from 'next/link';
 import { useStateContext } from '@/context/StateContext';
 import { supabaseClient } from '@/utils/supabaseClient';
 import Image from 'next/image';
+import ImageUrlBuilder from '@sanity/image-url';
+import { sanityClient } from '../utils/sanityClient';
 
 type Props = {
   listingInfo: any;
@@ -16,10 +18,16 @@ const ListingCard = (props: Props) => {
 
   const supabase = supabaseClient();
 
+  const builder = ImageUrlBuilder(sanityClient);
+
+  function urlFor(source: any) {
+    return builder.image(source);
+  }
+
   const handleFavorite = async (listingId: any) => {
     if (state?.loggedInUser?.email) {
       // fetch all liked listings first and then check if the listing is already liked
-      const isLiked = props.listingInfo.favorite === true ? true : false;
+      const isLiked = props.listingInfo.favorite == true ? true : false;
 
       const { data: allLiked, error: allLikedError } = await supabase
         .from('appUsers')
@@ -35,7 +43,7 @@ const ListingCard = (props: Props) => {
         );
         props.setListings((prev: any) => {
           return prev.map((listing: any) => {
-            if (listing.user_id === listingId) {
+            if (listing.userInfo.email === listingId) {
               return { ...listing, favorite: false };
             }
             return listing;
@@ -44,6 +52,14 @@ const ListingCard = (props: Props) => {
       } else {
         // If not liked, add it to the favorites
         combinedFavorites = [...combinedFavorites, { listingId: listingId }];
+        props.setListings((prev: any) => {
+          return prev.map((listing: any) => {
+            if (listing.userInfo.email === listingId) {
+              return { ...listing, favorite: true };
+            }
+            return listing;
+          });
+        });
       }
 
       const { data, error } = await supabase
@@ -67,7 +83,7 @@ const ListingCard = (props: Props) => {
         });
         props.setAllListings((prev: any) => {
           return prev.map((listing: any) => {
-            if (listing.user_id === listingId) {
+            if (listing.userInfo.email === listingId) {
               return { ...listing, favorite: !isLiked };
             }
             return listing;
@@ -80,9 +96,20 @@ const ListingCard = (props: Props) => {
   return (
     <div className="rounded-xl p-[16px] flex-col md:m-2 bg-white relative flex h-auto my-2 m-auto w-[90%] md:w-[45%]">
       <div className="h-[25vh] relative">
-        <Link href={`/listings/${props.listingInfo?.user_id}`}>
+        <Link
+          href={
+            props.listingInfo?.userInfo.email == state?.loggedInUser?.email
+              ? `listings/my-listing`
+              : `/listings/${props.listingInfo?.userInfo.email}`
+          }>
           <Image
-            src={props.listingInfo?.homeInfo.listingImages[0]}
+            src={
+              props.listingInfo?.homeInfo.listingImages[0]?.asset
+                ? urlFor(
+                    props.listingInfo?.homeInfo.listingImages[0].asset
+                  ).url()
+                : '/placeholder.png'
+            }
             alt="listing image"
             layout="fill"
             objectFit="cover"
@@ -93,7 +120,11 @@ const ListingCard = (props: Props) => {
       <div className="flex-col flex">
         <div className="pt-2 mt-2 flex justify-between align-middle">
           <Link
-            href={`/listings/${props.listingInfo?.user_id}`}
+            href={
+              props.listingInfo?.userInfo.email == state?.loggedInUser?.email
+                ? `listings/my-listing`
+                : `/listings/${props.listingInfo?.userInfo.email}`
+            }
             className="cursor-pointer flex-col flex">
             <h1 className="text-xl">{props.listingInfo?.homeInfo.title}</h1>
             <p className="">{props.listingInfo?.homeInfo.city}</p>
@@ -101,7 +132,7 @@ const ListingCard = (props: Props) => {
           <div className="flex">
             <button
               onClick={() => {
-                handleFavorite(props.listingInfo.user_id);
+                handleFavorite(props.listingInfo.userInfo.email);
               }}>
               <svg
                 stroke={

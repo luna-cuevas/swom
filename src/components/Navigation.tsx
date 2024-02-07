@@ -27,14 +27,6 @@ const Navigation = (props: Props) => {
   const router = useRouter();
   const navigation = usePathname();
 
-  // useEffect(() => {
-  //   console.log('state', state);
-
-  //   if (state && state.session == null) {
-  //     router.push('/home');
-  //   }
-  // }, [state]);
-
   const handleSignOut = async () => {
     try {
       await supabase.auth.signOut();
@@ -99,12 +91,11 @@ const Navigation = (props: Props) => {
             <Link className="m-auto text-sm" href="/listings/my-listing">
               MY LISTING
             </Link>
-            {state.user?.email ==
-              ('anamariagomezc@gmail.com' ||
-                's.cuevas14@gmail.com' ||
-                'ana@swom.travel') && (
-              <Link className="m-auto text-sm" href="/listings/admin-dashboard">
-                APPROVAL DASHBOARD
+            {(state.user?.email == 'anamariagomezc@gmail.com' ||
+              state.user?.email == 's.cuevas14@gmail.com' ||
+              state.user?.email == 'ana@swom.travel') && (
+              <Link className="m-auto text-sm" href="/studio">
+                STUDIO
               </Link>
             )}
           </>
@@ -226,12 +217,12 @@ const Navigation = (props: Props) => {
             <Link className="m-auto" href="/listings/my-listing">
               MY LISTING
             </Link>
-            {state.user?.email ==
-              ('anamariagomezc@gmail.com' ||
-                's.cuevas14@gmail.com' ||
-                'ana@swom.travel') && (
-              <Link className="m-auto" href="/listings/admin-dashboard">
-                APPROVAL DASHBOARD
+
+            {(state.user?.email == 'anamariagomezc@gmail.com' ||
+              state.user?.email == 's.cuevas14@gmail.com' ||
+              state.user?.email == 'ana@swom.travel') && (
+              <Link className="m-auto" href="/studio">
+                STUDIO
               </Link>
             )}
           </>

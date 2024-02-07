@@ -10,6 +10,7 @@ import BecomeMemberDropzone from '@/components/BecomeMemberDropzone';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import ReCAPTCHA from 'react-google-recaptcha';
+import { sanityClient } from '@/utils/sanityClient';
 
 type Props = {};
 
@@ -122,86 +123,52 @@ const Page = (props: Props) => {
       console.log(error);
       toast.error(error.message);
     } else {
-      console.log('userData', userData);
+      try {
+        // Upload Images
+        const uploadPromises = imageFiles.map((file) => {
+          return sanityClient.assets.upload('image', file);
+        });
+        const imageAssets = await Promise.all(uploadPromises);
+        const imageReferences = imageAssets.map((asset) => ({
+          _type: 'image',
+          _key: asset._id,
+          asset: {
+            _type: 'reference',
+            _ref: asset._id,
+          },
+        }));
 
-      if (userData.user) {
-        const uploadImageToCloudinary = async (imageFile: any) => {
-          try {
-            const formData = new FormData();
-            formData.append('file', imageFile);
-            formData.append('upload_preset', 'zttdzjqk');
-            formData.append('folder', `${userData.user?.id}/listingImages}`);
-
-            const response = await fetch(
-              'https://api.cloudinary.com/v1_1/dxfz8k7g8/image/upload',
-              {
-                method: 'POST',
-                body: formData,
-              }
-            );
-
-            if (!response.ok) {
-              throw new Error('Failed to upload image to Cloudinary');
-            }
-
-            const result = await response.json();
-            console.log('Uploaded image to Cloudinary:', result);
-
-            // Include transformation parameters to reduce image size
-            const transformedUrl = `${result.secure_url.replace(
-              '/upload/',
-              '/upload/w_auto,c_scale,q_auto:low/'
-            )}`;
-
-            console.log('Transformed URL:', transformedUrl);
-
-            return transformedUrl;
-          } catch (error) {
-            console.error('Error uploading image to Cloudinary:', error);
-            throw error;
-          }
+        // Prepare New Listing Data
+        const newListingData = {
+          _type: 'needsApproval',
+          ...data,
+          userInfo: {
+            ...data.userInfo,
+            openToOtherDestinations:
+              data.userInfo.openToOtherDestinations === 'true',
+          },
+          homeInfo: {
+            ...data.homeInfo,
+            howManySleep: parseInt(data.homeInfo.howManySleep),
+            bathrooms: parseInt(data.homeInfo.bathrooms),
+            listingImages: imageReferences,
+          },
+          // ... any other fields you need to include
         };
 
-        if (imageFiles && imageFiles.length > 0) {
-          // Upload images to the listingImages bucket
-          const uploadPromises = imageFiles.map((imageFile) =>
-            uploadImageToCloudinary(imageFile)
-          );
-          const results = await Promise.all(uploadPromises);
+        // Create the New Listing Document
+        const createdListing = await sanityClient.create(newListingData);
+        console.log('New listing created:', createdListing);
 
-          if (results.some((result) => result.length === 0)) {
-            console.error('Error uploading listing images:', results);
-          } else {
-            data.homeInfo.listingImages = results;
-            console.log('results', results);
-          }
-        }
-
-        const { data: userListing, error: userError } = await supabase
-          .from('needs_approval')
-          .upsert(
-            {
-              user_id: userData.user?.id,
-              userInfo: data.userInfo,
-              homeInfo: data.homeInfo,
-              amenities: data.amenities,
-              city: '',
-            },
-            {
-              ignoreDuplicates: false,
-            }
-          );
-
-        if (userError) {
-          console.log(userError);
-          toast.error(userError.message);
-        } else {
-          console.log('user', userListing);
-          toast.success('Application submitted successfully');
-        }
+        // Handle success
+        toast.success('New listing created successfully!');
+        setSignUpActive(false);
+        setSubmitted(true);
+        // ... update local state and UI as needed
+      } catch (error) {
+        console.error('Error creating new listing:', error);
+        toast.error('Failed to create new listing.');
       }
-      setSignUpActive(false);
-      setSubmitted(true);
     }
   };
 
@@ -440,7 +407,7 @@ const Page = (props: Props) => {
                   <input
                     className="w-fit bg-transparent checked:bg-[#7F8119] appearance-none border border-[#172544] rounded-xl p-[6px] my-auto"
                     type="radio"
-                    value="house"
+                    value="House"
                     {...register('homeInfo.property')}
                     id="house"
                   />
@@ -450,17 +417,17 @@ const Page = (props: Props) => {
                   <input
                     className="w-fit bg-transparent checked:bg-[#7F8119] appearance-none border border-[#172544] rounded-xl p-[6px] my-auto"
                     type="radio"
-                    value="apartment"
+                    value="Apartment"
                     {...register('homeInfo.property')}
                     id="apartment"
                   />
-                  <label htmlFor="apartment">Apartment</label>
+                  <label htmlFor="Apartment">Apartment</label>
                 </div>
                 <div className="gap-2 flex">
                   <input
                     className="w-fit bg-transparent checked:bg-[#7F8119] appearance-none border border-[#172544] rounded-xl p-[6px] my-auto"
                     type="radio"
-                    value="villa"
+                    value="Villa"
                     {...register('homeInfo.property')}
                     id="villa"
                   />
@@ -471,7 +438,7 @@ const Page = (props: Props) => {
                   <input
                     className="w-fit bg-transparent checked:bg-[#7F8119] appearance-none border border-[#172544] rounded-xl p-[6px] my-auto"
                     type="radio"
-                    value="farm"
+                    value="Farm"
                     {...register('homeInfo.property')}
                     id="farm"
                   />
@@ -481,7 +448,7 @@ const Page = (props: Props) => {
                   <input
                     className="w-fit bg-transparent checked:bg-[#7F8119] appearance-none border border-[#172544] rounded-xl p-[6px] my-auto"
                     type="radio"
-                    value="boat"
+                    value="Boat"
                     {...register('homeInfo.property')}
                     id="boat"
                   />
@@ -492,7 +459,7 @@ const Page = (props: Props) => {
                     {...register('homeInfo.property')}
                     className="w-fit bg-transparent checked:bg-[#7F8119] appearance-none border border-[#172544] rounded-xl p-[6px] my-auto"
                     type="radio"
-                    value="rv"
+                    value="RV"
                     id="rv"
                   />
                   <label htmlFor="rv">RV</label>
@@ -501,7 +468,7 @@ const Page = (props: Props) => {
                   <input
                     className="w-fit bg-transparent checked:bg-[#7F8119] appearance-none border border-[#172544] rounded-xl p-[6px] my-auto"
                     type="radio"
-                    value="otherProperty"
+                    value="Other"
                     {...register('homeInfo.property')}
                     id="otherProperty"
                   />
@@ -542,7 +509,7 @@ const Page = (props: Props) => {
                       className="bg-transparent checked:bg-[#7F8119] appearance-none border border-[#172544] rounded-xl p-[6px] my-auto"
                       type="radio"
                       id="condominium"
-                      value="condominium"
+                      value="a condominium"
                       {...register('homeInfo.locatedIn', {})}
                     />
                     <label htmlFor="condominium">a condominium</label>
@@ -555,14 +522,14 @@ const Page = (props: Props) => {
                       value="gated"
                       {...register('homeInfo.locatedIn')}
                     />
-                    <label htmlFor="gated">a gated community</label>
+                    <label htmlFor="a gated community">a gated community</label>
                   </div>
                   <div className="flex gap-2">
                     <input
                       className="bg-transparent checked:bg-[#7F8119] appearance-none border border-[#172544] rounded-xl p-[6px] my-auto"
                       type="radio"
                       id="itRestsFreely"
-                      value="itRestsFreely"
+                      value="it rests freely"
                       {...register('homeInfo.locatedIn')}
                     />
                     <label htmlFor="itRestsFreely">it rests freely</label>

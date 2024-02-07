@@ -6,6 +6,7 @@ const nextConfig = {
       'placehold.co',
       'res.cloudinary.com',
       'drive.google.com',
+      'cdn.sanity.io',
     ],
   },
 };

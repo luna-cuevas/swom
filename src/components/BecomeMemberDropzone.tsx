@@ -1,9 +1,9 @@
 import { useStateContext } from '@/context/StateContext';
 import React, { useEffect, useState } from 'react';
 import { useDropzone } from 'react-dropzone';
-import { DragDropContext, Draggable, Droppable } from 'react-beautiful-dnd';
 import { ToastContainer, toast } from 'react-toastify';
-
+import SortableList, { SortableItem } from 'react-easy-sort';
+import { arrayMoveImmutable } from 'array-move';
 import 'react-toastify/dist/ReactToastify.css';
 
 type Props = {
@@ -14,29 +14,6 @@ type Props = {
 
 const BecomeMemberDropzone: React.FC<Props> = (props) => {
   const { state, setState } = useStateContext();
-
-  useEffect(() => {
-    const convertURLsToFileObjects = async () => {
-      const filePromises =
-        props.downloadURLs &&
-        props.downloadURLs.map(async (url) => {
-          const response = await fetch(url);
-          const blob = await response.blob();
-          return new File([blob], url.split('/').pop() || 'downloaded', {
-            type: blob.type,
-          });
-        });
-
-      if (filePromises) {
-        const files = await Promise.all(filePromises);
-        props.setImageFiles(files);
-        setOrderedImageFiles(files);
-      }
-    };
-
-    convertURLsToFileObjects();
-  }, [props.downloadURLs]);
-
   const [orderedImageFiles, setOrderedImageFiles] = useState<File[]>(
     props.imageFiles
   );
@@ -65,32 +42,77 @@ const BecomeMemberDropzone: React.FC<Props> = (props) => {
 
       props.setImageFiles(updatedImageFiles);
       setOrderedImageFiles(updatedImageFiles);
+      setItems(
+        updatedImageFiles.map((file, index) => ({
+          index,
+          name: `Image ${index + 1}`,
+          image: URL.createObjectURL(file),
+        }))
+      );
     },
   });
 
-  // Function to handle reordering
-  const handleOnDragEnd = (result: any) => {
-    if (!result.destination) {
-      return;
-    }
-
-    const items = Array.from(orderedImageFiles);
-    const [reorderedItem] = items.splice(result.source.index, 1);
-    items.splice(result.destination.index, 0, reorderedItem);
-
-    setOrderedImageFiles(items);
-    props.setImageFiles(items);
-  };
-
   const handleRemoveImage = (index: number) => {
+    console.log('index', index);
     const updatedImageFiles = [...orderedImageFiles];
     updatedImageFiles.splice(index, 1);
     props.setImageFiles(updatedImageFiles);
     setOrderedImageFiles(updatedImageFiles);
+    setItems(
+      updatedImageFiles.map((file, index) => ({
+        index,
+        name: `Image ${index + 1}`,
+        image: URL.createObjectURL(file),
+      }))
+    );
+  };
+
+  const [items, setItems] = useState(
+    props.imageFiles.map((file, index) => ({
+      index,
+      name: `Image ${index + 1}`,
+      image: URL.createObjectURL(file),
+    }))
+  );
+
+  useEffect(() => {
+    const convertURLsToFileObjects = async () => {
+      if (props.downloadURLs) {
+        const files = await Promise.all(
+          props.downloadURLs.map(async (url) => {
+            const response = await fetch(url);
+            const blob = await response.blob();
+            return new File([blob], url.split('/').pop() || 'downloaded', {
+              type: blob.type,
+            });
+          })
+        );
+        props.setImageFiles(files);
+        setOrderedImageFiles(files);
+        setItems(
+          files.map((file, index) => ({
+            index,
+            name: `Image ${index + 1}`,
+            image: URL.createObjectURL(file),
+          }))
+        );
+      }
+    };
+    convertURLsToFileObjects();
+  }, [props.downloadURLs, props.setImageFiles]);
+
+  const onSortEnd = (oldIndex: number, newIndex: number) => {
+    setItems((array) => arrayMoveImmutable(array, oldIndex, newIndex));
+    setOrderedImageFiles((array) =>
+      arrayMoveImmutable(array, oldIndex, newIndex)
+    );
+    props.setImageFiles((array) =>
+      arrayMoveImmutable(array, oldIndex, newIndex)
+    );
   };
 
   return (
-    <div className="flex bg-[#d2d2d244] z-[2000] rounded-lg flex-col h-fit w-full top-0 bottom-0 left-0 right-0 m-auto">
+    <div className="flex bg-[#d2d2d244] z-0 rounded-lg flex-col h-fit w-full top-0 bottom-0 left-0 right-0 m-auto">
       <button
         type="button"
         className=" ml-auto z-[100000] w-fit mr-2 text-sm bg-red-300 text-white px-1 h-fit rounded-full cursor-pointer"
@@ -112,44 +134,27 @@ const BecomeMemberDropzone: React.FC<Props> = (props) => {
           Drag and drop image(s) here, or click to select files
         </p>
       </div>
-      <div className=" max-h-[50vh] overflow-y-auto border-[#939393] pt-4">
-        <DragDropContext onDragEnd={handleOnDragEnd}>
-          <Droppable droppableId="droppable">
-            {(provided: any) => (
-              <div
-                {...provided.droppableProps}
-                ref={provided.innerRef}
-                className=" flex flex-wrap justify-center w-fit gap-2 m-auto overflow-hidden">
-                {orderedImageFiles.map((file, index) => (
-                  <Draggable
-                    key={index}
-                    draggableId={index.toString()}
-                    index={index}>
-                    {(provided: any) => (
-                      <div
-                        ref={provided.innerRef}
-                        {...provided.draggableProps}
-                        {...provided.dragHandleProps}
-                        className="w-1/4 flex relative">
-                        <img
-                          src={URL.createObjectURL(file)}
-                          alt={`Uploaded Image ${index + 1}`}
-                          className="m-auto"
-                        />
-                        <button
-                          onClick={() => handleRemoveImage(index)}
-                          className="absolute text-sm top-2 right-2 bg-red-300 text-white px-1 h-fit rounded-full cursor-pointer">
-                          X
-                        </button>
-                      </div>
-                    )}
-                  </Draggable>
-                ))}
-                {provided.placeholder}
-              </div>
-            )}
-          </Droppable>
-        </DragDropContext>
+      <div className=" max-h-[50vh]  overflow-y-auto border-[#939393] pt-4">
+        <SortableList
+          onSortEnd={onSortEnd}
+          draggedItemClassName="dragged"
+          className="grid grid-cols-3 select-none gap-4 ">
+          {items.map(({ image, name, index }) => (
+            <div className=" flex   justify-center  m-auto">
+              <SortableItem key={name}>
+                <div className="drag-item relative w-full pointer-events-none">
+                  <img className="m-auto" alt={name} src={image} />
+                  <button
+                    type="button"
+                    onClick={() => handleRemoveImage(index)}
+                    className="absolute pointer-events-auto z-[1000] text-sm top-2 right-2 bg-red-300 text-white px-1 h-fit rounded-full cursor-pointer">
+                    X
+                  </button>
+                </div>
+              </SortableItem>
+            </div>
+          ))}
+        </SortableList>
       </div>
       <ToastContainer
         position="bottom-right"

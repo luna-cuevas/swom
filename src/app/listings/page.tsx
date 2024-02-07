@@ -5,6 +5,8 @@ import { useStateContext } from '@/context/StateContext';
 import { supabaseClient } from '@/utils/supabaseClient';
 import React, { useEffect, useState } from 'react';
 import Stripe from 'stripe';
+import { sanityClient } from '@/utils/sanityClient';
+import ImageUrlBuilder from '@sanity/image-url';
 
 type Props = {};
 
@@ -18,7 +20,6 @@ const Page = (props: Props) => {
     }[]
   );
 
-  console.log(favorite);
   const stripeActivation = new Stripe(
     process.env.NEXT_PUBLIC_STRIPE_SECRET_KEY!,
     {
@@ -31,69 +32,29 @@ const Page = (props: Props) => {
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const supabase = supabaseClient();
   const { state, setState } = useStateContext();
+  const builder = ImageUrlBuilder(sanityClient);
+
+  function urlFor(source: any) {
+    return builder.image(source);
+  }
 
   useEffect(() => {
-    fetchListings();
-  }, []);
-
-  const allLikedListings = async () => {
-    const { data: allLiked, error: allLikedError } = await supabase
-      .from('appUsers')
-      .select('favorites')
-      .eq('id', state.loggedInUser.id);
-
-    console.log('allLiked', allLiked);
-
-    if (allLikedError) {
-      console.log('fetch liked listings error:', allLikedError);
+    if (state.loggedInUser) {
+      fetchListings();
     }
-
-    if (allLiked) {
-      // setListing all liked listings
-      allLiked[0]?.favorites?.map((favorite: any) => {
-        setListings((prev: any) => {
-          return prev.map((listing: any) => {
-            if (listing.user_id === favorite.listingId) {
-              return { ...listing, favorite: true };
-            }
-            return listing;
-          });
-        });
-        setAllListings((prev: any) => {
-          return prev.map((listing: any) => {
-            if (listing.user_id === favorite.listingId) {
-              return { ...listing, favorite: true };
-            }
-            return listing;
-          });
-        });
-      });
-    }
-  };
-
-  useEffect(() => {
-    if (state.loggedInUser && allListings) {
-      allLikedListings();
-      console.log('liked', favorite);
-    }
-  }, [allListings, state.loggedInUser]);
+  }, [state.user, state.loggedInUser, state.loggedInUser?.id]);
 
   const fetchListings = async () => {
+    setIsLoading(true);
     try {
-      setIsLoading(true);
-      const listings = await fetch('/api/getListings', {
-        cache: 'no-cache',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        method: 'POST',
-        body: JSON.stringify({}),
-      });
-      const listingsJson = await listings.json();
-      console.log('listingsJson', listingsJson);
+      const query = `*[_type == "listing"]{
+        ...,
+      "imageUrl": image.asset->url
+    }`;
+      const data = await sanityClient.fetch(query);
 
       const subscribedListings = await Promise.all(
-        listingsJson.map(async (listing: any) => {
+        data.map(async (listing: any) => {
           const isSubscribed = await isUserSubscribed(listing.userInfo.email);
           if (isSubscribed) {
             return listing;
@@ -109,6 +70,37 @@ const Page = (props: Props) => {
 
       setAllListings(filteredListings);
       setListings(filteredListings);
+
+      const { data: allLiked, error: allLikedError } = await supabase
+        .from('appUsers')
+        .select('favorites')
+        .eq('id', state.loggedInUser.id);
+
+      if (allLikedError) {
+        console.log('fetch liked listings error:', allLikedError);
+      }
+
+      if (allLiked) {
+        // setListing all liked listings
+        allLiked[0]?.favorites?.map((favorite: any) => {
+          setListings((prev: any) => {
+            return prev.map((listing: any) => {
+              if (listing.userInfo.email === favorite.listingId) {
+                return { ...listing, favorite: true };
+              }
+              return listing;
+            });
+          });
+          setAllListings((prev: any) => {
+            return prev.map((listing: any) => {
+              if (listing.userInfo.email === favorite.listingId) {
+                return { ...listing, favorite: true };
+              }
+              return listing;
+            });
+          });
+        });
+      }
       setIsLoading(false);
     } catch (error: any) {
       console.error('Error fetching data:', error.message);
@@ -116,7 +108,6 @@ const Page = (props: Props) => {
   };
 
   const filteredListings = async () => {
-    console.log('whereIsIt', whereIsIt.length);
     if (whereIsIt.length > 0) {
       const filteredListingsByLocation = allListings.filter((listing: any) => {
         const city = listing.homeInfo.city.toLowerCase();
@@ -124,7 +115,6 @@ const Page = (props: Props) => {
         return city.includes(searchQuery);
       });
 
-      console.log('filteredListingsByLocation', filteredListingsByLocation);
       setListings(filteredListingsByLocation);
     } else {
       setListings(allListings);
@@ -179,12 +169,6 @@ const Page = (props: Props) => {
   useEffect(() => {
     filteredListings();
   }, [isIdle, whereIsIt]);
-
-  useEffect(() => {
-    console.log('isSearching', isSearching);
-  }, [isSearching]);
-
-  console.log('listings', listings);
 
   return (
     <main className="pt-6  flex   flex-col bg-[#F2E9E7] min-h-screen">

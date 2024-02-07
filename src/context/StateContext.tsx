@@ -157,9 +157,9 @@ const StateProvider: React.FC<StateProviderProps> = ({ children }) => {
     );
 
     // // Cleanup subscription on unmount
-    // return () => {
-    //   authListener?.subscription.unsubscribe();
-    // };
+    return () => {
+      authListener?.subscription.unsubscribe();
+    };
   }, []);
 
   useEffect(() => {

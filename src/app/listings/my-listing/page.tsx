@@ -13,6 +13,8 @@ import BecomeMemberDropzone from '@/components/BecomeMemberDropzone';
 import { useRouter } from 'next/navigation';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
+import { sanityClient } from '@/utils/sanityClient';
+import ImageUrlBuilder from '@sanity/image-url';
 
 type Props = {};
 
@@ -39,6 +41,12 @@ const Page = (props: Props) => {
   const [showTooltip, setShowTooltip] = useState(false);
   const [isLoaded, setIsLoaded] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [cities, setCities] = useState<any>([]);
+  const builder = ImageUrlBuilder(sanityClient);
+
+  function urlFor(source: any) {
+    return builder.image(source);
+  }
 
   const {
     register,
@@ -62,7 +70,6 @@ const Page = (props: Props) => {
         about_me: '',
         children: '',
         recommended: '',
-        whereTo: '',
         openToOtherCities: {
           cityVisit1: '',
           cityVisit2: '',
@@ -76,16 +83,13 @@ const Page = (props: Props) => {
         description: '',
         listingImages: [],
         property: '',
-        howManySleep: '',
+        howManySleep: 0,
         locatedIn: '',
         city: '',
         mainOrSecond: '',
-        bathrooms: '',
+        bathrooms: 0,
         area: '',
-        whereIsIt: '',
       },
-
-      city: '',
 
       amenities: {
         bike: false, // Default value for the "bike" radio button
@@ -139,6 +143,33 @@ const Page = (props: Props) => {
     };
   }, []);
 
+  useEffect(() => {
+    const fetchCities = async () => {
+      const query = `*[_type == "city"]`; // Adjust the query to fit your needs
+      const data = await sanityClient.fetch(query);
+      setCities(data);
+    };
+
+    fetchCities();
+
+    const fetchListings = async () => {
+      if (state.user && state.user.email) {
+        try {
+          const loggedInUserEmail = state.user.email;
+          const query = `*[_type == "listing" && userInfo.email == $loggedInUserEmail]`;
+          const data = await sanityClient.fetch(query, { loggedInUserEmail });
+
+          setListings(data);
+          console.log('sanity listing', data);
+          setIsLoaded(true);
+        } catch (error: any) {
+          console.error('Error fetching data:', error.message);
+        }
+      }
+    };
+    fetchListings();
+  }, [state.user]);
+
   const handleInputChange = (e: any) => {
     const value = e.target.value;
     setSearchTerm(value);
@@ -147,7 +178,7 @@ const Page = (props: Props) => {
     }
   };
 
-  const filteredCities = citiesData.filter((city) => {
+  const filteredCities = cities.filter((city: any) => {
     return city.city
       .toLowerCase()
       .includes(searchTerm.split(',')[0].toLowerCase());
@@ -161,8 +192,8 @@ const Page = (props: Props) => {
   };
 
   const handleSearch = () => {
-    const matchedCity = citiesData.find(
-      (city) =>
+    const matchedCity = cities.find(
+      (city: any) =>
         city.city.toLowerCase() ===
         listings[0].homeInfo.city.split(', ')[0].toLowerCase()
     );
@@ -172,25 +203,6 @@ const Page = (props: Props) => {
   };
 
   const { ref, ...rest } = register('homeInfo.description');
-
-  const fetchListings = async () => {
-    try {
-      const listings = await fetch('/api/getListings', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ userId: state.user.id }),
-      });
-      const listingsJson = await listings.json();
-
-      setListings(listingsJson);
-      console.log('listing', listingsJson);
-      setIsLoaded(true);
-    } catch (error: any) {
-      console.error('Error fetching data:', error.message);
-    }
-  };
 
   useEffect(() => {
     const textarea = aboutYourHomeRef.current;
@@ -216,14 +228,6 @@ const Page = (props: Props) => {
   }, [whereIsIt]);
 
   useEffect(() => {
-    if (state.user) {
-      fetchListings();
-      // setUserName(state?.user?.email);
-      // setValue('userInfo.userName', state?.user?.email);
-    }
-  }, [state?.user]);
-
-  useEffect(() => {
     if (listings.length > 0) {
       const dob = new Date(listings[0].userInfo.dob);
       const today = new Date();
@@ -235,7 +239,7 @@ const Page = (props: Props) => {
         setValue('userInfo.age', age);
       }
       setValue('userInfo.name', listings[0].userInfo.name);
-      setValue('userInfo.profileImage', listings[0].userInfo.profileImage);
+
       setValue('userInfo.about_me', listings[0].userInfo.about_me);
       setValue('userInfo.children', listings[0].userInfo.children);
       setValue('userInfo.recommended', listings[0].userInfo.recommended);
@@ -262,13 +266,17 @@ const Page = (props: Props) => {
       );
       setValue(
         'userInfo.openToOtherDestinations',
-        listings[0].userInfo.openToOtherDestinations
+        listings[0].userInfo.openToOtherDestinations.toString()
       );
       setValue('homeInfo.city', listings[0].homeInfo.city);
       if (listings[0].homeInfo.city) {
         handleSearch();
       }
-      setDownloadedImages(listings[0].homeInfo.listingImages);
+      setDownloadedImages(
+        listings[0].homeInfo.listingImages.map((image: any) => {
+          return urlFor(image).url();
+        })
+      );
       setValue('homeInfo.description', listings[0].homeInfo.description);
       setValue('homeInfo.property', listings[0].homeInfo.property);
       setValue('homeInfo.howManySleep', listings[0].homeInfo.howManySleep);
@@ -285,111 +293,86 @@ const Page = (props: Props) => {
     }
   }, [listings]);
 
+  console.log('profileimg', profileImage);
+
   const onSubmit = async (data: any) => {
     setIsSubmitting(true);
-    const uploadImageToCloudinary = async (imageFile: any, folder: string) => {
-      try {
-        const formData = new FormData();
-        formData.append('file', imageFile);
-        formData.append('upload_preset', 'zttdzjqk');
-        formData.append('folder', folder);
-
-        const response = await fetch(
-          'https://api.cloudinary.com/v1_1/dxfz8k7g8/image/upload',
-          {
-            method: 'POST',
-            body: formData,
-          }
-        );
-
-        if (!response.ok) {
-          throw new Error('Failed to upload image to Cloudinary');
-        }
-
-        const result = await response.json();
-        console.log('Uploaded image to Cloudinary:', result);
-
-        // Include transformation parameters to reduce image size
-
-        if (imageFile !== profileImage[0]) {
-          const transformedUrl = `${result.secure_url.replace(
-            '/upload/',
-            '/upload/c_scale,q_auto:good,h_600,w_auto/'
-          )}`;
-          console.log('Transformed URL:', transformedUrl);
-
-          return transformedUrl;
-        } else {
-          const transformedUrl = `${result.secure_url.replace(
-            '/upload/',
-            '/upload/w_auto,c_scale,q_auto:low/'
-          )}`;
-          console.log('Transformed URL:', transformedUrl);
-
-          return transformedUrl;
-        }
-      } catch (error) {
-        console.error('Error uploading image to Cloudinary:', error);
-        throw error;
-      }
-    };
-
-    if (profileImage && profileImage.length > 0) {
-      // Upload profile image to Cloudinary
-      const profileImageFile = profileImage[0];
-      const profileImageUrl = await uploadImageToCloudinary(
-        profileImageFile,
-        `${state.user.id}/profileImage`
-      );
-
-      // Use the Cloudinary URL directly
-      data.userInfo.profileImage = profileImageUrl;
-    }
-
-    if (imageFiles && imageFiles.length > 0) {
-      // Upload images to the listingImages bucket
-      const uploadPromises = imageFiles.map((imageFile) =>
-        uploadImageToCloudinary(imageFile, `${state.user.id}/listingImages`)
-      );
-      const results = await Promise.all(uploadPromises);
-
-      if (results.some((result) => result.length === 0)) {
-        console.error('Error uploading listing images:', results);
-        return toast.error('Error uploading listing images');
-      } else {
-        data.homeInfo.listingImages = results;
-        console.log('results', results);
-      }
-    }
 
     console.log('data', data);
 
-    const editListingData = await fetch('/api/listings/editListing', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        id: state.user.id,
-        data,
-      }),
-    });
-    const editListingDataJson = await editListingData.json();
-    console.log('editListingDataJson', editListingDataJson);
-
-    if (!editListingDataJson) {
-      console.error('Error updating user info:', editListingDataJson);
-    } else {
-      setState({
-        ...state,
-        loggedInUser: {
-          ...state.loggedInUser,
-          profileImage: data.userInfo.profileImage,
+    if (profileImage.length > 0) {
+      const profileImageAsset = await sanityClient.assets.upload(
+        'image',
+        profileImage[0]
+      );
+      data.userInfo.profileImage = {
+        _type: 'image',
+        _key: profileImageAsset._id,
+        asset: {
+          _type: 'reference',
+          _ref: profileImageAsset._id,
         },
-      });
-      console.log('User info updated successfully!', editListingDataJson);
-      toast.success('User info updated successfully!');
-      // router.refresh();
+      };
+    } else {
+      data.userInfo.profileImage = listings[0].userInfo.profileImage;
+    }
+
+    try {
+      const query = `*[_type == "listing" && userInfo.email == $email][0]._id`;
+      const params = { email: listings[0].userInfo.email };
+      const documentId = await sanityClient.fetch(query, params);
+
+      if (imageFiles.length > 0) {
+        const uploadPromises = imageFiles.map((file) => {
+          return sanityClient.assets.upload('image', file);
+        });
+
+        const imageAssets = await Promise.all(uploadPromises);
+
+        // Create references for the uploaded images
+        const imageReferences = imageAssets.map((asset) => ({
+          _type: 'image',
+          _key: asset._id,
+          asset: {
+            _type: 'reference',
+            _ref: asset._id,
+          },
+        }));
+        data.homeInfo.listingImages = imageReferences;
+      } else {
+        data.homeInfo.listingImages = listings[0].homeInfo.listingImages;
+      }
+
+      // Prepare the updated listing data with image references
+      const updatedListingData = {
+        ...data,
+        userInfo: {
+          ...data.userInfo,
+          age: parseInt(data.userInfo.age),
+          profileImage: data.userInfo.profileImage,
+          openToOtherDestinations:
+            data.userInfo.openToOtherDestinations === 'true',
+        },
+        homeInfo: {
+          ...data.homeInfo,
+          listingImages: data.homeInfo.listingImages,
+          howManySleep: parseInt(data.homeInfo.howManySleep),
+          bathrooms: parseInt(data.homeInfo.bathrooms),
+        },
+      };
+
+      // Update the listing in Sanity
+      await sanityClient
+        .patch(documentId) // Replace with your listing ID
+        .set(updatedListingData)
+        .commit();
+
+      // Handle success
+      toast.success('Listing updated successfully!');
+      // ... update local state and UI as needed
+    } catch (error) {
+      console.error('Error uploading images or updating listing:', error);
+      toast.error('Failed to update listing.');
     }
     setIsSubmitting(false);
   };
@@ -455,7 +438,10 @@ const Page = (props: Props) => {
                       src={
                         profileImage.length > 0
                           ? URL.createObjectURL(profileImage[0])
-                          : listings[0]?.userInfo.profileImage ||
+                          : (listings[0]?.userInfo.profileImage &&
+                              urlFor(
+                                listings[0]?.userInfo.profileImage
+                              ).url()) ||
                             '/placeholder.png'
                       }
                       alt="hero"
@@ -765,9 +751,9 @@ const Page = (props: Props) => {
 
               {filteredCities.length > 0 && citySearchOpen && (
                 <ul className="absolute bg-white w-full p-2 top-full left-0 max-h-[200px] overflow-y-scroll">
-                  {filteredCities.map((city) => (
+                  {filteredCities.map((city: any) => (
                     <li
-                      key={city.id}
+                      key={city._id}
                       onClick={() => handleCitySelect(city)}
                       style={{ cursor: 'pointer' }}>
                       {city.city}, {city.country}
@@ -823,11 +809,13 @@ const Page = (props: Props) => {
                   {...register('homeInfo.property')}
                   className="w-fit m-auto bg-transparent outline-none p-2 my-2 rounded-lg border-[#172544] border"
                   id="property">
-                  <option value="house">House</option>
-                  <option value="apartment">Apartment</option>
-                  <option value="condo">Condo</option>
-                  <option value="townhouse">Townhouse</option>
-                  <option value="villa">Villa</option>
+                  <option value="House">House</option>
+                  <option value="Apartment">Apartment</option>
+                  <option value="Villa">Villa</option>
+                  <option value="Farm">Farm</option>
+                  <option value="Boat">Boat</option>
+                  <option value="RV">RV</option>
+                  <option value="Other">Other</option>
                 </select>
               </div>
 
@@ -858,10 +846,10 @@ const Page = (props: Props) => {
                   className="w-fit m-auto bg-transparent outline-none p-2 my-2 rounded-lg border-[#172544] border"
                   {...register('homeInfo.locatedIn')}
                   id="locatedIn">
-                  <option value="condominium">a condominium</option>
-                  <option value="gated community">a gated community</option>
-                  <option value="neighborhood">a neighborhood</option>
-                  <option value="rural">a rural area</option>
+                  <option value="a condominium">a condominium</option>
+                  <option value="a gated community">a gated community</option>
+                  <option value="it rests freely">it rests freely</option>
+                  <option value="other">a rural area</option>
                 </select>
               </div>
             </div>

@@ -8,6 +8,8 @@ import { supabaseClient } from '../../../utils/supabaseClient';
 import cityData from '@/data/citiesDescriptions.json';
 import Link from 'next/link';
 import { useStateContext } from '@/context/StateContext';
+import { sanityClient } from '@/utils/sanityClient';
+import ImageUrlBuilder from '@sanity/image-url';
 
 type Props = {};
 
@@ -21,23 +23,45 @@ const Page = (props: Props) => {
   const [imageFiles, setImageFiles] = useState<any[]>([]);
   const [selectedImage, setSelectedImage] = useState(0); // Track selected image
 
+  const builder = ImageUrlBuilder(sanityClient);
+
+  function urlFor(source: any) {
+    return builder.image(source);
+  }
+
+  const fetchUserByEmail = async (email: string) => {
+    const { data, error } = await supabase
+      .from('appUsers')
+      .select('id')
+      .eq('email', email);
+
+    if (error) {
+      console.error('Error fetching user:', error);
+    } else {
+      return data[0]?.id;
+    }
+  };
+
+  const [contactedUser, setContactedUser] = useState(null);
+
+  useEffect(() => {
+    const fetchContactedUser = async () => {
+      const user = await fetchUserByEmail(listings[0]?.userInfo?.email);
+      setContactedUser(user);
+    };
+
+    fetchContactedUser();
+  }, [listings]);
+
   const fetchListings = async () => {
     try {
-      // Replace 'listings' with your actual table name
+      const query = `*[_type == "listing" && userInfo.email == $slug]{
+        ...,
+      "imageUrl": image.asset->url
+    }`;
+      const data = await sanityClient.fetch(query, { slug });
 
-      const listings = await fetch('/api/getListings', {
-        body: JSON.stringify({ userId: slug }),
-        cache: 'no-cache',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        method: 'POST',
-      });
-      const listingsJson = await listings.json();
-
-      console.log('data', listingsJson);
-
-      const userInfo = listingsJson[0]?.userInfo;
+      const userInfo = data[0]?.userInfo;
       const dob = new Date(userInfo?.dob);
       const today = new Date();
       const age =
@@ -49,7 +73,7 @@ const Page = (props: Props) => {
 
       console.log('dob', age);
 
-      const updatedData = listingsJson.map((item: any) => ({
+      const updatedData = data.map((item: any) => ({
         ...item,
         userInfo: {
           ...item.userInfo,
@@ -57,8 +81,23 @@ const Page = (props: Props) => {
         },
       }));
 
+      data[0]?.homeInfo?.listingImages &&
+        data[0]?.homeInfo?.listingImages.map((image: any) => {
+          const imageUrl = urlFor(image).url();
+          setImageFiles((prev: any) => [...prev, imageUrl]);
+        });
+
+      console.log('setting profile image');
+
+      if (data[0]?.userInfo?.profileImage) {
+        const imageUrl = urlFor(
+          data[0]?.userInfo?.profileImage.image.asset
+        ).url();
+        console.log('imageUrl', imageUrl);
+        data[0].userInfo.profileImage.src = imageUrl;
+      }
+
       setListings(updatedData);
-      setImageFiles(listingsJson[0]?.homeInfo?.listingImages);
     } catch (error: any) {
       console.error('Error fetching data:', error.message);
     }
@@ -102,7 +141,11 @@ const Page = (props: Props) => {
           {/* User Info - Left Section */}
           <div className="w-[25%]  flex flex-col">
             <h2 className="font-sans mx-auto mb-8 font-light text-2xl border border-[#172544] py-2 px-8 rounded-xl w-fit">
-              Listing <span className="font-bold"> No. {slug.slice(-5)}</span>
+              Listing{' '}
+              <span className="font-bold">
+                {' '}
+                No. {listings[0]?.listingNumber}
+              </span>
             </h2>
 
             <div className="mx-auto text-center">
@@ -110,8 +153,8 @@ const Page = (props: Props) => {
                 <Image
                   fill
                   src={
-                    listings[0]?.userInfo?.profileImage
-                      ? listings[0]?.userInfo?.profileImage
+                    listings[0]?.userInfo?.profileImage?.image
+                      ? listings[0]?.userInfo?.profileImage.src
                       : '/placeholder.png'
                   }
                   className="rounded-full object-cover"
@@ -128,17 +171,17 @@ const Page = (props: Props) => {
                   : ''}
               </p>
               <Link
-                href={`/messages?contactedUser=${listings[0]?.user_id}&userId=${state.user.id}`}
+                href={`/messages?contactedUser=${contactedUser}&userId=${state?.user?.id}`}
                 className="bg-[#E78426] w-fit hover:bg-[#e78326d8] text-[#fff] mx-auto  my-2 px-3 py-1 rounded-xl">
                 Contact me
               </Link>
             </div>
 
-            <div className="my-2">
+            <div className="my-2 break-all">
               <h4 className="font-serif text-xl font-thin border-b border-[#172544] mb-2">
                 About us
               </h4>
-              <p>{listings[0]?.userInfo?.about_me}</p>
+              <p className="break-all">{listings[0]?.userInfo?.about_me}</p>
             </div>
 
             {listings[0]?.userInfo?.citiesToGo && (
@@ -209,7 +252,7 @@ const Page = (props: Props) => {
                 <p>{checkCityDescription(listings[0]?.homeInfo?.city)}</p>
               </div>
               <div className=" h-[80%] mx-6 my-auto border border-[#172544]" />
-              <div className="w-1/2 mt-4">
+              <div className="w-1/2 mt-4 break-all">
                 <h4>About my home</h4>
                 <p>{listings[0]?.homeInfo?.description}</p>
               </div>
