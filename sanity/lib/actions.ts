@@ -2,7 +2,7 @@ import { sanityClient } from './client'
 // @ts-ignore
 import { supabaseClient } from '../../src/utils/supabaseClient.tsx';
 
-export function approveDocumentAction(props) {
+export function approveDocumentAction(props: any) {
   const isDev = process.env.NODE_ENV === 'development';
 
   return {
