@@ -140,8 +140,8 @@ const BecomeMemberDropzone: React.FC<Props> = (props) => {
           draggedItemClassName="dragged"
           className="grid grid-cols-3 select-none gap-4 ">
           {items.map(({ image, name, index }) => (
-            <div className=" flex   justify-center  m-auto">
-              <SortableItem key={name}>
+            <div key={name} className=" flex   justify-center  m-auto">
+              <SortableItem>
                 <div className="drag-item relative w-full pointer-events-none">
                   <img className="m-auto" alt={name} src={image} />
                   <button
