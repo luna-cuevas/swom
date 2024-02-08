@@ -160,7 +160,7 @@ const CarouselPage = (props: Props) => {
               className={`rounded-xl z-0 ${
                 props.contain ? 'object-contain' : 'object-cover'
               } h-full`}
-              src={image.src ?? '/placeholder.png'}
+              src={image.src || '/placeholder.png'}
               alt="image"
               fill
               priority

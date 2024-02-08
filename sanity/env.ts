@@ -17,7 +17,7 @@ export const authToken = assertValue(
 )
 
 
-export const useCdn = true
+export const useCdn = false
 
 function assertValue<T>(v: T | undefined, errorMessage: string): T {
   if (v === undefined) {

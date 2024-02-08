@@ -10,44 +10,47 @@ export function approveDocumentAction(props: any) {
 
     onHandle: async () => {
       const { id, published } = props
+      console.log('Approving document:', id, published);
 
-      if (!published) {
+      if (published === undefined || !published) {
 
         window.alert('Must publish the document before approving it.');
         return;
-      }
-      const supabase = supabaseClient()
+      } else {
 
-      try {
-        const query = `*[_type == "needsApproval" && _id == $id][0]`;
-        const documentToApprove = await sanityClient.fetch(query, { id });
+        const supabase = supabaseClient()
 
-        if (!documentToApprove) {
-          console.error('Document not found');
-          return;
+        try {
+          const query = `*[_type == "needsApproval" && _id == $id][0]`;
+          const documentToApprove = await sanityClient.fetch(query, { id });
+
+          if (!documentToApprove) {
+            console.error('Document not found');
+            return;
+          }
+
+          const newDocument = {
+            ...documentToApprove,
+            _id: undefined,
+            _type: 'listing'
+          };
+
+          const createdListing = await sanityClient.create(newDocument);
+          const { data: userCreationData, error: userCreationError } =
+            await supabase.auth.resetPasswordForEmail(
+              documentToApprove.userInfo.email,
+              {
+                redirectTo: isDev
+                  ? 'http://localhost:3000/sign-up'
+                  : 'https://swom.travel/sign-up',
+              });
+
+          await sanityClient.delete(documentToApprove._id);
+
+          console.log('Listing approved and moved to listings:', createdListing);
+        } catch (error) {
+          console.error('Error in approving listing:', error);
         }
-
-        const newDocument = {
-          ...documentToApprove,
-          _id: undefined,
-          _type: 'listing'
-        };
-
-        const createdListing = await sanityClient.create(newDocument);
-        const { data: userCreationData, error: userCreationError } =
-          await supabase.auth.resetPasswordForEmail(
-            documentToApprove.userInfo.email,
-            {
-              redirectTo: isDev
-                ? 'http://localhost:3000/sign-up'
-                : 'https://swom.travel/sign-up',
-            });
-
-        await sanityClient.delete(documentToApprove._id);
-
-        console.log('Listing approved and moved to listings:', createdListing);
-      } catch (error) {
-        console.error('Error in approving listing:', error);
       }
 
     }

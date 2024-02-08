@@ -5,6 +5,7 @@ import { ToastContainer, toast } from 'react-toastify';
 import SortableList, { SortableItem } from 'react-easy-sort';
 import { arrayMoveImmutable } from 'array-move';
 import 'react-toastify/dist/ReactToastify.css';
+import Image from 'next/image';
 
 type Props = {
   setImageFiles: React.Dispatch<React.SetStateAction<File[]>>;
@@ -27,6 +28,12 @@ const BecomeMemberDropzone: React.FC<Props> = (props) => {
       toast.error("File rejected. Please check the file's size and type.");
     },
     onDrop: (acceptedFiles) => {
+      const totalFilesAfterAdding =
+        orderedImageFiles.length + acceptedFiles.length;
+      if (totalFilesAfterAdding > 9) {
+        toast.error('You can only upload up to 9 images.');
+        return;
+      }
       const existingFileNames = orderedImageFiles.map((file) => file.name);
       const newImageFiles = acceptedFiles.filter(
         (file) => !existingFileNames.includes(file.name)
@@ -134,16 +141,32 @@ const BecomeMemberDropzone: React.FC<Props> = (props) => {
           Drag and drop image(s) here, or click to select files
         </p>
       </div>
+
+      <div className="border-y-2 border-gray-400 py-2">
+        <p className="text-center text-base">
+          You can upload up to 9 images. Drag to rearrange the order. The first
+          image will be the cover image.
+        </p>
+      </div>
       <div className=" max-h-[50vh]  overflow-y-auto border-[#939393] pt-4">
         <SortableList
           onSortEnd={onSortEnd}
           draggedItemClassName="dragged"
           className="grid grid-cols-3 select-none gap-4 ">
           {items.map(({ image, name, index }) => (
-            <div key={name} className=" flex   justify-center  m-auto">
+            <div
+              key={name}
+              className={` flex ${
+                index == items[0].index && 'border-4 border-blue-500'
+              }   justify-center  m-auto`}>
               <SortableItem>
-                <div className="drag-item relative w-full pointer-events-none">
-                  <img className="m-auto" alt={name} src={image} />
+                <div className="drag-item relative w-[200px] h-[200px] pointer-events-none">
+                  <Image
+                    className="m-auto object-cover"
+                    fill
+                    alt={name}
+                    src={image}
+                  />
                   <button
                     type="button"
                     onClick={() => handleRemoveImage(index)}

@@ -96,6 +96,10 @@ const ListingCard = (props: Props) => {
   return (
     <div className="rounded-xl p-[16px] flex-col md:m-2 bg-white relative flex h-auto my-2 m-auto w-[90%] md:w-[45%]">
       <div className="h-[25vh] relative">
+        <div className="bg-white z-50 px-2 text-sm absolute top-0 right-2 rounded-b-lg">
+          Listing No.{' '}
+          {props.listingInfo.listingNumber || props.listingInfo._id.slice(0, 5)}
+        </div>
         <Link
           href={
             props.listingInfo?.userInfo.email == state?.loggedInUser?.email

@@ -8,7 +8,7 @@ import { structureTool } from 'sanity/structure'
 import { approveDocumentAction } from './sanity/lib/actions'
 
 // Go to https://www.sanity.io/docs/api-versioning to learn how API versioning works
-import { apiVersion, dataset, projectId, authToken } from './sanity/env';
+import { apiVersion, dataset, projectId, authToken, useCdn } from './sanity/env';
 import { schema } from './sanity/schema'
 
 export default defineConfig({
@@ -17,6 +17,7 @@ export default defineConfig({
   dataset,
   authToken,
   schema,
+  useCdn: false,
   document: {
     actions: (prev, context) => {
       return context.schemaType === 'needsApproval' ? [...prev, approveDocumentAction] : prev;

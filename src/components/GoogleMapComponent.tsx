@@ -12,6 +12,8 @@ import {
 } from '@react-google-maps/api';
 import Image from 'next/image';
 import Link from 'next/link';
+import ImageUrlBuilder from '@sanity/image-url';
+import { sanityClient } from '../utils/sanityClient';
 
 type Props = {
   setWhereIsIt?: React.Dispatch<React.SetStateAction<string>>;
@@ -25,6 +27,9 @@ type Props = {
   hideMap?: boolean;
   listings?: Array<{
     user_id: string;
+    userInfo: {
+      email: string;
+    };
     homeInfo: {
       address: string;
       description: string;
@@ -52,7 +57,11 @@ export default function GoogleMapComponent(props: Props) {
     props.exactAddress || props.city || ''
   );
   const [debouncedValue, setDebouncedValue] = useState(inputValue);
+  const builder = ImageUrlBuilder(sanityClient);
 
+  function urlFor(source: any) {
+    return builder.image(source);
+  }
   const mapContainerStyle: React.CSSProperties = {
     width: '100%',
     height: '100%',
@@ -89,6 +98,9 @@ export default function GoogleMapComponent(props: Props) {
                       title: listing.homeInfo.title,
                       listingImages: listing.homeInfo.listingImages,
                       locatedIn: listing.homeInfo.locatedIn,
+                    },
+                    userInfo: {
+                      email: listing.userInfo.email,
                     },
                   },
                 ]);
@@ -307,7 +319,7 @@ export default function GoogleMapComponent(props: Props) {
               <div className="flex text-center w-full h-full px-4 flex-col">
                 <div className="w-full h-[50px] relative">
                   <Image
-                    src={activeMarker.homeInfo.listingImages[0]}
+                    src={urlFor(activeMarker.homeInfo.listingImages[0]).url()}
                     alt="listing image"
                     fill
                     objectFit="cover"
@@ -317,7 +329,7 @@ export default function GoogleMapComponent(props: Props) {
                 <p className="text-lg">{activeMarker.homeInfo.title}</p>
                 <p className="text-sm">{activeMarker.homeInfo.description}</p>
                 <button className="px-2 py-1 rounded-xl font-bold w-fit mx-auto text-white bg-[#F28A38] mt-2">
-                  <Link href={`/listings/${activeMarker.homeInfo.id}`}>
+                  <Link href={`/listings/${activeMarker.userInfo.email}`}>
                     View Listing
                   </Link>
                 </button>

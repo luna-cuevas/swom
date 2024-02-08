@@ -7,6 +7,8 @@ import React, { ChangeEvent, use, useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
+import { sanityClient } from '@/utils/sanityClient';
+import ImageUrlBuilder from '@sanity/image-url';
 
 type Props = {};
 
@@ -19,6 +21,13 @@ const Page = (props: Props) => {
   const [imageUpload, setImageUpload] = useState(false);
   const supabase = supabaseClient();
   const [isLoading, setIsLoading] = useState(false);
+  const [listingData, setListingData] = useState<any>();
+
+  const builder = ImageUrlBuilder(sanityClient);
+
+  function urlFor(source: any) {
+    return builder.image(source);
+  }
 
   const {
     register,
@@ -62,45 +71,100 @@ const Page = (props: Props) => {
     }
   };
 
-  const uploadImageToCloudinary = async (imageFile: any, folder: string) => {
-    try {
-      const formData = new FormData();
-      formData.append('file', imageFile);
-      formData.append('upload_preset', 'zttdzjqk');
-      formData.append('folder', folder);
+  // const uploadImageToCloudinary = async (imageFile: any, folder: string) => {
+  //   try {
+  //     const formData = new FormData();
+  //     formData.append('file', imageFile);
+  //     formData.append('upload_preset', 'zttdzjqk');
+  //     formData.append('folder', folder);
 
-      const response = await fetch(
-        'https://api.cloudinary.com/v1_1/dxfz8k7g8/image/upload',
-        {
-          method: 'POST',
-          body: formData,
-        }
-      );
+  //     const response = await fetch(
+  //       'https://api.cloudinary.com/v1_1/dxfz8k7g8/image/upload',
+  //       {
+  //         method: 'POST',
+  //         body: formData,
+  //       }
+  //     );
 
-      if (!response.ok) {
-        throw new Error('Failed to upload image to Cloudinary');
-      }
+  //     if (!response.ok) {
+  //       throw new Error('Failed to upload image to Cloudinary');
+  //     }
 
-      const result = await response.json();
-      console.log('Uploaded image to Cloudinary:', result);
+  //     const result = await response.json();
+  //     console.log('Uploaded image to Cloudinary:', result);
 
-      // Include transformation parameters to reduce image size
-      const transformedUrl = `${result.secure_url.replace(
-        '/upload/',
-        '/upload/w_auto,c_scale,q_auto:low/'
-      )}`;
+  //     // Include transformation parameters to reduce image size
+  //     const transformedUrl = `${result.secure_url.replace(
+  //       '/upload/',
+  //       '/upload/w_auto,c_scale,q_auto:low/'
+  //     )}`;
 
-      console.log('Transformed URL:', transformedUrl);
+  //     console.log('Transformed URL:', transformedUrl);
 
-      return transformedUrl;
-    } catch (error) {
-      console.error('Error uploading image to Cloudinary:', error);
-      throw error;
-    }
-  };
+  //     return transformedUrl;
+  //   } catch (error) {
+  //     console.error('Error uploading image to Cloudinary:', error);
+  //     throw error;
+  //   }
+  // };
 
   const onSubmit = async (data: any) => {
     setIsLoading(true);
+    // const passwordResults = comparePasswords();
+    // if (passwordResults && newPassword !== '') {
+    //   setIsPasswordChanged(false);
+    //   const { data, error } = await supabase.auth.updateUser({
+    //     password: newPassword,
+    //   });
+    //   if (error) {
+    //     toast.error('Password not updated');
+    //   } else {
+    //     toast.success('Password updated');
+    //   }
+    // }
+
+    // if (profileImage && profileImage.length > 0) {
+    //   // Upload profile image to Cloudinary
+    //   const profileImageFile = profileImage[0];
+    //   const profileImageUrl = await uploadImageToCloudinary(
+    //     profileImageFile,
+    //     `${state.user?.id}/profileImage`
+    //   );
+    //   data.profileImage = profileImageUrl;
+    // }
+
+    // data.name = `${data.firstName} ${data.lastName}`;
+
+    // const editListingData = await fetch('/api/profile/editProfile', {
+    //   method: 'POST',
+    //   headers: {
+    //     'Content-Type': 'application/json',
+    //   },
+    //   body: JSON.stringify({
+    //     id: state.user.id,
+    //     data,
+    //   }),
+    // });
+    // const editListingJson = await editListingData?.json();
+
+    // if (!editListingJson) {
+    //   toast.error('Details not updated');
+    //   console.log('error', editListingJson);
+    // } else {
+    //   setIsLoading(false);
+    //   console.log('editListingJson', editListingJson);
+    //   setState({
+    //     ...state,
+    //     loggedInUser: {
+    //       ...state.loggedInUser,
+    //       name: data.name,
+    //       email: data.emailAddress,
+    //       profileImage: data.profileImage && data.profileImage,
+    //     },
+    //   });
+    //   toast.success('Details updated');
+    // }
+
     const passwordResults = comparePasswords();
     if (passwordResults && newPassword !== '') {
       setIsPasswordChanged(false);
@@ -108,63 +172,99 @@ const Page = (props: Props) => {
         password: newPassword,
       });
       if (error) {
-        toast.error('Password not updated');
+        toast.error(error.message);
+        setIsLoading(false);
+        return;
       } else {
         toast.success('Password updated');
       }
     }
 
-    if (profileImage && profileImage.length > 0) {
-      // Upload profile image to Cloudinary
-      const profileImageFile = profileImage[0];
-      const profileImageUrl = await uploadImageToCloudinary(
-        profileImageFile,
-        `${state.user?.id}/profileImage`
-      );
-      data.profileImage = profileImageUrl;
-    }
+    try {
+      const query = `*[_type == "listing" && userInfo.email == $email][0]._id`;
+      const params = { email: state.loggedInUser.email };
+      const documentId = await sanityClient.fetch(query, params);
+      console.log('documentId', documentId);
 
-    data.name = `${data.firstName} ${data.lastName}`;
+      if (profileImage.length > 0) {
+        const profileImageAsset = await sanityClient.assets.upload(
+          'image',
+          profileImage[0]
+        );
+        console.log('profileImageAsset', profileImageAsset);
+        data.profileImage = {
+          _type: 'image',
+          _key: profileImageAsset._id,
+          asset: {
+            _type: 'reference',
+            _ref: profileImageAsset._id,
+          },
+        };
+      } else {
+        data.profileImage = listingData.userInfo.profileImage;
+      }
 
-    const editListingData = await fetch('/api/profile/editProfile', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        id: state.user.id,
-        data,
-      }),
-    });
-    const editListingJson = await editListingData?.json();
+      console.log('data.profileImage', data.profileImage);
 
-    if (!editListingJson) {
-      toast.error('Details not updated');
-      console.log('error', editListingJson);
-    } else {
-      setIsLoading(false);
-      console.log('editListingJson', editListingJson);
-      setState({
-        ...state,
-        loggedInUser: {
-          ...state.loggedInUser,
-          name: data.name,
-          email: data.emailAddress,
-          profileImage: data.profileImage && data.profileImage,
+      // Prepare the updated listing data with image references
+      const updatedListingData = {
+        ...listingData,
+        userInfo: {
+          ...listingData.userInfo,
+          profileImage: data.profileImage,
         },
-      });
-      toast.success('Details updated');
+      };
+
+      console.log('updatedListingData', updatedListingData);
+
+      // Update the listing in Sanity
+      await sanityClient
+        .patch(documentId) // Replace with your listing ID
+        .set(updatedListingData)
+        .commit();
+
+      // Handle success
+      toast.success('Listing updated successfully!');
+      setIsLoading(false);
+    } catch (error) {
+      console.error('Error uploading images or updating listing:', error);
+      toast.error('Failed to update listing.');
+      setIsLoading(false);
     }
   };
 
+  const fetchListingData = async () => {
+    const query = `*[_type == "listing" && userInfo.email == $email][0]`;
+    const params = { email: state.loggedInUser.email };
+    const listingData = await sanityClient.fetch(query, params);
+    console.log('listingData', listingData);
+    setListingData(listingData);
+  };
+
+  useEffect(() => {
+    if (listingData) {
+      setValue('firstName', listingData.userInfo.name.split(' ')[0]);
+      setValue('lastName', listingData.userInfo.name.split(' ')[1]);
+      setValue('emailAddress', listingData.userInfo.email);
+      setProfileImage(listingData.userInfo.profileImage || []);
+      console.log(
+        'listingData.userInfo.profileImage',
+        listingData.userInfo.profileImage
+      );
+    }
+  }, [listingData]);
+
   useEffect(() => {
     if (state.loggedInUser) {
-      setValue('firstName', state.loggedInUser?.name.split(' ')[0]);
-      setValue('lastName', state.loggedInUser?.name.split(' ')[1]);
-      setValue('emailAddress', state.loggedInUser?.email);
-      // setValue('userName', state.loggedInUser?.email.split('@')[0]);
+      fetchListingData();
     }
   }, [state.loggedInUser]);
+
+  useEffect(() => {
+    if (profileImage.length > 0) {
+      setImageUpload(false);
+    }
+  }, [profileImage]);
 
   return (
     <main className="bg-[#F7F1EE] min-h-[80vh] relative flex flex-col">
@@ -177,32 +277,19 @@ const Page = (props: Props) => {
           className="flex md:flex-row flex-col px-4 relative  z-20 justify-evenly">
           <div className="flex justify-center  flex-col md:w-1/3">
             {imageUpload ? (
-              profileImage.length == 0 ? (
-                <ProfilePicDropZone setProfileImage={setProfileImage} />
-              ) : (
-                <div className="relative w-[100px] mx-auto mb-4 h-[100px]">
-                  <Image
-                    src={
-                      profileImage.length > 0
-                        ? URL.createObjectURL(profileImage[0])
-                        : state?.loggedInUser?.profileImage ||
-                          '/placeholder.png'
-                    }
-                    alt="hero"
-                    fill
-                    objectPosition="center"
-                    // objectFit="cover"
-                    className="object-cover rounded-full"
-                  />
-                </div>
-              )
+              <ProfilePicDropZone
+                setProfileImage={setProfileImage}
+                setImageUpload={setImageUpload}
+              />
             ) : (
               <div className="relative w-[100px] mx-auto mb-4 h-[100px]">
                 <Image
                   src={
                     profileImage.length > 0
                       ? URL.createObjectURL(profileImage[0])
-                      : state?.loggedInUser?.profileImage || '/placeholder.png'
+                      : (listingData?.userInfo?.profileImage &&
+                          urlFor(listingData.userInfo.profileImage).url()) ||
+                        '/placeholder.png'
                   }
                   alt="hero"
                   fill
@@ -219,9 +306,6 @@ const Page = (props: Props) => {
             <button
               type="button"
               onClick={() => {
-                if (imageUpload) {
-                  // upload image
-                }
                 setImageUpload(!imageUpload);
               }}
               className="bg-[#172544] py-2 px-4 mx-auto w-fit text-white rounded-3xl">
@@ -275,52 +359,46 @@ const Page = (props: Props) => {
               />
             </div>
 
-            <div className="flex flex-col md:flex-row gap-6">
-              {/* <div className="">
-                <label
-                  className="tracking-widest font-bold uppercase text-sm"
-                  htmlFor="">
-                  Username
-                </label>
-                <input
-                  {...register('userName')}
-                  className="w-full focus-visible:outline-none bg-transparent border-b-[1px] border-[#172544]"
-                  type="text"
-                />
-              </div> */}
-              <div className="">
-                <label
-                  className="tracking-widest font-bold uppercase text-sm"
-                  htmlFor="">
-                  Reset Password
-                </label>
-                <input
-                  onChange={(e) => {
-                    handlePasswordChange(e.target.value);
-                  }}
-                  value={newPassword}
-                  className="w-full focus-visible:outline-none bg-transparent border-b-[1px] border-[#172544]"
-                  type="password"
-                />
+            <div className="flex gap-6 md:flex-row flex-col">
+              <div className="md:w-1/2 ">
+                <div className="">
+                  <label
+                    className="tracking-widest font-bold uppercase text-sm"
+                    htmlFor="">
+                    Reset Password
+                  </label>
+                  <input
+                    // no auto fill
+                    autoComplete="new-password"
+                    onChange={(e) => {
+                      handlePasswordChange(e.target.value);
+                    }}
+                    value={newPassword}
+                    className="w-full focus-visible:outline-none bg-transparent border-b-[1px] border-[#172544]"
+                    type="password"
+                  />
+                </div>
               </div>
+              {isPasswordChanged && (
+                <div className="md:w-1/2">
+                  <label
+                    className="tracking-widest font-bold uppercase text-sm"
+                    htmlFor="">
+                    Confirm Password
+                  </label>
+                  <input
+                    autoComplete="w-password"
+                    onChange={(e) => {
+                      handleConfirmPasswordChange(e.target.value);
+                    }}
+                    value={confirmPassword}
+                    className="w-full focus-visible:outline-none bg-transparent border-b-[1px] border-[#172544]"
+                    type="password"
+                  />
+                </div>
+              )}
             </div>
-            {isPasswordChanged && (
-              <div className="md:w-1/2 md:ml-auto md:pl-4">
-                <label
-                  className="tracking-widest font-bold uppercase text-sm"
-                  htmlFor="">
-                  Confirm Password
-                </label>
-                <input
-                  onChange={(e) => {
-                    handleConfirmPasswordChange(e.target.value);
-                  }}
-                  value={confirmPassword}
-                  className="w-full focus-visible:outline-none bg-transparent border-b-[1px] border-[#172544]"
-                  type="password"
-                />
-              </div>
-            )}
+
             {isLoading ? (
               <div
                 role="status"
@@ -364,7 +442,7 @@ const Page = (props: Props) => {
         pauseOnHover
         theme="light"
       />
-      <div className="  h-[45vh]  w-1/4 z-10 right-0 bottom-0 absolute">
+      <div className=" md:block hidden  h-[45vh]  w-1/4 z-10 right-0 bottom-0 absolute">
         <Image
           src="/profile/profile-bg.png"
           alt="hero"

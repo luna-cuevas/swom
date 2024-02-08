@@ -60,16 +60,6 @@ a {
   align-content: center;
 }
 
-* {
-  box-sizing: border-box;
-  color: #172544;
-}
-
-#studio *,
-#studio button span svg {
-  color: white !important;
-}
-
 .circle-button {
   position: relative;
   width: 100%;

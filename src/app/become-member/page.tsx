@@ -106,16 +106,15 @@ const Page = (props: Props) => {
       return;
     }
 
-    const { data: userData, error } = await supabase.auth.signUp({
+    const { data: userData, error } = await supabase.auth.admin.createUser({
       email: data.userInfo.email,
+      email_confirm: true,
       password: temporaryPassword,
-      options: {
-        data: {
-          name: data.userInfo.name,
-          dob: data.userInfo.dob,
-          phone: data.userInfo.phone,
-          role: 'member',
-        },
+      user_metadata: {
+        name: data.userInfo.name,
+        dob: data.userInfo.dob,
+        phone: data.userInfo.phone,
+        role: 'member',
       },
     });
 
@@ -519,10 +518,10 @@ const Page = (props: Props) => {
                       className="bg-transparent checked:bg-[#7F8119] appearance-none border border-[#172544] rounded-xl p-[6px] my-auto"
                       type="radio"
                       id="gated"
-                      value="gated"
+                      value="a gated community"
                       {...register('homeInfo.locatedIn')}
                     />
-                    <label htmlFor="a gated community">a gated community</label>
+                    <label htmlFor="gated">a gated community</label>
                   </div>
                   <div className="flex gap-2">
                     <input
