@@ -36,14 +36,15 @@ export function approveDocumentAction(props: any) {
           };
 
           const createdListing = await sanityClient.create(newDocument);
-          const { data: userCreationData, error: userCreationError } =
-            await supabase.auth.resetPasswordForEmail(
-              documentToApprove.userInfo.email,
-              {
-                redirectTo: isDev
-                  ? 'http://localhost:3000/sign-up'
-                  : 'https://swom.travel/sign-up',
-              });
+
+          // const { data: userCreationData, error: userCreationError } =
+          //   await supabase.auth.resetPasswordForEmail(
+          //     documentToApprove.userInfo.email,
+          //     {
+          //       redirectTo: isDev
+          //         ? 'http://localhost:3000/sign-up'
+          //         : 'https://swom.travel/sign-up',
+          //     });
 
           await sanityClient.delete(documentToApprove._id);
 
