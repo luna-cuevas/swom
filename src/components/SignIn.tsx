@@ -2,12 +2,13 @@
 import React, { useEffect } from 'react';
 import { Auth } from '@supabase/auth-ui-react';
 import { supabaseClient } from '@/utils/supabaseClient';
-import { useStateContext } from '@/context/StateContext';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import Stripe from 'stripe';
+import { useAtom } from 'jotai';
+import { globalStateAtom } from '@/context/atoms';
 
 type Props = {
   setSignInActive: React.Dispatch<React.SetStateAction<boolean>>;
@@ -15,13 +16,14 @@ type Props = {
 
 const SignIn = (props: Props) => {
   const supabase = supabaseClient();
-  const { state, setState } = useStateContext();
   const stripeActivation = new Stripe(
     process.env.NEXT_PUBLIC_STRIPE_SECRET_KEY!,
     {
       apiVersion: '2023-08-16',
     }
   );
+
+  const [state, setState] = useAtom(globalStateAtom);
 
   async function isUserSubscribed(
     email: string,

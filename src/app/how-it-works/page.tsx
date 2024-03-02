@@ -63,10 +63,10 @@ const Page: React.FC<Props> = (props) => {
             />
           </div>
           <div className=" md:w-9/12 mt-20 flex flex-col">
-            <h3 className="uppercase text-[#7F8119] leading-[50px] mb-20 tracking-[0.4rem] w-1/2 text-right border-b-2 border-[#7F8119] text-3xl ml-auto">
+            <h1 className="uppercase text-[#7F8119] leading-[50px] mb-20 tracking-[0.2rem] w-1/2 text-right border-b-2 border-[#7F8119] text-3xl ml-auto">
               Follow these <br />{' '}
               <strong className="text-[#7F8119]">simple steps</strong>{' '}
-            </h3>
+            </h1>
             <div className="grid pl-[10%]  z-50 h-fit grid-cols-2">
               <div className="col-start-2">
                 <h1 className="text-7xl font-bold font-sans">1</h1>
@@ -127,7 +127,7 @@ const Page: React.FC<Props> = (props) => {
             </div>
           </div>
         </div>
-        <button className="text-xl z-50 font-bold tracking-wider mt-16 hover:bg-[#7f8119d3] text-white rounded-3xl uppercase px-4 py-2 bg-[#7F8119] w-fit mx-auto">
+        <button className="text-lg z-50 font-bold tracking-wider mt-16 hover:bg-[#7f8119d3] text-white rounded-3xl uppercase px-4 py-2 bg-[#7F8119] w-fit mx-auto">
           <Link href="/become-member">Apply Now</Link>
         </button>
       </div>
@@ -143,10 +143,10 @@ const Page: React.FC<Props> = (props) => {
         </div>
 
         <div className="flex flex-col m-auto w-3/4">
-          <h2 className="tracking-[0.4rem] opacity-90 mb-2 text-3xl text-white uppercase font-sans">
+          <h1 className="tracking-[0.2rem] font-bold opacity-90 mb-2 text-3xl text-white uppercase">
             We love to help
-          </h2>
-          <p className="flex-wrap gap-1 flex opacity-80  text-white text-lg font-sans">
+          </h1>
+          <p className="flex-wrap gap-1 flex opacity-80  text-white text-lg ">
             Our team is ready to help in any situation. Whether it is to apply
             or create a profile, rest assured that we will be there every step
             of the way. Contact us{' '}

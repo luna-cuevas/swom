@@ -1,15 +1,37 @@
-// 'use client';
 import Carousel from '@/components/Carousel';
-import { supabaseClient } from '@/utils/supabaseClient';
+import { globalStateAtom } from '@/context/atoms';
+import { useAtom } from 'jotai';
 import Image from 'next/image';
 import Link from 'next/link';
 import React from 'react';
+import { sanityClient } from '../../../sanity/lib/client';
+import { urlForImage } from '../../../sanity/lib/image';
 
 type Props = {};
 
-const Page = (props: Props) => {
-  const supabase = supabaseClient();
+const fetchListings = async () => {
+  try {
+    const query = `*[_type == "highlightedListings"]{
+      listings[]->{
+        _id,
+        userInfo {
+          email
+        },
+        homeInfo {
+          "firstImage": listingImages[0]
+        }
+      }
+    }`;
+    const data = await sanityClient.fetch(query);
 
+    return data[0].listings;
+  } catch (error: any) {
+    console.error('Error fetching data:', error.message);
+    return [];
+  }
+};
+
+const Page = async (props: Props) => {
   // const updatePassword = async () => {
   //   const { data: user, error } = await supabase.auth.admin.updateUserById(
   //     'f9afa7b8-8005-454e-a74e-8e71670e2ce3',
@@ -20,6 +42,13 @@ const Page = (props: Props) => {
   // };
   // updatePassword();
 
+  const highlightedListings = await fetchListings();
+
+  highlightedListings.map((listing: any) => {
+    listing.homeInfo.firstImage = urlForImage(listing.homeInfo.firstImage);
+    console.log('listing', listing);
+  });
+
   return (
     <main
       style={{
@@ -28,22 +57,17 @@ const Page = (props: Props) => {
       <div className="">
         <div className="h-[80vh] bg-black relative">
           <div className="absolute w-fit z-50 h-fit top-0 bottom-0 left-0 right-0 m-auto ">
-            <h2 className="text-[#ffffff] uppercase text-3xl tracking-widest text-center">
+            <h1 className="text-[#ffffff] uppercase text-3xl tracking-widest text-center">
               Make Memories <br /> All over the <br /> world
-            </h2>
+            </h1>
           </div>
           <Carousel
-            images={[
-              { src: '/homepage/hero-image-1.png', listingNum: '5201' },
-              { src: '/homepage/hero-image-2.png', listingNum: '103' },
-              { src: '/homepage/hero-image-3.png', listingNum: '5702' },
-              { src: '/homepage/hero-image-4.png', listingNum: '102' },
-              { src: '/homepage/hero-image-5.png', listingNum: '3401' },
-              { src: '/homepage/hero-image-6.png', listingNum: '5704' },
-              { src: '/homepage/hero-image-7.png', listingNum: '35801' },
-              { src: '/homepage/hero-image-8.png', listingNum: '6101' },
-              { src: '/homepage/hero-image-9.png', listingNum: '5202' },
-            ]}
+            images={highlightedListings.map((listing: any) => {
+              return {
+                src: listing.homeInfo.firstImage,
+                listingNum: listing._id,
+              };
+            })}
             picturesPerSlide={1}
             overlay={true}
           />
@@ -65,8 +89,8 @@ const Page = (props: Props) => {
 
       <section className="md:h-[50vh] bg-[#F4ECE8] h-fit md:flex-row flex-col  flex px-10 align-middle md:gap-16  md:justify-evenly">
         <div className="md:w-[40%] h-fit md:my-auto my-4">
-          <h2 className="text-4xl tracking-wider uppercase">Swom</h2>
-          <p className="font-thin">(Verb): to swap you home.</p>
+          <h1 className="text-4xl tracking-wider uppercase">Swom</h1>
+          <h2 className="font-thin">(Verb): to swap you home.</h2>
           <p className="mt-6 text-xl">
             Get ready to SWOM your way to a whole new address and a suitcase
             full of memories.
@@ -154,7 +178,7 @@ const Page = (props: Props) => {
         className="md:h-[30vh] py-6  m-auto justify-center  flex flex-col">
         <div className="w-2/3 m-auto">
           <div className="w-fit ">
-            <h2 className="text-4xl bold  shadow-2xl mb-4">Explore</h2>
+            <h1 className="text-4xl font-bold  mb-4">Explore</h1>
           </div>
           <form className="md:grid w-full flex flex-col justify-center md:grid-cols-6 gap-4">
             <input
@@ -172,9 +196,11 @@ const Page = (props: Props) => {
               <option value="2">2 Guest</option>
               <option value="3">3 Guest</option>
             </select>
-            <button className="bg-[#E88527] rounded-3xl mx-auto md:mx-0 text-white h-fit w-fit py-2 px-8 my-auto">
+            <Link
+              href={'/become-member'}
+              className="bg-[#E88527] rounded-3xl mx-auto md:mx-0 text-white h-fit w-fit py-2 px-8 my-auto">
               Search
-            </button>
+            </Link>
           </form>
         </div>
       </section>
@@ -183,14 +209,14 @@ const Page = (props: Props) => {
         <div className="md:grid md:grid-cols-3 gap-4  h-[70%]">
           <div className="sm:grid flex flex-col grid-rows-4 gap-4">
             <div className="row-span-1 text-right">
-              <h2 className="text-2xl word-wrap  h-fit">
+              <h1 className="text-2xl word-wrap  h-fit">
                 THE JOY OF <br /> BEGINNING
-              </h2>
+              </h1>
             </div>
             <div className="row-span-1">
-              <p className="text-sm font-sans tracking-widest">
+              <h2 className="text-lg font-sans tracking-widest">
                 HOME, SWEET HOME
-              </p>
+              </h2>
               <h1 className="text-4xl  font-bold font-sans my-6">
                 WE ARE A REVOLUTION IN THE WAY OF TRAVELING
               </h1>
@@ -227,9 +253,9 @@ const Page = (props: Props) => {
 
           <div className="sm:grid flex flex-col grid-rows-5 gap-4">
             <div className="row-span-1 my-auto">
-              <h2 className="text-3xl font-bold font-sans">
+              <h1 className="text-3xl font-bold font-sans">
                 A photo, a <br /> moment a <br /> short story
-              </h2>
+              </h1>
             </div>
 
             <div className="relative h-[40vh] md:h-auto  row-span-2">
@@ -252,9 +278,9 @@ const Page = (props: Props) => {
 
         <div className=" my-4 flex">
           <div className="relative flex-col md:flex-row  w-full py-4  justify-evenly align-middle px-8 m-auto border-l-0 rounded-xl  flex border-2 border-[#7F8119]">
-            <h2 className="h-fit m-auto text-2xl md:w-2/3 font-bold font-sans">
+            <h1 className="h-fit m-auto text-2xl md:w-2/3 font-bold font-sans">
               BE PART OF A HARMONIOUS COOPERATIVE GLOBAL COMMUNITY
-            </h2>
+            </h1>
             <p className="h-fit text-xl m-auto md:w-6/12">
               Opening your home to others fosters your capacity for trust and
               generosity.

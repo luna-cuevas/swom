@@ -1,8 +1,9 @@
 'use client';
+import { globalStateAtom } from '@/context/atoms';
+import { useAtom } from 'jotai';
 import Image from 'next/image';
 import Link from 'next/link';
 import React, { useState, useEffect } from 'react';
-import { useStateContext } from '@/context/StateContext';
 
 type Props = {
   roundedLeft?: boolean;
@@ -21,7 +22,7 @@ type Props = {
 
 const CarouselPage = (props: Props) => {
   const [currentSlide, setCurrentSlide] = useState(0);
-  const { state, setState } = useStateContext();
+  const [state, setState] = useAtom(globalStateAtom);
 
   useEffect(() => {
     // Automatically change slides every 5 seconds
@@ -129,7 +130,7 @@ const CarouselPage = (props: Props) => {
             <div className="w-full h-full z-[50] m-auto top-0  absolute ">
               {props.listingPage && (
                 <div className=" absolute bg-white rounded-b-xl px-4 text-xs right-4">
-                  Listing No. {image.listingNum}
+                  Listing No. {image.listingNum?.slice(-5)}
                 </div>
               )}
               {image.listingNum && !props.listingPage && (
@@ -144,7 +145,9 @@ const CarouselPage = (props: Props) => {
                     <Link href={`/listings/${image.listingNum}`}>
                       <div className="relative  py-4 px-8 text-[#172544]">
                         Let&apos;s meet your new favorite home. <br />
-                        <strong>Listing No. {image.listingNum}</strong>
+                        <strong>
+                          Listing No. {image.listingNum.slice(-5)}
+                        </strong>
                       </div>
                     </Link>
                   )}
@@ -166,6 +169,7 @@ const CarouselPage = (props: Props) => {
               priority
               placeholder="blur"
               blurDataURL="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAARgAAABYCAYAA"
+              sizes=" (max-width: 768px) 100vw, (max-width: 1024px) 50vw, 33vw"
             />
           </div>
         ))}

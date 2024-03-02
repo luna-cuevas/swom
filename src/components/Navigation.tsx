@@ -2,7 +2,7 @@
 
 import Image from 'next/image';
 import Link from 'next/link';
-import React, { use, useEffect } from 'react';
+import React, { use, useEffect, useState } from 'react';
 import {
   Menu,
   MenuHandler,
@@ -12,37 +12,43 @@ import {
   Input,
 } from '@material-tailwind/react';
 import SignIn from '@/components/SignIn';
-import { useStateContext } from '@/context/StateContext';
 import { supabaseClient } from '@/utils/supabaseClient';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { usePathname, useRouter } from 'next/navigation';
+import { globalStateAtom } from '@/context/atoms';
+import { useAtom } from 'jotai';
 
 type Props = {};
 
 const Navigation = (props: Props) => {
-  const [signInActive, setSignInActive] = React.useState(false);
-  const { state, setState } = useStateContext();
   const supabase = supabaseClient();
   const router = useRouter();
   const navigation = usePathname();
+  const [signInActive, setSignInActive] = React.useState(false);
+  const [state, setState] = useAtom(globalStateAtom);
+  const { user } = state;
+
+  const [isClient, setIsClient] = useState(false);
+
+  useEffect(() => {
+    // Component has mounted, set isClient to true
+    setIsClient(true);
+  }, []);
 
   const handleSignOut = async () => {
     try {
       await supabase.auth.signOut();
       localStorage.clear();
-      // clear all state
+      // Clear all atom states
       setState({
         ...state,
-        session: null,
-        user: null,
-        showMobileMenu: false,
-        noUser: false,
-        imgUploadPopUp: false,
-        aboutYou: false,
-        isSubscribed: false,
+        user: {
+          email: '',
+        },
         loggedInUser: null,
         activeNavButtons: false,
+        isSubscribed: false,
       });
       router.push('/home');
       toast.success('Signed out successfully');
@@ -67,11 +73,12 @@ const Navigation = (props: Props) => {
             src="/swom-logo.jpg"
             alt="logo"
             fill
+            sizes=" (max-width: 768px) 30vw, (max-width: 1024px) 20vw, 15vw"
           />
         </Link>
       </div>
       <div className="hidden 2xl:flex gap-4 align-middle">
-        {state && state.activeNavButtons && state.isSubscribed && (
+        {state && state.activeNavButtons && state.isSubscribed && isClient && (
           <>
             <Link className="m-auto text-sm" href="/how-it-works">
               HOW IT WORKS
@@ -91,9 +98,9 @@ const Navigation = (props: Props) => {
             <Link className="m-auto text-sm" href="/listings/my-listing">
               MY LISTING
             </Link>
-            {(state.user?.email == 'anamariagomezc@gmail.com' ||
-              state.user?.email == 's.cuevas14@gmail.com' ||
-              state.user?.email == 'ana@swom.travel') && (
+            {(user?.email == 'anamariagomezc@gmail.com' ||
+              user?.email == 's.cuevas14@gmail.com' ||
+              user?.email == 'ana@swom.travel') && (
               <Link className="m-auto text-sm" href="/studio">
                 STUDIO
               </Link>
@@ -107,7 +114,7 @@ const Navigation = (props: Props) => {
           BECOME A MEMEBER
         </Link>
 
-        {state.activeNavButtons ? (
+        {state.activeNavButtons && isClient ? (
           <button
             className="m-auto text-sm"
             onClick={() => {
@@ -197,7 +204,7 @@ const Navigation = (props: Props) => {
           opacity: state.showMobileMenu ? '1' : '0',
         }}
         className={`2xl:hidden  align-middle gap-4  box-border top-full flex flex-col justify-center text-center transition-all duration-300 ease-in-out overflow-hidden max-h-[100vh] left-0 bg-white w-full absolute`}>
-        {state && state.activeNavButtons && state.isSubscribed && (
+        {state && state.activeNavButtons && state.isSubscribed && isClient && (
           <>
             <Link className="m-auto" href="/how-it-works">
               HOW IT WORKS
@@ -233,7 +240,7 @@ const Navigation = (props: Props) => {
         <Link className="m-auto" href="/become-member">
           BECOME A MEMEBER
         </Link>
-        {state.activeNavButtons ? (
+        {state.activeNavButtons && isClient ? (
           <button
             className="m-auto"
             onClick={() => {

@@ -1,19 +1,37 @@
+'use client';
 import Image from 'next/image';
 import Link from 'next/link';
-import React from 'react';
+import React, { useState } from 'react';
 
 type Props = {};
 
 const Footer = (props: Props) => {
-  const handleSubmission = (e: React.FormEvent<HTMLFormElement>) => {
+  const [messageContents, setMessageContents] = useState({
+    email: '',
+    language: 'English',
+  });
+
+  const [messageSent, setMessageSent] = useState(false);
+  const handleSubmission = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    const email = e.currentTarget.email.value;
-    const language = e.currentTarget.language.value;
+    const response = await fetch('/api/sendMail', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        email: messageContents.email,
+        language: messageContents.language,
+      }),
+    });
 
-    console.log('Email:', email);
-    console.log('Language:', language);
+    if (response.ok) {
+      setMessageSent(true);
 
-    alert('Message sent!');
+      console.log('Email sent successfully');
+    } else {
+      console.error('Failed to send email');
+    }
   };
 
   return (
@@ -29,6 +47,7 @@ const Footer = (props: Props) => {
             src="/footer-logo.jpg"
             alt="logo"
             fill
+            sizes=" (max-width: 768px) 30vw, (max-width: 1024px) 20vw, 15vw"
             className="object-contain"
           />
         </div>
@@ -46,28 +65,49 @@ const Footer = (props: Props) => {
       </div>
 
       <div className="md:w-1/3 w-3/4  m-auto flex flex-col">
-        <form
-          onSubmit={(e) => {
-            handleSubmission(e);
-          }}>
-          <p className="text-[#F4ECE8]">Contact us</p>
-          <input
-            name="email"
-            placeholder="Email"
-            className="w-full p-4  rounded-lg my-2 bg-[#F4ECE8]"
-            type="text"
-          />
-          <select
-            name="language"
-            className="w-fit p-4 rounded-lg my-1 bg-[#F4ECE8]"
-            id="">
-            <option value="English">English</option>
-            <option value="Spanish">Spanish</option>
-          </select>
-          <button className="bg-[#F4ECE8] ml-4 w-fit  p-4 rounded-lg my-1">
-            Send
-          </button>
-        </form>
+        {messageSent ? (
+          <p className="text-[#F4ECE8]">
+            Thank you for contacting us. We will get back to you as soon as
+            possible.
+          </p>
+        ) : (
+          <form
+            onSubmit={(e) => {
+              handleSubmission(e);
+            }}>
+            <p className="text-[#F4ECE8]">Contact us</p>
+            <input
+              name="email"
+              onChange={(e) => {
+                setMessageContents({
+                  ...messageContents,
+                  email: e.target.value,
+                });
+              }}
+              placeholder="Email"
+              className="w-full p-4  rounded-lg my-2 bg-[#F4ECE8]"
+              type="text"
+            />
+            <select
+              name="language"
+              onChange={(e) => {
+                setMessageContents({
+                  ...messageContents,
+                  language: e.target.value,
+                });
+              }}
+              className="w-fit p-4 rounded-lg my-1 bg-[#F4ECE8]"
+              id="">
+              <option value="English">English</option>
+              <option value="Spanish">Spanish</option>
+            </select>
+            <button
+              type="submit"
+              className="bg-[#F4ECE8] ml-4 w-fit  p-4 rounded-lg my-1">
+              Send
+            </button>
+          </form>
+        )}
       </div>
     </div>
   );

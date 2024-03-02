@@ -1,11 +1,12 @@
 import React, { useEffect } from 'react';
 import CarouselPage from './Carousel';
 import Link from 'next/link';
-import { useStateContext } from '@/context/StateContext';
 import { supabaseClient } from '@/utils/supabaseClient';
 import Image from 'next/image';
 import ImageUrlBuilder from '@sanity/image-url';
 import { sanityClient } from '../utils/sanityClient';
+import { useAtom } from 'jotai';
+import { globalStateAtom } from '@/context/atoms';
 
 type Props = {
   listingInfo: any;
@@ -14,7 +15,7 @@ type Props = {
 };
 
 const ListingCard = (props: Props) => {
-  const { state, setState } = useStateContext();
+  const [state, setState] = useAtom(globalStateAtom);
 
   const supabase = supabaseClient();
 
@@ -97,14 +98,13 @@ const ListingCard = (props: Props) => {
     <div className="rounded-xl p-[16px] flex-col md:m-2 bg-white relative flex h-auto my-2 m-auto w-[90%] md:w-[45%]">
       <div className="h-[25vh] relative">
         <div className="bg-white z-50 px-2 text-sm absolute top-0 right-2 rounded-b-lg">
-          Listing No.{' '}
-          {props.listingInfo.listingNumber || props.listingInfo._id.slice(0, 5)}
+          Listing No. {props.listingInfo._id.slice(-5)}
         </div>
         <Link
           href={
             props.listingInfo?.userInfo.email == state?.loggedInUser?.email
               ? `listings/my-listing`
-              : `/listings/${props.listingInfo?.userInfo.email}`
+              : `/listings/${props.listingInfo?._id}`
           }>
           <Image
             src={
@@ -127,7 +127,7 @@ const ListingCard = (props: Props) => {
             href={
               props.listingInfo?.userInfo.email == state?.loggedInUser?.email
                 ? `listings/my-listing`
-                : `/listings/${props.listingInfo?.userInfo.email}`
+                : `/listings/${props.listingInfo?._id}`
             }
             className="cursor-pointer flex-col flex">
             <h1 className="text-xl">{props.listingInfo?.homeInfo.title}</h1>

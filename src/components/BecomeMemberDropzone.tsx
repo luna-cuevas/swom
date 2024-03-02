@@ -1,4 +1,3 @@
-import { useStateContext } from '@/context/StateContext';
 import React, { useEffect, useState } from 'react';
 import { useDropzone } from 'react-dropzone';
 import { ToastContainer, toast } from 'react-toastify';
@@ -6,6 +5,8 @@ import SortableList, { SortableItem } from 'react-easy-sort';
 import { arrayMoveImmutable } from 'array-move';
 import 'react-toastify/dist/ReactToastify.css';
 import Image from 'next/image';
+import { useAtom } from 'jotai';
+import { globalStateAtom } from '@/context/atoms';
 
 type Props = {
   setImageFiles: React.Dispatch<React.SetStateAction<File[]>>;
@@ -14,7 +15,7 @@ type Props = {
 };
 
 const BecomeMemberDropzone: React.FC<Props> = (props) => {
-  const { state, setState } = useStateContext();
+  const [state, setState] = useAtom(globalStateAtom);
   const [orderedImageFiles, setOrderedImageFiles] = useState<File[]>(
     props.imageFiles
   );

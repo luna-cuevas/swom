@@ -1,5 +1,6 @@
 'use client';
-import { useStateContext } from '@/context/StateContext';
+import { globalStateAtom } from '@/context/atoms';
+import { useAtom } from 'jotai';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
@@ -10,7 +11,7 @@ import 'react-toastify/dist/ReactToastify.css';
 type Props = {};
 
 const Page = (props: Props) => {
-  const { state, setState } = useStateContext();
+  const [state, setState] = useAtom(globalStateAtom);
   const [subbedInfo, setSubbedInfo] = useState<any>(null);
   const [cancelled, setCancelled] = useState<boolean>(false);
   const router = useRouter();
@@ -145,22 +146,22 @@ const Page = (props: Props) => {
         </div>
 
         <div>
-          <h3 className="text-lg text-center md:text-left text-[#4F6876] uppercase tracking-[0.3rem] mb-8">
+          <h1 className="text-lg text-center md:text-left text-[#4F6876] uppercase tracking-[0.3rem] mb-8">
             Your Membership
-          </h3>
+          </h1>
           <div className="flex flex-col md:flex-row gap-4 md:gap-12">
             <div className="p-4 border-[1px] rounded-3xl border-[#6D7283]">
-              <h3 className="text-sm uppercase mb-2 tracking-[0.3rem]">
+              <h1 className="text-sm uppercase mb-2 tracking-[0.3rem]">
                 MEMBERSHIP TYPE
-              </h3>
+              </h1>
               <p className="text-base ">
                 {subbedInfo && subbedInfo?.membershipType}
               </p>
             </div>
             <div className="p-4 border-[1px] rounded-3xl border-[#6D7283]">
-              <h3 className="text-sm text-[#E88527] uppercase mb-2 tracking-[0.3rem]">
+              <h1 className="text-sm text-[#E88527] uppercase mb-2 tracking-[0.3rem]">
                 {subbedInfo?.cancel_at ? 'Subscription ends' : 'Next Payment'}
-              </h3>
+              </h1>
               <p className="text-base">
                 {subbedInfo?.cancel_at
                   ? new Date(subbedInfo.cancel_at * 1000).toLocaleDateString(
@@ -178,9 +179,9 @@ const Page = (props: Props) => {
         </div>
 
         <div>
-          <h3 className="text-lg text-center md:text-left mt-8 text-[#4F6876] uppercase tracking-[0.3rem] mb-4">
+          <h1 className="text-lg text-center md:text-left mt-8 text-[#4F6876] uppercase tracking-[0.3rem] mb-4">
             Includes
-          </h3>
+          </h1>
           <ul className="list-disc pl-4 ">
             <li className="font-light">
               Access to all swom travel listings immediately.
@@ -221,7 +222,7 @@ const Page = (props: Props) => {
         </div>
 
         <div className="md:w-11/12 ml-auto bg-[#DDD5D2] px-6 p-4 rounded-3xl md:rounded-l-3xl mt-4">
-          <h3 className="uppercase font-thin tracking-[0.3rem]">Contact Us!</h3>
+          <h1 className="uppercase font-thin tracking-[0.3rem]">Contact Us!</h1>
           <p className="text-sm flex flex-wrap gap-[3px] font-sans">
             For questions contact us via Whatsapp or email us at{' '}
             <span>

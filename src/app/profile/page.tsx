@@ -1,6 +1,5 @@
 'use client';
 import ProfilePicDropZone from '@/components/ProfilePicDropZone';
-import { useStateContext } from '@/context/StateContext';
 import { supabaseClient } from '@/utils/supabaseClient';
 import Image from 'next/image';
 import React, { ChangeEvent, use, useEffect, useState } from 'react';
@@ -9,11 +8,13 @@ import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { sanityClient } from '@/utils/sanityClient';
 import ImageUrlBuilder from '@sanity/image-url';
+import { useAtom } from 'jotai';
+import { globalStateAtom } from '@/context/atoms';
 
 type Props = {};
 
 const Page = (props: Props) => {
-  const { state, setState } = useStateContext();
+  const [state, setState] = useAtom(globalStateAtom);
   const [profileImage, setProfileImage] = useState<File[]>([]);
   const [isPasswordChanged, setIsPasswordChanged] = useState(false);
   const [newPassword, setNewPassword] = useState('');
@@ -300,9 +301,9 @@ const Page = (props: Props) => {
               </div>
             )}
 
-            <h4 className="font-bold mx-auto my-4 tracking-widest text-center uppercase">
+            <h1 className="font-bold mx-auto my-4 tracking-widest text-center uppercase">
               {state?.loggedInUser?.name}
-            </h4>
+            </h1>
             <button
               type="button"
               onClick={() => {
@@ -315,9 +316,9 @@ const Page = (props: Props) => {
 
           <div className="h-auto w-[2px] border-x-[1px] border-[#172544]" />
           <div className="md:w-1/2 flex flex-col  pl-6 gap-12 my-4">
-            <h2 className="text-[#D68834] font-sans text-center md:text-left tracking-[0.3rem] uppercase font-bold">
+            <h1 className="text-[#D68834] text-2xl font-bold text-center md:text-left tracking-[0.2rem] uppercase ">
               Profile Settings
-            </h2>
+            </h1>
             <div className="flex flex-col md:flex-row gap-6">
               <div>
                 <label

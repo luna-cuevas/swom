@@ -1,6 +1,7 @@
 'use client';
-import { useStateContext } from '@/context/StateContext';
+import { globalStateAtom } from '@/context/atoms';
 import { supabaseClient } from '@/utils/supabaseClient';
+import { useAtom } from 'jotai';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
@@ -16,7 +17,7 @@ const Messages = (props: Props) => {
   const [conversations, setConversations] = useState<any[]>([]);
   const [messages, setMessages] = useState<any[]>([]);
   const [newMessage, setNewMessage] = useState<string>(''); // New state to handle the input message
-  const { state, setState } = useStateContext();
+  const [state, setState] = useAtom(globalStateAtom);
   const messagesContainerRef = useRef<HTMLDivElement>(null);
   const inboxRef = useRef<HTMLDivElement>(null);
   const [sendingMessage, setSendingMessage] = useState<boolean>(false);
@@ -338,7 +339,7 @@ const Messages = (props: Props) => {
             />
           </svg>
         </button>
-        <h1 className="tracking-[0.3rem] w-full uppercase text-3xl bg-[#E5DEDB] py-6 px-6">
+        <h1 className="tracking-[0.3rem] font-bold w-full uppercase text-3xl bg-[#E5DEDB] py-6 px-6">
           Messages
         </h1>
       </div>
@@ -348,9 +349,9 @@ const Messages = (props: Props) => {
           className={`h-full overflow-y-auto py-2 transition-all duration-200 ease-in-out w-full ${
             mobileNavMenu ? 'max-w-[35%]  border-r-2' : 'max-w-0'
           } md:max-w-[30%] md:border-r-2 h-auto  border-[#172544] flex- flex-col`}>
-          <h2 className="tracking-[0.3rem] w-full text-center mx-auto flex py-4 border-b-2 border-inherit uppercase md:text-xl gap-2 md:gap-4 pl-[8%]">
-            <span className="m-auto w-fit font-sans font-bold">Inbox</span>
-          </h2>
+          <div className="tracking-[0.3rem] w-full text-center mx-auto flex py-4 border-b-2 border-inherit uppercase md:text-xl gap-2 md:gap-4 pl-[8%]">
+            <h1 className="m-auto w-fit font-sans font-bold">Inbox</h1>
+          </div>
           <ul className="h-full">
             {conversations.map((convo) => (
               <li
@@ -380,12 +381,12 @@ const Messages = (props: Props) => {
                     objectFit="cover"
                   />
                 </div>
-                <span className="my-auto text-center xl:text-left">
+                <h1 className="my-auto text-center xl:text-left tracking-widest font-semibold">
                   {
                     convo.members[convo.members[1].id == state.user?.id ? 2 : 1]
                       .name
                   }
-                </span>
+                </h1>
               </li>
             ))}
           </ul>
@@ -430,16 +431,18 @@ const Messages = (props: Props) => {
                         className="rounded-full my-auto"
                       />
                     </div>
-                    <span className="my-auto w-fit text-center md:text-left font-serif break-all">
+                    <h1 className="my-auto font-bold w-fit text-center md:text-left font-serif break-all">
                       {selectedConvo?.members[memberIndex]?.name}
-                    </span>
+                    </h1>
                   </div>
                   <Link
                     type="button"
                     className="bg-[#E88527] hover:bg-[#e88427ca] text-base tracking-normal capitalize h-fit w-fit my-auto px-2 py-1 text-white rounded-xl "
                     href={
-                      selectedConvo?.members[memberIndex].id != state.user?.id
-                        ? '/listings/' + selectedConvo?.members[memberIndex].id
+                      selectedConvo?.members[memberIndex].email !=
+                      state.loggedInUser?.email
+                        ? '/listings/' +
+                          selectedConvo?.members[memberIndex].email
                         : ''
                     }>
                     View Listing
@@ -504,7 +507,7 @@ const Messages = (props: Props) => {
           <div className=" w-full h-[10%] px-2 flex justify-between md:px-10">
             <input
               onChange={(e) => setNewMessage(e.target.value)}
-              className="w-[80%] h-full pl-2 placeholder:tracking-[0.3rem] focus-visible:outline-none bg-transparent border-t-2 border-[#E5DEDB]"
+              className="w-[80%] font-['Noto'] h-full pl-2 placeholder:tracking-[0.3rem] focus-visible:outline-none bg-transparent border-t-2 border-[#E5DEDB]"
               placeholder="Type your message here"
               type="text"
               value={newMessage}
@@ -535,7 +538,7 @@ const Messages = (props: Props) => {
               <button
                 type="button"
                 onClick={() => sendMessage()}
-                className="bg-[#E88527] hover:bg-[#e88427ca] h-fit w-fit my-auto px-3 py-2 text-white rounded-xl ">
+                className="bg-[#E88527] font-['Noto'] hover:bg-[#e88427ca] h-fit w-fit my-auto px-3 py-2 text-white rounded-xl ">
                 Send
               </button>
             )}

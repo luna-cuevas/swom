@@ -2,26 +2,26 @@
 import CarouselPage from '@/components/Carousel';
 import DropZone from '@/components/DropZone';
 import GoogleMapComponent from '@/components/GoogleMapComponent';
-import { useStateContext } from '@/context/StateContext';
 import Image from 'next/image';
 import React, { use, useCallback, useEffect, useRef, useState } from 'react';
 import { set, useForm, Controller } from 'react-hook-form';
 import { supabaseClient } from '@/utils/supabaseClient';
 import ProfilePicDropZone from '@/components/ProfilePicDropZone';
-import citiesData from '@/data/citiesDescriptions.json';
 import BecomeMemberDropzone from '@/components/BecomeMemberDropzone';
 import { useRouter } from 'next/navigation';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { sanityClient } from '@/utils/sanityClient';
 import ImageUrlBuilder from '@sanity/image-url';
+import { useAtom } from 'jotai';
+import { globalStateAtom } from '@/context/atoms';
 
 type Props = {};
 
 const Page = (props: Props) => {
   const [editUserInfo, setEditUserInfo] = useState(false);
   // const [userName, setUserName] = useState('');
-  const { state, setState } = useStateContext();
+  const [state, setState] = useAtom(globalStateAtom);
   const [profileImage, setProfileImage] = useState<File[]>([]);
   const [citySearchOpen, setCitySearchOpen] = useState(false);
   const [imageFiles, setImageFiles] = useState<File[]>([]);
@@ -29,6 +29,7 @@ const Page = (props: Props) => {
   const [isSearching, setIsSearching] = useState<boolean>(false);
   const [selectedImage, setSelectedImage] = useState(0); // Track selected image
   const aboutYourHomeRef = useRef<HTMLTextAreaElement | null>(null);
+  const [aboutYou, setAboutYou] = useState(false);
   const [whereIsIt, setWhereIsIt] = useState('');
   const [listings, setListings] = useState<any>([]);
   const [downloadedImages, setDownloadedImages] = useState<any>([]);
@@ -467,54 +468,54 @@ const Page = (props: Props) => {
                     </div>
                   </div>
 
-                  <h2 className="font-serif break-all text-4xl ">
+                  <h1 className="font-serif break-all text-4xl ">
                     {getValues('userInfo.name')}
-                  </h2>
-                  <p className="font-sans my-1 break-all font-bold uppercase tracking-[0.1rem]">
+                  </h1>
+                  <h1 className="font-sans my-1 break-all font-bold uppercase tracking-[0.1rem]">
                     {getValues('userInfo.profession')}
-                  </p>
+                  </h1>
                 </>
               )}
             </div>
             <div className="lg:w-[65%]">
-              <div className="grid py-2 text-center grid-cols-4 border-b border-[#172544]">
-                <h3>First Name</h3>
-                <h3>Last Name</h3>
-                <h3>Age</h3>
-                <h3>Profession</h3>
+              <div className="grid py-2 text-xl text-center grid-cols-4 border-b border-[#172544]">
+                <h1>First Name</h1>
+                <h1>Last Name</h1>
+                <h1>Age</h1>
+                <h1>Profession</h1>
               </div>
               <div className="grid py-2 text-center grid-cols-4 border-b border-[#172544]">
-                <h3 className="flex-wrap break-all">
+                <h1 className="flex-wrap break-all">
                   {getValues('userInfo.name')
                     ? getValues('userInfo.name').split(' ')[0]
                     : 'First Name'}
-                </h3>
-                <h3 className="flex-wrap break-all">
+                </h1>
+                <h1 className="flex-wrap break-all">
                   {getValues('userInfo.name')
                     ? getValues('userInfo.name').split(' ')[1]
                     : 'Last Name'}
-                </h3>
-                {/* <h3 className="flex-wrap break-all">
+                </h1>
+                {/* <h1 className="flex-wrap break-all">
                   {userName ? userName.split('@')[0] : 'User Name'}
-                </h3> */}
-                <h3 className="flex-wrap break-all">
+                </h1> */}
+                <h1 className="flex-wrap break-all">
                   {getValues('userInfo.age') > 0
                     ? getValues('userInfo.age')
                     : 'Unknown Age'}
-                </h3>
-                <h3 className="flex-wrap break-all">
+                </h1>
+                <h1 className="flex-wrap break-all">
                   {getValues('userInfo.profession')
                     ? getValues('userInfo.profession')
                     : 'Profession'}
-                </h3>
+                </h1>
               </div>
-              <div className="flex justify-between py-2 border-b border-[#172544]">
-                <h2>About you</h2>
+              <div className="flex justify-between py-2  border-[#172544]">
+                <h1 className="text-xl">About you</h1>
 
                 <button
                   type="button"
                   onClick={() => {
-                    setState({ ...state, aboutYou: !state.aboutYou });
+                    setAboutYou(!aboutYou);
                   }}>
                   <div className="relative w-[30px] align-middle my-auto flex h-[30px]">
                     <Image
@@ -527,7 +528,7 @@ const Page = (props: Props) => {
                   </div>
                 </button>
               </div>
-              {state.aboutYou ? (
+              {aboutYou ? (
                 <div className="flex flex-col">
                   <textarea
                     {...register('userInfo.about_me')}
@@ -536,7 +537,7 @@ const Page = (props: Props) => {
                   />
                   <button
                     onClick={() => {
-                      setState({ ...state, aboutYou: !state.aboutYou });
+                      setAboutYou(!aboutYou);
                     }}
                     type="button"
                     className="bg-[#FE8217] my-2 mx-auto text-white py-1 px-2 rounded-xl">
@@ -551,9 +552,9 @@ const Page = (props: Props) => {
               )}
 
               <div className="flex flex-col md:flex-row gap-8 py-4 border-y border-[#172544]">
-                <h4 className="text-2xl font-serif italic">
+                <h1 className="text-2xl font-serif ">
                   Where would you like to go?
-                </h4>
+                </h1>
 
                 <div className="gap-4 flex">
                   <input
@@ -572,9 +573,9 @@ const Page = (props: Props) => {
               </div>
 
               <div className="flex flex-col justify-between py-4 ">
-                <h4 className="text-2xl font-serif italic">
+                <h1 className="text-2xl font-serif ">
                   Open to other destinations?
-                </h4>
+                </h1>
                 <div className="flex my-2">
                   <input
                     className="appearance-none h-fit my-auto bg-transparent checked:bg-[#7F8119] rounded-full border border-[#172544] p-2 mx-2"
@@ -600,9 +601,9 @@ const Page = (props: Props) => {
 
           <div className="w-full flex flex-col px-8 md:px-16 m-auto">
             <div className="flex my-4 flex-col md:flex-row border-y border-[#172544] py-4 justify-between">
-              <h2 className="text-xl">
+              <h1 className="text-xl">
                 {watch('homeInfo.city') ? getValues('homeInfo.city') : ''}
-              </h2>
+              </h1>
               <div className="flex gap-2 justify-evenly">
                 <div className="relative w-[20px] my-auto h-[20px]">
                   <Image
@@ -613,12 +614,12 @@ const Page = (props: Props) => {
                     alt=""
                   />
                 </div>
-                <h2 className="text-xl my-auto font-sans">
+                <h1 className="text-xl my-auto font-sans">
                   Listing{' '}
                   <span className="font-bold">
                     {state?.user?.id?.slice(-6)}
                   </span>
-                </h2>
+                </h1>
                 <button
                   className="ml-4 bg-[#FE8217] my-auto py-2 px-4 text-white rounded-xl relative"
                   onClick={() => {
@@ -728,7 +729,7 @@ const Page = (props: Props) => {
             </div>
 
             <div className="flex my-4 border-b border-[#172544] py-4 justify-between">
-              <h2 className="text-xl italic font-serif">Name of the city</h2>
+              <h1 className="text-xl  font-serif">Name of the city</h1>
             </div>
 
             <div className="w-full relative flex p-2 my-4 rounded-xl border border-[#172544]">
@@ -774,9 +775,7 @@ const Page = (props: Props) => {
             )}
 
             <div className="flex my-4  border-y border-[#172544] py-4 justify-between">
-              <h2 className="text-xl italic font-serif">
-                Tell us about your home
-              </h2>
+              <h1 className="text-xl  font-serif">Tell us about your home</h1>
             </div>
 
             <textarea
@@ -909,7 +908,7 @@ const Page = (props: Props) => {
               </div>
             </div>
             <div className="flex my-4  border-y border-[#172544] py-4 flex-col">
-              <h2 className="text-xl italic font-serif">Where is it? </h2>
+              <h1 className="text-xl font-serif">Where is it? </h1>
               <p className="font-serif">
                 {' '}
                 Write down the exact address so google can identify the location
@@ -934,9 +933,7 @@ const Page = (props: Props) => {
             </div>
 
             <div className="flex my-4  border-y border-[#172544] py-4 justify-between">
-              <h2 className="text-xl italic font-serif">
-                Amenities and advantages
-              </h2>
+              <h1 className="text-xl  font-serif">Amenities and advantages</h1>
             </div>
 
             <div className="flex flex-wrap pb-8">

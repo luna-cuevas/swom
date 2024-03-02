@@ -5,25 +5,26 @@ import { usePathname, useRouter } from 'next/navigation';
 import React, { useEffect, useState } from 'react';
 import GoogleMapComponent from '@/components/GoogleMapComponent';
 import { supabaseClient } from '../../../utils/supabaseClient';
-import cityData from '@/data/citiesDescriptions.json';
 import Link from 'next/link';
-import { useStateContext } from '@/context/StateContext';
 import { sanityClient } from '@/utils/sanityClient';
 import ImageUrlBuilder from '@sanity/image-url';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
+import { useAtom } from 'jotai';
+import { globalStateAtom } from '@/context/atoms';
 type Props = {};
 
 const Page = (props: Props) => {
   const pathName = usePathname();
   const slug = pathName.split('/listings/')[1];
-  const [mapsActive, setMapsActive] = useState(true);
-  const [listings, setListings] = useState<any>([]);
   const supabase = supabaseClient();
-  const { state, setState } = useStateContext();
+  const [state, setState] = useAtom(globalStateAtom);
   const [imageFiles, setImageFiles] = useState<any[]>([]);
   const [selectedImage, setSelectedImage] = useState(0); // Track selected image
   const [isLoading, setIsLoading] = useState(true);
+  const [cities, setCities] = useState<any>([]);
+  const [mapsActive, setMapsActive] = useState(true);
+  const [listings, setListings] = useState<any>([]);
 
   const builder = ImageUrlBuilder(sanityClient);
 
@@ -47,6 +48,13 @@ const Page = (props: Props) => {
   const [contactedUser, setContactedUser] = useState(null);
 
   useEffect(() => {
+    const fetchCities = async () => {
+      const query = `*[_type == "city"]`; // Adjust the query to fit your needs
+      const data = await sanityClient.fetch(query);
+      setCities(data);
+    };
+
+    fetchCities();
     const fetchContactedUser = async () => {
       const user = await fetchUserByEmail(listings[0]?.userInfo?.email);
       setContactedUser(user);
@@ -57,7 +65,7 @@ const Page = (props: Props) => {
 
   const fetchListings = async () => {
     try {
-      const query = `*[_type == "listing" && userInfo.email == $slug]{
+      const query = `*[_type == "listing" && _id == $slug]{
         ...,
       "imageUrl": image.asset->url
     }`;
@@ -84,7 +92,7 @@ const Page = (props: Props) => {
       }));
 
       data[0]?.homeInfo?.listingImages &&
-        data[0]?.homeInfo?.listingImages.map((image: any) => {
+        data[0]?.homeInfo?.listingImages.forEach((image: any) => {
           const imageUrl = urlFor(image).url();
           setImageFiles((prev: any) => [...prev, imageUrl]);
         });
@@ -107,12 +115,11 @@ const Page = (props: Props) => {
     }
   };
 
-  const checkCityDescription = (city: string) => {
-    const cityDescription = cityData.find(
-      (cityObj: any) => cityObj.city === city
-    );
-    return cityDescription?.description ?? 'No description available';
-  };
+  const cityDescription = cities.filter((city: any) => {
+    return city.city
+      .toLowerCase()
+      .includes(listings[0]?.homeInfo?.city.split(',')[0].toLowerCase());
+  });
 
   useEffect(() => {
     fetchListings();
@@ -153,10 +160,9 @@ const Page = (props: Props) => {
               {listings[0]?.homeInfo?.title} <br />
               <span className="font-bold"> {listings[0]?.homeInfo?.city}</span>
             </h1>
-            <div className="relative w-[30px] flex align-middle my-auto h-[30px]">
+            <div className="relative w-[30px] flex align-middle my-auto object-contain h-[30px]">
               <Image
                 fill
-                objectFit="contain"
                 className="h-full m-auto"
                 src="/logo-icons.png"
                 alt=""
@@ -168,14 +174,14 @@ const Page = (props: Props) => {
           <div className="flex my-8 justify-between">
             {/* User Info - Left Section */}
             <div className="w-[25%]  flex flex-col">
-              <h2 className="font-sans mx-auto mb-8 font-light text-2xl border border-[#172544] py-2 px-8 rounded-xl w-fit">
+              <h1 className="font-sans mx-auto mb-8 font-light text-2xl border border-[#172544] py-2 px-8 rounded-xl w-fit">
                 Listing{' '}
                 <span className="font-bold">
                   {' '}
                   No.{' '}
                   {listings[0]?.listingNumber || listings[0]?._id.slice(0, 5)}
                 </span>
-              </h2>
+              </h1>
 
               <div className="mx-auto text-center">
                 <div className="relative m-auto  h-[100px] w-[100px]">
@@ -186,11 +192,12 @@ const Page = (props: Props) => {
                         ? listings[0]?.userInfo?.profileImage.src
                         : '/placeholder.png'
                     }
+                    sizes="100px"
                     className="rounded-full object-cover"
                     alt=""
                   />
                 </div>
-                <h3 className="text-xl">{listings[0]?.userInfo?.name}</h3>
+                <h1 className="text-xl">{listings[0]?.userInfo?.name}</h1>
                 <p className="font-bold font-sans">
                   {listings[0]?.userInfo?.profession}
                 </p>
@@ -207,17 +214,17 @@ const Page = (props: Props) => {
               </div>
 
               <div className="my-2 break-all">
-                <h4 className="font-serif text-xl font-thin border-b border-[#172544] mb-2">
+                <h1 className="font-serif text-xl font-thin border-b border-[#172544] mb-2">
                   About us
-                </h4>
+                </h1>
                 <p className="break-all">{listings[0]?.userInfo?.about_me}</p>
               </div>
 
               {listings[0]?.userInfo?.citiesToGo && (
                 <div className="my-2">
-                  <h4 className="font-serif text-xl font-thin border-b border-[#172544] mb-2">
+                  <h1 className="font-serif text-xl font-thin border-b border-[#172544] mb-2">
                     We want to go to
-                  </h4>
+                  </h1>
                   <ul>
                     <li>City</li>
                     <li>City</li>
@@ -227,11 +234,13 @@ const Page = (props: Props) => {
               )}
 
               <div className="my-2">
-                <h4 className="font-serif text-xl font-thin border-b border-[#172544] mb-2">
+                <h1 className="font-serif text-xl font-thin border-b border-[#172544] mb-2">
                   Open to other destinations
-                </h4>
+                </h1>
                 {listings[0]?.userInfo?.openToOtherCities &&
-                  Object.values(listings[0]?.userInfo?.openToOtherCities).map(
+                  Object.values(
+                    listings[0]?.userInfo?.openToOtherCities
+                  ).forEach(
                     // @ts-ignore
                     (city: string) => <p key={city}>{city}</p>
                   )}
@@ -250,6 +259,7 @@ const Page = (props: Props) => {
                   alt=""
                   className="rounded-3xl object-cover "
                   fill
+                  sizes="100%"
                   objectPosition="center"
                 />
               </div>
@@ -265,9 +275,11 @@ const Page = (props: Props) => {
                   images={
                     imageFiles.length > 0
                       ? imageFiles.map((file) => ({
+                          key: file,
                           src: file.toString(),
                         }))
                       : [1, 2].map((file) => ({
+                          key: file,
                           src: '/placeholder.png',
                         }))
                   }
@@ -275,14 +287,27 @@ const Page = (props: Props) => {
                 {/* )} */}
               </div>
 
-              <div className="flex border-t border-[#172544]">
-                <div className="w-1/2 mt-4">
-                  <h4>About the City</h4>
-                  <p>{checkCityDescription(listings[0]?.homeInfo?.city)}</p>
+              <div
+                className={`flex gap-4 ${
+                  cityDescription[0]?.description ? 'flex-col' : 'flex-row'
+                } border-t border-[#172544]`}>
+                <div
+                  className={` mt-4 border-[#172544] ${
+                    cityDescription[0]?.description
+                      ? 'w-full border-b-2 pb-4'
+                      : 'w-1/2 border-r-2 '
+                  }`}>
+                  <h1 className="font-bold text-xl">About the City</h1>
+                  <p>
+                    {cityDescription[0]?.description ||
+                      'No city description available.'}
+                  </p>
                 </div>
-                <div className=" h-[80%] mx-6 my-auto border border-[#172544]" />
-                <div className="w-1/2 mt-4 break-all">
-                  <h4>About my home</h4>
+                <div
+                  className={`${
+                    cityDescription[0]?.description ? 'w-full' : 'w-1/2'
+                  } mt-4 break-all`}>
+                  <h1 className="font-bold text-xl">About my home</h1>
                   <p>{listings[0]?.homeInfo?.description}</p>
                 </div>
               </div>
@@ -293,41 +318,41 @@ const Page = (props: Props) => {
           <div className="py-2 border-y-[1px] border-[#172544]">
             <div className=" border my-8 border-[#172544] rounded-xl grid grid-cols-3 text-center py-8 justify-evenly">
               <div className="border-r border-[#172544]">
-                <div className="relative my-1 m-auto w-[40px] h-[40px]">
+                <div className="relative my-1 m-auto w-[40px] h-[40px] object-contain">
                   <Image
                     fill
-                    objectFit="contain"
                     src="/listings/slug/apartments-icon.png"
                     alt=""
+                    sizes="40px"
                   />
                 </div>
-                <h3 className="font-bold">Type of property</h3>
+                <h1 className="font-bold">Type of property</h1>
                 <p className="capitalize text-xl">
                   {listings[0]?.homeInfo?.property}
                 </p>
               </div>
               <div className="border-r border-[#172544]">
-                <div className="relative my-1 m-auto w-[40px] h-[40px]">
+                <div className="relative my-1 m-auto w-[40px] h-[40px] object-contain">
                   <Image
                     fill
-                    objectFit="contain"
                     src="/listings/slug/bedroom-icon.png"
                     alt=""
+                    sizes="40px"
                   />
                 </div>
-                <h3 className="font-bold">Bedrooms</h3>
+                <h1 className="font-bold">Bedrooms</h1>
                 <p className="text-xl">{listings[0]?.homeInfo?.howManySleep}</p>
               </div>
               <div className="">
-                <div className="relative my-1 m-auto w-[40px] h-[40px]">
+                <div className="relative my-1 m-auto w-[40px] h-[40px] object-contain">
                   <Image
                     fill
-                    objectFit="contain"
                     src="/listings/slug/location-icon.png"
                     alt=""
+                    sizes="40px"
                   />
                 </div>
-                <h3 className="font-bold">Property located in</h3>
+                <h1 className="font-bold">Property located in</h1>
                 <p className="capitalize text-xl">
                   {listings[0]?.homeInfo?.locatedIn}
                 </p>
@@ -336,41 +361,41 @@ const Page = (props: Props) => {
 
             <div className=" border my-8 border-[#172544] rounded-xl grid grid-cols-3 text-center py-8 justify-evenly">
               <div className="border-r border-[#172544]">
-                <div className="relative my-1 m-auto w-[40px] h-[40px]">
+                <div className="relative my-1 m-auto w-[40px] h-[40px] object-contain">
                   <Image
                     fill
-                    objectFit="contain"
                     src="/listings/slug/finger-icon.png"
                     alt=""
+                    sizes="40px"
                   />
                 </div>
-                <h3 className="font-bold">Kind of property</h3>
+                <h1 className="font-bold">Kind of property</h1>
                 <p className="capitalize text-xl">
                   {listings[0]?.homeInfo?.mainOrSecond}
                 </p>
               </div>
               <div className="border-r border-[#172544]">
-                <div className="relative my-1 m-auto w-[40px] h-[40px]">
+                <div className="relative my-1 m-auto w-[40px] object-contain h-[40px]">
                   <Image
                     fill
-                    objectFit="contain"
                     src="/listings/slug/bathroom-icon.png"
                     alt=""
+                    sizes="40px"
                   />
                 </div>
-                <h3 className="font-bold">Bathrooms</h3>
+                <h1 className="font-bold">Bathrooms</h1>
                 <p className="text-xl">{listings[0]?.homeInfo?.bathrooms}</p>
               </div>
               <div className="">
-                <div className="relative my-1 m-auto w-[40px] h-[40px]">
+                <div className="relative my-1 m-auto w-[40px] object-contain h-[40px]">
                   <Image
                     fill
-                    objectFit="contain"
                     src="/listings/slug/square-icon.png"
                     alt=""
+                    sizes="40px"
                   />
                 </div>
-                <h3 className="font-bold">Area</h3>
+                <h1 className="font-bold">Area</h1>
                 <p className="text-xl">
                   {listings[0]?.homeInfo?.area
                     ? `${listings[0]?.homeInfo?.area} sqm`
@@ -387,7 +412,7 @@ const Page = (props: Props) => {
                 setMapsActive(!mapsActive);
               }}
               className="text-2xl flex justify-between w-full text-left my-4 pb-4 border-b border-[#172544] font-serif">
-              <h2>Where is it?</h2>
+              <h1>Where is it?</h1>
               {/* arrow down that switches to up when button active */}
               <svg
                 className={`w-6 h-6 inline-block ${
@@ -423,9 +448,9 @@ const Page = (props: Props) => {
           </div>
 
           <div className="mt-14">
-            <h2 className="text-2xl flex justify-between w-full text-left my-4 py-4 border-y-[1px] border-[#172544] font-serif">
+            <h1 className="text-2xl flex justify-between w-full text-left my-4 py-4 border-y-[1px] border-[#172544] font-serif">
               Amenities & advantages
-            </h2>
+            </h1>
             <div className="flex gap-[5%]">
               <ul className="flex flex-col gap-2">
                 {listings[0]?.amenities &&
@@ -441,9 +466,6 @@ const Page = (props: Props) => {
                   })}
               </ul>
             </div>
-            {/* <button className="font-sans hover:bg-[#fff] text-base my-8 py-2 px-4 border border-[#172544] rounded-xl">
-          Show all xx services
-        </button> */}
           </div>
         </div>
         <ToastContainer

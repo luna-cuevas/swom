@@ -5,11 +5,12 @@ import { supabaseClient } from '@/utils/supabaseClient';
 import { CheckoutSubscriptionBody } from '@/app/api/subscription/makeSubscription/route';
 import { loadStripe } from '@stripe/stripe-js';
 import Stripe from 'stripe';
-import { useStateContext } from '@/context/StateContext';
 import { ToastContainer, toast } from 'react-toastify';
 import { useRouter, useSearchParams } from 'next/navigation';
 
 import 'react-toastify/dist/ReactToastify.css';
+import { useAtom } from 'jotai';
+import { globalStateAtom } from '@/context/atoms';
 
 type Props = {};
 
@@ -21,7 +22,7 @@ const SignUpForm = (props: Props) => {
     amount: 20000,
     planDescription: 'Subscribe for $200 per year.',
   });
-  const { state, setState } = useStateContext();
+  const [state, setState] = useAtom(globalStateAtom);
   const [stripe, setStripe] = useState<Stripe | null>(null);
   const [subScreen, setSubScreen] = useState(false);
   const router = useRouter();

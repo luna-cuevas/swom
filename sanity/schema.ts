@@ -4,9 +4,9 @@ import listings from './schemas/listings'
 import userInfo from './schemas/userInfo'
 import homeInfo from './schemas/homeInfo'
 import amenities from './schemas/amenities'
-// import profileImage from './schemas/profileImage'
 import needsApproval from './schemas/needsApproval'
+import highlightedListings from './schemas/highlightedListings'
 
 export const schema: { types: SchemaTypeDefinition[] } = {
-  types: [cityDescriptions, listings, userInfo, homeInfo, amenities, needsApproval],
+  types: [cityDescriptions, listings, userInfo, homeInfo, amenities, needsApproval, highlightedListings],
 }

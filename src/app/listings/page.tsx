@@ -1,12 +1,13 @@
 'use client';
 import GoogleMapComponent from '@/components/GoogleMapComponent';
 import ListingCard from '@/components/ListingCard';
-import { useStateContext } from '@/context/StateContext';
 import { supabaseClient } from '@/utils/supabaseClient';
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import Stripe from 'stripe';
 import { sanityClient } from '@/utils/sanityClient';
 import ImageUrlBuilder from '@sanity/image-url';
+import { useAtom } from 'jotai';
+import { globalStateAtom } from '@/context/atoms';
 
 type Props = {};
 
@@ -31,16 +32,12 @@ const Page = (props: Props) => {
   const [isIdle, setIsIdle] = useState<boolean>(false);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const supabase = supabaseClient();
-  const { state, setState } = useStateContext();
+  const [state, setState] = useAtom(globalStateAtom);
   const builder = ImageUrlBuilder(sanityClient);
-
-  function urlFor(source: any) {
-    return builder.image(source);
-  }
 
   useEffect(() => {
     if (state.loggedInUser) {
-      fetchListings();
+      memoizedListings;
     }
   }, [state.user, state.loggedInUser, state.loggedInUser?.id]);
 
@@ -106,6 +103,8 @@ const Page = (props: Props) => {
       console.error('Error fetching data:', error.message);
     }
   };
+
+  const memoizedListings = useMemo(() => fetchListings(), [state.loggedInUser]);
 
   const filteredListings = async () => {
     if (whereIsIt.length > 0) {

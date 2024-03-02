@@ -1,10 +1,11 @@
-import { useStateContext } from '@/context/StateContext';
 import React, { useState } from 'react';
 import { useDropzone } from 'react-dropzone';
 import { DragDropContext, Draggable, Droppable } from 'react-beautiful-dnd';
 import { ToastContainer, toast } from 'react-toastify';
 
 import 'react-toastify/dist/ReactToastify.css';
+import { useAtom } from 'jotai';
+import { globalStateAtom } from '@/context/atoms';
 
 type Props = {
   setImageFiles: React.Dispatch<React.SetStateAction<File[]>>;
@@ -12,7 +13,7 @@ type Props = {
 };
 
 const DropZone: React.FC<Props> = (props) => {
-  const { state, setState } = useStateContext();
+  const [state, setState] = useAtom(globalStateAtom);
   const [orderedImageFiles, setOrderedImageFiles] = useState<File[]>(
     props.imageFiles
   );

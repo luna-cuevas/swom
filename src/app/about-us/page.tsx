@@ -14,11 +14,11 @@ const Page = (props: Props) => {
 
       <div className="flex px-8  flex-col md:flex-row h-[50vh] justify-center m-auto py-4">
         <div className="md:w-1/3 px-4 my-auto">
-          <h2 className=" tracking-[0.1rem] text-center md:text-left font-light font-serif pb-4 text-4xl md:text-5xl">
+          <h1 className="inline tracking-[0.1rem] text-center md:text-left font-light font-serif pb-4 text-4xl md:text-5xl">
             &quot;I&apos;ve got a life to <br />{' '}
             <strong className="italic ">start living.</strong>
             &quot;{' '}
-          </h2>
+          </h1>
           <p className="text-center uppercase tracking-[0.3rem] font-light font-sans pb-4 text-xs">
             - The Holiday (2006)
           </p>
@@ -64,9 +64,9 @@ const Page = (props: Props) => {
 
       <div className="flex flex-col md:flex-row py-16 w-[80%] justify-evenly align-middle m-auto h-[120vh] md:h-[100vh]">
         <div className="md:w-1/3">
-          <h2 className=" text-5xl font-  font-serif tracking-[0.1rem]">
+          <h1 className=" text-5xl font-  font-serif tracking-[0.1rem]">
             Why we <br /> created <strong className="italic">SWOM</strong>
-          </h2>
+          </h1>
           <div className="border my-6 border-black w-full" />
           <p className="font-sans text-left text-lg font-thin">
             We believe in TRUST and we make it our main currency. We celebrate

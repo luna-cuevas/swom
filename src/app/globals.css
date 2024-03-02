@@ -28,34 +28,36 @@
 }
 
 li {
-  font-family: 'Kanit';
+  font-family: 'Kanit' !important;
 }
 
 textPath {
-  font-family: 'Noto';
-  font-weight: 500;
+  font-family: 'Noto' !important;
   font-size: 8px;
   letter-spacing: 0.2rem;
 }
 
-h1 {
-  font-family: 'Kanit';
-  font-weight: 500;
+h1,
+label {
+  font-family: 'EBGaramond' !important;
 }
 
 h2 {
-  font-family: 'Kanit';
-  font-weight: 500;
+  font-family: 'Kanit' !important;
   font-size: 1.5rem;
 }
 
-p {
-  font-family: 'EBGaramond';
-  font-weight: 500;
+p,
+input,
+button,
+select,
+textarea {
+  font-family: 'Noto' !important;
 }
 
 a {
   display: flex;
+  font-family: 'Noto' !important;
   flex-wrap: wrap;
   align-content: center;
 }
