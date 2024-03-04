@@ -24,7 +24,12 @@ export default function sitemap(): MetadataRoute.Sitemap {
 
   const staticPaths = [
     '/',
-    '',
+    '/home',
+    '/how-it-works',
+    '/membership',
+    '/listings',
+    '/about-us',
+    '/become-member',
   ];
 
   const combinedPaths = [...staticPaths, ...dynamicPaths];
