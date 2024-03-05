@@ -81,9 +81,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <Head>
-        <GoogleAnalytics gaId="G-Z15K7DHQM2" />
-      </Head>
+      <GoogleAnalytics gaId="G-Z15K7DHQM2" />
       <Providers>
         <body className="relative">
           <CookieConsentComponent />
