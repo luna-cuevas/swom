@@ -8,6 +8,8 @@ import { Analytics } from '@vercel/analytics/react';
 import { SpeedInsights } from '@vercel/speed-insights/next';
 import CookieConsentComponent from '@/components/CookieConsentComponent';
 import Providers from '../context/providers';
+import Head from 'next/head';
+import { GoogleAnalytics } from '@next/third-parties/google';
 
 export const metadata: Metadata = {
   title: 'SWOM - Swap your home.',
@@ -79,6 +81,9 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
+      <Head>
+        <GoogleAnalytics gaId="G-Z15K7DHQM2" />
+      </Head>
       <Providers>
         <body className="relative">
           <CookieConsentComponent />
