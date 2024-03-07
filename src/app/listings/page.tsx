@@ -8,6 +8,7 @@ import { sanityClient } from '@/utils/sanityClient';
 import ImageUrlBuilder from '@sanity/image-url';
 import { useAtom } from 'jotai';
 import { globalStateAtom } from '@/context/atoms';
+import { getListings } from '../actions/getListings';
 
 type Props = {};
 
@@ -36,19 +37,16 @@ const Page = (props: Props) => {
   const builder = ImageUrlBuilder(sanityClient);
 
   useEffect(() => {
-    if (state.loggedInUser) {
+    if (state.loggedInUser && listings.length === 0) {
       memoizedListings;
     }
   }, [state.user, state.loggedInUser, state.loggedInUser?.id]);
 
   const fetchListings = async () => {
     setIsLoading(true);
+
     try {
-      const query = `*[_type == "listing"]{
-        ...,
-      "imageUrl": image.asset->url
-    }`;
-      const data = await sanityClient.fetch(query);
+      const data = await getListings();
 
       const subscribedListings = await Promise.all(
         data.map(async (listing: any) => {
@@ -65,8 +63,10 @@ const Page = (props: Props) => {
         (listing: any) => listing !== null
       );
 
-      setAllListings(filteredListings);
-      setListings(filteredListings);
+      if (filteredListings.length > 0) {
+        setAllListings(filteredListings);
+        setListings(filteredListings);
+      }
 
       const { data: allLiked, error: allLikedError } = await supabase
         .from('appUsers')
@@ -104,7 +104,7 @@ const Page = (props: Props) => {
     }
   };
 
-  const memoizedListings = useMemo(() => fetchListings(), [state.loggedInUser]);
+  const memoizedListings = useMemo(() => fetchListings(), []);
 
   const filteredListings = async () => {
     if (whereIsIt.length > 0) {
