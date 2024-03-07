@@ -1,4 +1,3 @@
-'use client';
 import Carousel from '@/components/Carousel';
 import Image from 'next/image';
 import Link from 'next/link';
@@ -8,7 +7,7 @@ import { urlForImage } from '../../../sanity/lib/image';
 
 type Props = {};
 
-const Page = (props: Props) => {
+const Page = async (props: Props) => {
   // const updatePassword = async () => {
   //   const { data: user, error } = await supabase.auth.admin.updateUserById(
   //     'f9afa7b8-8005-454e-a74e-8e71670e2ce3',
