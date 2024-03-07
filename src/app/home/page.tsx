@@ -1,35 +1,11 @@
 import Carousel from '@/components/Carousel';
-import { globalStateAtom } from '@/context/atoms';
-import { useAtom } from 'jotai';
 import Image from 'next/image';
 import Link from 'next/link';
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { sanityClient } from '../../../sanity/lib/client';
 import { urlForImage } from '../../../sanity/lib/image';
 
 type Props = {};
-
-const fetchListings = async () => {
-  try {
-    const query = `*[_type == "highlightedListings"]{
-      listings[]->{
-        _id,
-        userInfo {
-          email
-        },
-        homeInfo {
-          "firstImage": listingImages[0]
-        }
-      }
-    }`;
-    const data = await sanityClient.fetch(query);
-
-    return data[0].listings;
-  } catch (error: any) {
-    console.error('Error fetching data:', error.message);
-    return [];
-  }
-};
 
 const Page = async (props: Props) => {
   // const updatePassword = async () => {
@@ -42,12 +18,38 @@ const Page = async (props: Props) => {
   // };
   // updatePassword();
 
-  const highlightedListings = await fetchListings();
+  // const highlightedListings = await fetchListings();
 
-  highlightedListings.map((listing: any) => {
-    listing.homeInfo.firstImage = urlForImage(listing.homeInfo.firstImage);
-    console.log('listing', listing);
-  });
+  // const [listings, setListings] = useState([]);
+
+  // useEffect(() => {
+  //   const fetchListings = async () => {
+  //     try {
+  //       const response = await fetch('api/getHighlightedListings');
+  //       if (!response.ok) {
+  //         throw new Error(`HTTP error! status: ${response.status}`);
+  //       }
+  //       const data = await response.json();
+
+  //       const updatedData = data.map((listing: any) => {
+  //         return {
+  //           ...listing,
+  //           homeInfo: {
+  //             ...listing.homeInfo,
+  //             firstImage: urlForImage(listing.homeInfo.firstImage),
+  //           },
+  //         };
+  //       });
+
+  //       setListings(updatedData);
+  //     } catch (error) {
+  //       console.error('Error fetching data:', error);
+  //       setListings([]);
+  //     }
+  //   };
+
+  //   fetchListings();
+  // }, []);
 
   return (
     <main
@@ -62,12 +64,25 @@ const Page = async (props: Props) => {
             </h1>
           </div>
           <Carousel
-            images={highlightedListings.map((listing: any) => {
-              return {
-                src: listing.homeInfo.firstImage,
-                listingNum: listing._id,
-              };
-            })}
+            images={
+              // listings?.map((listing: any) => {
+              // return {
+              //   src: listing.homeInfo.firstImage,
+              //   listingNum: listing._id,
+              // };
+              // })
+              [
+                { src: '/homepage/hero-image-1.png', listingNum: '5201' },
+                { src: '/homepage/hero-image-2.png', listingNum: '103' },
+                { src: '/homepage/hero-image-3.png', listingNum: '5702' },
+                { src: '/homepage/hero-image-4.png', listingNum: '102' },
+                { src: '/homepage/hero-image-5.png', listingNum: '3401' },
+                { src: '/homepage/hero-image-6.png', listingNum: '5704' },
+                { src: '/homepage/hero-image-7.png', listingNum: '35801' },
+                { src: '/homepage/hero-image-8.png', listingNum: '6101' },
+                { src: '/homepage/hero-image-9.png', listingNum: '5202' },
+              ]
+            }
             picturesPerSlide={1}
             overlay={true}
           />
@@ -287,10 +302,9 @@ const Page = async (props: Props) => {
             </p>
           </div>
 
-          <div className="relative hidden lg:flex w-1/3 h-2/3 xl:h-full my-auto">
+          <div className="relative hidden object-contain lg:flex w-1/3 h-2/3 xl:h-full my-auto">
             <Image
               src="/homepage/bottom-logo.png"
-              objectFit="contain"
               className="object-contain"
               alt="bottom image"
               fill></Image>
