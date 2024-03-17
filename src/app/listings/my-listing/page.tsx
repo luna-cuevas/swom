@@ -1,10 +1,9 @@
 'use client';
 import CarouselPage from '@/components/Carousel';
-import DropZone from '@/components/DropZone';
 import GoogleMapComponent from '@/components/GoogleMapComponent';
 import Image from 'next/image';
-import React, { use, useCallback, useEffect, useRef, useState } from 'react';
-import { set, useForm, Controller } from 'react-hook-form';
+import React, { useEffect, useRef, useState } from 'react';
+import { useForm } from 'react-hook-form';
 import { supabaseClient } from '@/utils/supabaseClient';
 import ProfilePicDropZone from '@/components/ProfilePicDropZone';
 import BecomeMemberDropzone from '@/components/BecomeMemberDropzone';
@@ -33,7 +32,6 @@ const Page = (props: Props) => {
   const [whereIsIt, setWhereIsIt] = useState('');
   const [listings, setListings] = useState<any>([]);
   const [downloadedImages, setDownloadedImages] = useState<any>([]);
-  const router = useRouter();
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCity, setSelectedCity] = useState(null);
   const [windowWidth, setWindowWidth] = useState(

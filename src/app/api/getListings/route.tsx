@@ -1,29 +1,17 @@
-import { supabaseClient } from '@/utils/supabaseClient';
 import { NextResponse } from 'next/server';
+import { sanityClient } from '../../../../sanity/lib/client';
 
-export async function POST(req: Request, res: Response) {
-  const supabase = supabaseClient();
-  const body = await req.json();
-  const id = body.userId;
+export async function GET() {
+  try {
+    const query = `*[_type == "listing"]{
+        ...,
+      "imageUrl": image.asset->url
+    }`;
+    const data = await sanityClient.fetch(query);
 
-  if (id) {
-    const { data, error } = await supabase
-      .from('listings')
-      .select('*')
-      .eq('user_id', id)
-      .limit(50);
-    if (error) {
-      throw error;
-    }
     return NextResponse.json(data);
-  } else {
-    const { data, error } = await supabase
-      .from('listings')
-      .select('*')
-      .limit(50);
-    if (error) {
-      throw error;
-    }
-    return NextResponse.json(data);
+  } catch (error: any) {
+    console.error('Error fetching data:', error.message);
+    return NextResponse.error();
   }
 }

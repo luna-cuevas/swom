@@ -17,7 +17,7 @@ export async function POST(req: Request, res: Response) {
         limit: 1,
       });
 
-      return NextResponse.json(subscriptions.data[0]);
+      return NextResponse.json(subscriptions.data[0].status);
     } else {
       return NextResponse.json({ message: 'No customer found' });
     }

@@ -105,10 +105,6 @@ export default function GoogleMapComponent(props: Props) {
                   },
                 ]);
               } else {
-                console.error(
-                  'Geocode was not successful for the following reason:',
-                  status
-                );
               }
             }
           );
@@ -132,7 +128,6 @@ export default function GoogleMapComponent(props: Props) {
       } else if ((location || props.city) && !inputValue) {
         console.log('location', location);
         console.log('props.city', props.city);
-        console.log('inputValue', inputValue);
         // Get the latitude and longitude of the city
         geocoder.geocode(
           { address: location || props.city },
@@ -149,8 +144,6 @@ export default function GoogleMapComponent(props: Props) {
           props.setWhereIsIt(location);
         }
       } else if (inputValue) {
-        // Get the latitude and longitude of the exact address
-        console.log('inputValue', inputValue);
         geocoder.geocode({ address: inputValue }, (results, status) => {
           if (status === 'OK' && results != null) {
             const location = results[0].geometry.location;

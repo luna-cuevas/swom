@@ -3,9 +3,6 @@ import GoogleMapComponent from '@/components/GoogleMapComponent';
 import ListingCard from '@/components/ListingCard';
 import { supabaseClient } from '@/utils/supabaseClient';
 import React, { useEffect, useMemo, useState } from 'react';
-import Stripe from 'stripe';
-import { sanityClient } from '@/utils/sanityClient';
-import ImageUrlBuilder from '@sanity/image-url';
 import { useAtom } from 'jotai';
 import { globalStateAtom } from '@/context/atoms';
 
@@ -14,29 +11,19 @@ type Props = {};
 const Page = (props: Props) => {
   const [listings, setListings] = useState<any>([]);
   const [allListings, setAllListings] = useState<any>([]);
-  const [favorite, setFavorite] = useState(
-    [] as {
-      favorite: boolean;
-      listingId: string;
-    }[]
-  );
-
-  const stripeActivation = new Stripe(
-    process.env.NEXT_PUBLIC_STRIPE_SECRET_KEY!,
-    {
-      apiVersion: '2023-08-16',
-    }
-  );
   const [isSearching, setIsSearching] = useState<boolean>(false);
   const [whereIsIt, setWhereIsIt] = useState<string>('');
   const [isIdle, setIsIdle] = useState<boolean>(false);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const supabase = supabaseClient();
   const [state, setState] = useAtom(globalStateAtom);
-  const builder = ImageUrlBuilder(sanityClient);
 
   useEffect(() => {
-    if (state.loggedInUser) {
+    filteredListings();
+  }, [isIdle, whereIsIt]);
+
+  useEffect(() => {
+    if (state.loggedInUser && state.allListings.length === 0) {
       memoizedListings;
     }
   }, [state.user, state.loggedInUser, state.loggedInUser?.id]);
@@ -44,14 +31,16 @@ const Page = (props: Props) => {
   const fetchListings = async () => {
     setIsLoading(true);
     try {
-      const query = `*[_type == "listing"]{
-        ...,
-      "imageUrl": image.asset->url
-    }`;
-      const data = await sanityClient.fetch(query);
+      const data = fetch('/api/getListings');
+      const dataJson = await data.then((res) => res.json());
+
+      if (dataJson.error) {
+        console.log('fetch listings error:', dataJson.error);
+        return;
+      }
 
       const subscribedListings = await Promise.all(
-        data.map(async (listing: any) => {
+        dataJson.map(async (listing: any) => {
           const isSubscribed = await isUserSubscribed(listing.userInfo.email);
           if (isSubscribed) {
             return listing;
@@ -67,6 +56,10 @@ const Page = (props: Props) => {
 
       setAllListings(filteredListings);
       setListings(filteredListings);
+      setState({
+        ...state,
+        allListings: filteredListings,
+      });
 
       const { data: allLiked, error: allLikedError } = await supabase
         .from('appUsers')
@@ -78,7 +71,6 @@ const Page = (props: Props) => {
       }
 
       if (allLiked) {
-        // setListing all liked listings
         allLiked[0]?.favorites?.map((favorite: any) => {
           setListings((prev: any) => {
             return prev.map((listing: any) => {
@@ -104,8 +96,6 @@ const Page = (props: Props) => {
     }
   };
 
-  const memoizedListings = useMemo(() => fetchListings(), [state.loggedInUser]);
-
   const filteredListings = async () => {
     if (whereIsIt.length > 0) {
       const filteredListingsByLocation = allListings.filter((listing: any) => {
@@ -120,9 +110,6 @@ const Page = (props: Props) => {
     }
   };
 
-  // ... [rest of your imports and component code]
-
-  // Utility function to sleep for a given number of milliseconds
   const sleep = (ms: number) =>
     new Promise((resolve) => setTimeout(resolve, ms));
 
@@ -136,25 +123,20 @@ const Page = (props: Props) => {
     }
 
     try {
-      if (!stripeActivation) {
-        console.log('Stripe.js has not loaded yet.');
-        return false;
-      }
+      const subscriptionStatus = await fetch(
+        '/api/subscription/getSubscription',
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ email }),
+        }
+      );
 
-      const customers = await stripeActivation.customers.list({ email: email });
-      const customer = customers.data[0];
+      const subscriptionStatusJson = await subscriptionStatus.json();
 
-      if (customer) {
-        const subscriptions = await stripeActivation.subscriptions.list({
-          customer: customer.id,
-          limit: 1,
-        });
-
-        return subscriptions.data.length > 0;
-      } else {
-        console.log('Customer not found');
-        return false;
-      }
+      return subscriptionStatusJson === 'active';
     } catch (error) {
       // Wait for delay milliseconds and then retry
       console.log(`Retrying in ${delay}ms...`);
@@ -163,11 +145,7 @@ const Page = (props: Props) => {
     }
   }
 
-  // ... [rest of your component code]
-
-  useEffect(() => {
-    filteredListings();
-  }, [isIdle, whereIsIt]);
+  const memoizedListings = useMemo(() => fetchListings(), [state.loggedInUser]);
 
   return (
     <main className="pt-6  flex   flex-col bg-[#F2E9E7] min-h-screen">
@@ -200,7 +178,6 @@ const Page = (props: Props) => {
               hideMap={whereIsIt.length === 0}
               listings={listings && listings}
               setWhereIsIt={setWhereIsIt}
-              // setIsIdle={setIsIdle}
             />
           </div>
           <div className="flex flex-col  flex-grow mx-auto w-full mt-8 justify-between">
