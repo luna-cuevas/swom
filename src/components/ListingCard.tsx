@@ -108,7 +108,7 @@ const ListingCard = (props: Props) => {
           }>
           <Image
             src={
-              props.listingInfo?.homeInfo.listingImages[0]?.asset
+              props.listingInfo?.homeInfo?.listingImages?.[0]?.asset
                 ? urlFor(
                     props.listingInfo?.homeInfo.listingImages[0].asset
                   ).url()
