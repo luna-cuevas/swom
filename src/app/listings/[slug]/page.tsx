@@ -118,7 +118,7 @@ const Page = (props: Props) => {
   const cityDescription = cities.filter((city: any) => {
     return city.city
       .toLowerCase()
-      .includes(listings[0]?.homeInfo?.city.split(',')[0].toLowerCase());
+      .includes(listings[0]?.homeInfo?.city?.split(',')[0].toLowerCase());
   });
 
   useEffect(() => {
