@@ -156,7 +156,7 @@ const CarouselPage = (props: Props) => {
             </div>
 
             {props.overlay && (
-              <div className="w-full z-10 absolute top-0 left-0 right-0 bottom-0 h-full bg-[#00000052]" />
+              <div className="w-full z-10 absolute top-0 left-0 right-0 bottom-0 h-full bg-[#00000080]" />
             )}
 
             <Image

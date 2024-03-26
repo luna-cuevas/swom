@@ -22,7 +22,7 @@ type Props = {
   newLocation?: (location: string) => void;
   city?: string;
   noSearch?: boolean;
-  exactAddress?: string; // Prop for the exact address
+  exactAddress?: string | { lat: number; lng: number };
   radius?: number; // Radius in meters
   hideMap?: boolean;
   listings?: Array<{
@@ -115,9 +115,13 @@ export default function GoogleMapComponent(props: Props) {
         });
       }
 
-      if (props.exactAddress && !inputValue) {
+      if (
+        props.exactAddress &&
+        !inputValue &&
+        typeof props.exactAddress == 'string'
+      ) {
         // Use geocoding for the exact address
-        console.log('props.exactAddress', props.exactAddress);
+        console.log('props.exactAddress && !inputValue');
         geocoder.geocode({ address: props.exactAddress }, (results, status) => {
           if (status === 'OK' && results != null) {
             const location = results[0].geometry.location;
@@ -130,6 +134,8 @@ export default function GoogleMapComponent(props: Props) {
           props.setWhereIsIt(props.exactAddress);
         }
       } else if ((location || props.city) && !inputValue) {
+        console.log('(location || props.city) && !inputValue');
+
         console.log('location', location);
         console.log('props.city', props.city);
         console.log('inputValue', inputValue);
@@ -151,14 +157,19 @@ export default function GoogleMapComponent(props: Props) {
       } else if (inputValue) {
         // Get the latitude and longitude of the exact address
         console.log('inputValue', inputValue);
-        geocoder.geocode({ address: inputValue }, (results, status) => {
-          if (status === 'OK' && results != null) {
-            const location = results[0].geometry.location;
-            const lat = location.lat();
-            const lng = location.lng();
-            setCenter({ lat, lng });
-          }
-        });
+
+        if (typeof inputValue == 'string') {
+          geocoder.geocode({ address: inputValue }, (results, status) => {
+            if (status === 'OK' && results != null) {
+              const location = results[0].geometry.location;
+              const lat = location.lat();
+              const lng = location.lng();
+              setCenter({ lat, lng });
+            }
+          });
+        } else if (typeof inputValue == 'object') {
+          setCenter({ lat: inputValue.lat, lng: inputValue.lng });
+        }
       }
     }
   }, [
@@ -246,7 +257,9 @@ export default function GoogleMapComponent(props: Props) {
             }
           }}
           placeholder={
-            props.exactAddress ? props.exactAddress : 'Search for a city'
+            typeof props.exactAddress == 'string'
+              ? props.exactAddress
+              : 'Search for a city'
           }
         />
       )}

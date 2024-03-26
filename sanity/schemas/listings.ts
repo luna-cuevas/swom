@@ -6,11 +6,6 @@ export default defineType({
   type: 'document',
   fields: [
     {
-      name: 'listingNumber',
-      title: 'Listing Number',
-      type: 'number',
-    },
-    {
       name: 'userInfo',
       title: 'User Information',
       type: 'userInfo', // Referencing the userInfo schema

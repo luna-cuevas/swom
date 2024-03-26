@@ -4,14 +4,14 @@ export default defineType({
   title: 'User Information',
   type: 'object',
   fields: [
-    { name: 'name', type: 'string', title: 'Name' },
+    { name: 'name', type: 'string', title: 'Name', validation: Rule => Rule.required().error('This field is required.') },
     {
       name: 'profileImage', type: 'image', title: 'Profile Image',
     },
     {
       name: 'dob', type: 'date', title: 'Date of Birth',
     },
-    { name: 'email', type: 'string', title: 'Email' },
+    { name: 'email', type: 'string', title: 'Email', validation: Rule => Rule.required().error('This field is required.') },
     {
       name: 'phone', type: 'string', title: 'Phone', validation: Rule => Rule.required().regex(/^\+\d+/, 'Phone number must start with a country code (+ followed by digits)')
     },

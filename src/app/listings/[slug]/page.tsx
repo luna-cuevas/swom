@@ -55,12 +55,14 @@ const Page = (props: Props) => {
     };
 
     fetchCities();
-    const fetchContactedUser = async () => {
-      const user = await fetchUserByEmail(listings[0]?.userInfo?.email);
-      setContactedUser(user);
-    };
 
-    fetchContactedUser();
+    if (listings.length > 0) {
+      const fetchContactedUser = async () => {
+        const user = await fetchUserByEmail(listings[0]?.userInfo?.email);
+        setContactedUser(user);
+      };
+      fetchContactedUser();
+    }
   }, [listings]);
 
   const fetchListings = async () => {
@@ -91,18 +93,22 @@ const Page = (props: Props) => {
         },
       }));
 
-      data[0]?.homeInfo?.listingImages &&
-        data[0]?.homeInfo?.listingImages.forEach((image: any) => {
-          const imageUrl = urlFor(image).url();
-          setImageFiles((prev: any) => [...prev, imageUrl]);
-        });
+      if (data[0].homeInfo.listingImages) {
+        const updatedImages = data[0].homeInfo.listingImages.map(
+          (image: any, index: number) => {
+            const imageUrl = urlFor(image).url();
+            setImageFiles((prev) => [...prev, imageUrl]);
+            return { src: imageUrl, key: index };
+          }
+        );
+
+        data[0].homeInfo.listingImages = updatedImages;
+      }
 
       console.log('setting profile image');
 
-      if (data[0]?.userInfo?.profileImage) {
-        const imageUrl = urlFor(
-          data[0]?.userInfo?.profileImage.image.asset
-        ).url();
+      if (data[0].userInfo.profileImage !== undefined) {
+        const imageUrl = urlFor(data[0]?.userInfo.profileImage).url();
         console.log('imageUrl', imageUrl);
         data[0].userInfo.profileImage.src = imageUrl;
       }
@@ -125,7 +131,7 @@ const Page = (props: Props) => {
     fetchListings();
   }, []);
 
-  console.log('listings', listings);
+  console.log('listing', listings[0]);
 
   if (isLoading) {
     return (
@@ -188,11 +194,12 @@ const Page = (props: Props) => {
                   <Image
                     fill
                     src={
-                      listings[0]?.userInfo?.profileImage?.image
+                      listings[0]?.userInfo?.profileImage?.src
                         ? listings[0]?.userInfo?.profileImage.src
                         : '/placeholder.png'
                     }
                     sizes="100px"
+                    priority
                     className="rounded-full object-cover"
                     alt=""
                   />
@@ -265,7 +272,6 @@ const Page = (props: Props) => {
               </div>
 
               <div className="flex relative h-[30vh] gap-4 my-4">
-                {/* {imageFiles.length > 0 && ( */}
                 <CarouselPage
                   picturesPerSlide={3}
                   selectedImage={selectedImage}
@@ -273,18 +279,14 @@ const Page = (props: Props) => {
                   overlay={false}
                   contain={false}
                   images={
-                    imageFiles.length > 0
-                      ? imageFiles.map((file) => ({
-                          key: file,
-                          src: file.toString(),
-                        }))
-                      : [1, 2].map((file) => ({
+                    listings[0]?.homeInfo?.listingImages?.length > 0
+                      ? listings[0]?.homeInfo?.listingImages
+                      : [1, 2, 3].map((file) => ({
                           key: file,
                           src: '/placeholder.png',
                         }))
                   }
                 />
-                {/* )} */}
               </div>
 
               <div
@@ -452,12 +454,12 @@ const Page = (props: Props) => {
               Amenities & advantages
             </h1>
             <div className="flex gap-[5%]">
-              <ul className="flex flex-col gap-2">
+              <ul className="grid w-full flex-wrap gap-4 text-center grid-cols-4">
                 {listings[0]?.amenities &&
                   Object.entries(listings[0]?.amenities).map(([key, value]) => {
                     if (value === true) {
                       return (
-                        <li key={key} className="capitalize">
+                        <li key={key} className="capitalize text-xl">
                           {key}
                         </li>
                       );

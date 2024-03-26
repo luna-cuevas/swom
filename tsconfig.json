@@ -30,7 +30,8 @@
     ".next/types/**/*.ts",
     "src/utils/useCloudinary.js",
     "src/utils/supabaseClient.js",
-    "src/utils/sanityClient.js"
+    "src/utils/sanityClient.js",
+    "sanity/**/*.ts"
   ],
   "exclude": ["node_modules"]
 }
