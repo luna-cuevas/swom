@@ -30,7 +30,7 @@ const Page = (props: Props) => {
   const [selectedImage, setSelectedImage] = useState(0); // Track selected image
   const aboutYourHomeRef = useRef<HTMLTextAreaElement | null>(null);
   const [aboutYou, setAboutYou] = useState(false);
-  const [whereIsIt, setWhereIsIt] = useState('');
+  const [whereIsIt, setWhereIsIt] = useState<any>(null);
   const [listings, setListings] = useState<any>([]);
   const [downloadedImages, setDownloadedImages] = useState<any>([]);
   const router = useRouter();
@@ -225,7 +225,7 @@ const Page = (props: Props) => {
 
   useEffect(() => {
     setValue('homeInfo.address', whereIsIt);
-    console.log(watch('homeInfo.address'));
+    console.log('home.address', watch('homeInfo.address'));
   }, [whereIsIt]);
 
   useEffect(() => {
@@ -903,7 +903,7 @@ const Page = (props: Props) => {
                   <option value="400-450">400 - 450 m2</option>
                   <option value="450-500">450 - 500 m2</option>
                   <option value="500-550">500 - 550 m2</option>
-                  <option value="550-600">550 - 600 m2</option>
+                  <option value="500+">500+ m2</option>
                 </select>
               </div>
             </div>

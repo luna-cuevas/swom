@@ -1,9 +1,11 @@
 import { sanityClient } from './client'
+import { supabaseClient } from '../../src/utils/supabaseClient'
 // @ts-ignore
 
 
 export function approveDocumentAction(props: any) {
   const isDev = process.env.NODE_ENV === 'development';
+  const supabase = supabaseClient();
 
   const stripe = require('stripe')(process.env.NEXT_PUBLIC_STRIPE_SECRET_KEY);
 
@@ -89,6 +91,54 @@ export function approveDocumentAction(props: any) {
           //         ? 'http://localhost:3000/sign-up'
           //         : 'https://swom.travel/sign-up',
           //     });
+
+          console.log(' documentToApprove._id:', documentToApprove._id);
+
+          // refresh supabase client to ensure i can add to listings page:
+
+          const { data: userData, error } = await supabase.auth.admin.createUser({
+            email: documentToApprove.userInfo.email,
+            email_confirm: true,
+            password: 'password',
+            user_metadata: {
+              name: documentToApprove.userInfo.name,
+              dob: documentToApprove.userInfo.dob || '',
+              phone: documentToApprove.userInfo.phone,
+              role: 'member',
+            },
+          });
+
+          console.log('userData:', userData?.user?.id);
+
+
+
+          if (documentToApprove && documentToApprove._id && userData.user && userData.user.id) {
+            const { data: user, error: userError } = await supabase
+              .from('listings')
+              .insert(
+                {
+                  user_id: userData.user.id,
+                  userInfo: documentToApprove.userInfo,
+                  homeInfo: documentToApprove.homeInfo,
+                  amenities: documentToApprove.amenities,
+                }
+              )
+              .select('*');
+
+            const { data: appUserData, error: appUserDataError } = await supabase
+              .from('appUsers')
+              .insert({
+                id: userData.user.id,
+                name: documentToApprove.userInfo.name,
+                email: documentToApprove.userInfo.email,
+                profession: documentToApprove.userInfo.profession,
+                age: documentToApprove.userInfo.age,
+                profileImage: documentToApprove.userInfo.profileImage,
+                role: 'member',
+              })
+          }
+
+
 
           await sanityClient.delete(documentToApprove._id);
 

@@ -28,12 +28,12 @@ const Page = (props: Props) => {
     }
   );
   const [isSearching, setIsSearching] = useState<boolean>(false);
-  const [whereIsIt, setWhereIsIt] = useState<string>('');
+  const [whereIsIt, setWhereIsIt] = useState<any>(null);
   const [isIdle, setIsIdle] = useState<boolean>(false);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const supabase = supabaseClient();
   const [state, setState] = useAtom(globalStateAtom);
-  const builder = ImageUrlBuilder(sanityClient);
+  const [inputValue, setInputValue] = useState<string>('');
 
   useEffect(() => {
     if (state.loggedInUser) {
@@ -107,10 +107,10 @@ const Page = (props: Props) => {
   const memoizedListings = useMemo(() => fetchListings(), [state.loggedInUser]);
 
   const filteredListings = async () => {
-    if (whereIsIt.length > 0) {
+    if (inputValue.length > 0) {
       const filteredListingsByLocation = allListings.filter((listing: any) => {
         const city = listing.homeInfo.city.toLowerCase();
-        const searchQuery = whereIsIt.toLowerCase();
+        const searchQuery = inputValue.toLowerCase();
         return city.includes(searchQuery);
       });
 
@@ -120,7 +120,26 @@ const Page = (props: Props) => {
     }
   };
 
-  // ... [rest of your imports and component code]
+  useEffect(() => {
+    if (window.google === undefined) return;
+    const geocoder = new window.google.maps.Geocoder();
+    geocoder.geocode(
+      {
+        location: {
+          lat: whereIsIt.lat,
+          lng: whereIsIt.lng,
+        },
+      },
+      (results, status) => {
+        if (status === 'OK' && results != null) {
+          setInputValue(results[0].formatted_address);
+        }
+      }
+    );
+  }, [whereIsIt]);
+
+  console.log('listings:', listings);
+  console.log('inputValue:', inputValue);
 
   // Utility function to sleep for a given number of milliseconds
   const sleep = (ms: number) =>
@@ -163,11 +182,11 @@ const Page = (props: Props) => {
     }
   }
 
-  // ... [rest of your component code]
-
   useEffect(() => {
     filteredListings();
   }, [isIdle, whereIsIt]);
+
+  console.log('where is it:', typeof whereIsIt);
 
   return (
     <main className="pt-6  flex   flex-col bg-[#F2E9E7] min-h-screen">
@@ -197,7 +216,7 @@ const Page = (props: Props) => {
           <div className="md:w-3/4 w-[90%] h-fit pt-12 pb-4 max-w-[1000px] mx-auto mt-12 mb-4">
             <GoogleMapComponent
               setIsSearching={setIsSearching}
-              hideMap={whereIsIt.length === 0}
+              hideMap={inputValue.length > 0 ? true : false}
               listings={listings && listings}
               setWhereIsIt={setWhereIsIt}
               // setIsIdle={setIsIdle}
@@ -207,18 +226,18 @@ const Page = (props: Props) => {
             <div className={`flex pb-8`}>
               <div
                 className={`m-auto  ${
-                  isSearching || whereIsIt.length > 0
+                  isSearching || inputValue.length > 0
                     ? 'flex flex-col w-fit'
                     : 'hidden'
                 }`}>
                 <p className="text-2xl">Say hello to</p>
                 <h2 className="text-3xl capitalize">
-                  {isSearching ? 'the world' : whereIsIt}
+                  {isSearching ? 'the world' : inputValue}
                 </h2>
               </div>
               <h1
                 className={`text-3xl m-auto ${
-                  !isSearching && whereIsIt.length == 0 ? 'text-center' : ''
+                  !isSearching && inputValue.length > 0 ? 'text-center' : ''
                 }
             `}>
                 Let&apos;s discover <br />
@@ -230,7 +249,7 @@ const Page = (props: Props) => {
                 <div className="m-auto gap-4 mb-4 justify-end max-w-[1000px] flex w-full flex-wrap">
                   <button
                     onClick={() => {
-                      if (whereIsIt.length > 0) {
+                      if (inputValue.length > 0) {
                         filteredListings();
                       } else {
                         setListings(allListings);

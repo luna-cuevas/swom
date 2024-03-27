@@ -130,8 +130,8 @@ const ListingCard = (props: Props) => {
                 : `/listings/${props.listingInfo?._id}`
             }
             className="cursor-pointer flex-col flex">
-            <h1 className="text-xl">{props.listingInfo?.homeInfo.title}</h1>
-            <p className="">{props.listingInfo?.homeInfo.city}</p>
+            <h1 className="text-xl">{props.listingInfo?.homeInfo?.title}</h1>
+            <p className="">{props.listingInfo?.homeInfo?.city}</p>
           </Link>
           <div className="flex">
             <button

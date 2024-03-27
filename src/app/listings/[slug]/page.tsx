@@ -4,7 +4,6 @@ import Image from 'next/image';
 import { usePathname, useRouter } from 'next/navigation';
 import React, { useEffect, useState } from 'react';
 import GoogleMapComponent from '@/components/GoogleMapComponent';
-import { supabaseClient } from '../../../utils/supabaseClient';
 import Link from 'next/link';
 import { sanityClient } from '@/utils/sanityClient';
 import ImageUrlBuilder from '@sanity/image-url';
@@ -12,12 +11,12 @@ import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { useAtom } from 'jotai';
 import { globalStateAtom } from '@/context/atoms';
+import { supabaseClient } from '@/utils/supabaseClient';
 type Props = {};
 
 const Page = (props: Props) => {
   const pathName = usePathname();
   const slug = pathName.split('/listings/')[1];
-  const supabase = supabaseClient();
   const [state, setState] = useAtom(globalStateAtom);
   const [imageFiles, setImageFiles] = useState<any[]>([]);
   const [selectedImage, setSelectedImage] = useState(0); // Track selected image
@@ -32,6 +31,8 @@ const Page = (props: Props) => {
     return builder.image(source);
   }
 
+  const supabase = supabaseClient();
+
   const fetchUserByEmail = async (email: string) => {
     const { data, error } = await supabase
       .from('appUsers')
@@ -41,7 +42,7 @@ const Page = (props: Props) => {
     if (error) {
       console.error('Error fetching user:', error);
     } else {
-      return data[0]?.id;
+      return data;
     }
   };
 
@@ -58,8 +59,11 @@ const Page = (props: Props) => {
 
     if (listings.length > 0) {
       const fetchContactedUser = async () => {
-        const user = await fetchUserByEmail(listings[0]?.userInfo?.email);
-        setContactedUser(user);
+        const user = await fetchUserByEmail(listings[0]?.userInfo.email);
+        console.log('user', user);
+        if (user) {
+          setContactedUser(user[0]?.id);
+        }
       };
       fetchContactedUser();
     }
@@ -94,13 +98,13 @@ const Page = (props: Props) => {
       }));
 
       if (data[0].homeInfo.listingImages) {
-        const updatedImages = data[0].homeInfo.listingImages.map(
-          (image: any, index: number) => {
+        const updatedImages = data[0].homeInfo.listingImages
+          .slice(0, 10)
+          .map((image: any, index: number) => {
             const imageUrl = urlFor(image).url();
             setImageFiles((prev) => [...prev, imageUrl]);
             return { src: imageUrl, key: index };
-          }
-        );
+          });
 
         data[0].homeInfo.listingImages = updatedImages;
       }

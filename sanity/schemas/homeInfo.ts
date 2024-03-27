@@ -15,7 +15,7 @@ export default defineType({
       name: 'address', type: 'geopoint', title: 'Address',
     },
     {
-      name: 'description', type: 'text', title: 'Description', validation: Rule => Rule.required().error('This field is required.')
+      name: 'description', type: 'text', title: 'Description',
     },
     {
       name: 'listingImages',
@@ -25,7 +25,7 @@ export default defineType({
       options: {
         layout: 'grid',
       },
-      validation: Rule => Rule.max(10).error('You can only upload up to 10 images.')
+      validation: Rule => Rule.max(16).error('You can only upload up to 16 images.')
     },
     {
       name: 'property',
@@ -77,7 +77,23 @@ export default defineType({
       name: 'bathrooms', type: 'number', title: 'Bathrooms', validation: Rule => Rule.required().error('This field is required.')
     },
     {
-      name: 'area', type: 'string', title: 'Area', validation: Rule => Rule.required().error('This field is required.')
+      name: 'area', type: 'string', title: 'Area', options: {
+        list: [
+          { title: "60 - 100", value: "60-100" },
+          { title: "100 - 150", value: "100-150" },
+          { title: "150 - 200", value: "150-200" },
+          {
+            title: "200 - 250", value: "200-250"
+          },
+          { title: "250 - 300", value: "250-300" },
+          { title: "300 - 350", value: "300-350" },
+          { title: "350 - 400", value: "350-400" },
+          { title: "400 - 450", value: "400-450" },
+          { title: "450 - 500", value: "450-500" },
+          { title: "500+", value: "500+" }
+          // Add more options as needed
+        ]
+      }, validation: Rule => Rule.required().error('This field is required.')
     },
   ],
 

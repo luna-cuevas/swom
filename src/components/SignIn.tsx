@@ -9,6 +9,7 @@ import { useRouter } from 'next/navigation';
 import Stripe from 'stripe';
 import { useAtom } from 'jotai';
 import { globalStateAtom } from '@/context/atoms';
+import { sanityClient } from '@/utils/sanityClient';
 
 type Props = {
   setSignInActive: React.Dispatch<React.SetStateAction<boolean>>;

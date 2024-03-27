@@ -6,7 +6,8 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import React, { useEffect, useRef, useState } from 'react';
-import useSWR from 'swr';
+import { sanityClient } from '../../sanity/lib/client';
+import { urlForImage } from '../../sanity/lib/image';
 
 type Props = {};
 
@@ -107,9 +108,60 @@ const Messages = (props: Props) => {
     });
 
     const data = await listings.json();
+    console.log('contacted user info', data);
+
+    const profilePic = await sanityClient.fetch(
+      `*[_type == "listing" && userInfo.email == $email]`,
+      { email: data.email }
+    );
 
     return data;
   };
+
+  // useEffect(() => {
+  //   const retrievePic = async () => {
+  //     const myProfilePic = await sanityClient.fetch(
+  //       `*[_type == "listing" && userInfo.email == $email]{
+  //           userInfo {
+  //             profileImage
+  //           }
+  //         }`,
+  //       { email: state.user.email }
+  //     );
+
+  //     console.log('profilePic', myProfilePic);
+
+  //     // look through selectedConvo.members and find the one that is not me
+  //     let retrieveContactedUserEmail;
+  //     for (let key in selectedConvo.members) {
+  //       if (selectedConvo.members[key].email !== state.user.email) {
+  //         retrieveContactedUserEmail = selectedConvo.members[key].email;
+  //         break;
+  //       }
+  //     }
+
+  //     console.log('retrieveContactedUserEmail', retrieveContactedUserEmail);
+
+  //     // const { data } = await supabase.auth.admin.getUserById(
+  //     //   contactedUserID as string
+  //     // );
+
+  //     // console.log('retrieveContactedUserEmail', data);
+
+  //     // const theirProfilePic = await sanityClient.fetch(
+  //     //   `*[_type == "listing" && userInfo.email == $email]`,
+  //     //   { email: retrieveContactedUserEmail.email }
+  //     // );
+
+  //     // console.log('theirProfilePic', theirProfilePic);
+  //   };
+  //   if (state.user !== null && selectedConvo !== undefined) {
+  //     retrievePic();
+  //   }
+
+  //   console.log('state.user', state.user);
+  //   console.log('selectedConvo', selectedConvo);
+  // }, [state.user, selectedConvo]);
 
   const fetchAllConversations = async () => {
     if (state.user !== null) {
@@ -123,6 +175,48 @@ const Messages = (props: Props) => {
       });
 
       const allConvosDataJson = await allConvosData.json();
+
+      // i want to pull all the profileImages from the sanity backend that matches the email address for each of the members in the convo
+      // then i want to set the profileImage for each member in the convo to the profileImage from the sanity backend
+      const profileImages = await sanityClient.fetch(
+        `*[_type == "listing" && userInfo.email in $emails]{
+          userInfo {
+            email,
+            "profileImage": profileImage.asset->url
+
+          }
+        }`,
+        {
+          emails:
+            // go through allConvoDataJson and get all the emails that don't match the loggedInUser email
+            allConvosDataJson.map((convo: any) => {
+              return convo.members[1].email != state.user.email
+                ? convo.members[1].email
+                : convo.members[2].email;
+            }),
+        }
+      );
+
+      console.log('profileImages', profileImages);
+
+      // now match the profileImages to the members in the convo
+      // then set the profileImage for each member in the convo to the profileImage from the sanity backend
+      allConvosDataJson.forEach((convo: any) => {
+        Object.entries(convo.members).forEach(
+          ([key, member]: [string, any]) => {
+            // Add type assertion for 'member'
+            const profile = profileImages.find(
+              (profile: any) => profile.userInfo.email === member.email
+            );
+            if (profile && profile.userInfo.profileImage) {
+              // Update the convo object directly with the found profile image URL
+              member.profileImage = profile.userInfo.profileImage;
+            }
+          }
+        );
+      });
+
+      // console.log('allConvosDataJson2', allConvosDataJson);
 
       if (allConvosDataJson.length === 0 || !allConvosDataJson) {
         console.log('allConvosDataJson', allConvosDataJson);
@@ -263,6 +357,7 @@ const Messages = (props: Props) => {
   }, [selectedConversation]);
 
   const sendMessage = async () => {
+    console.log('sending message', selectedConversation, newMessage);
     if (selectedConversation !== null && newMessage.trim() !== '') {
       setSendingMessage(true);
       // Perform the upsert with the updated messages
@@ -411,8 +506,8 @@ const Messages = (props: Props) => {
                           )?.members[
                             selectedConvo?.members[memberIndex].id ==
                             state.user.id
-                              ? 2
-                              : 1
+                              ? 1
+                              : 2
                           ]?.profileImage
                             ? conversations?.find(
                                 (convo) =>
@@ -420,8 +515,8 @@ const Messages = (props: Props) => {
                               )?.members[
                                 selectedConvo?.members[memberIndex].id ==
                                 state.user.id
-                                  ? 2
-                                  : 1
+                                  ? 1
+                                  : 2
                               ]?.profileImage // Assuming convoPic is a property of the second member
                             : '/profile/profile-pic-placeholder.png'
                         }
@@ -441,8 +536,7 @@ const Messages = (props: Props) => {
                     href={
                       selectedConvo?.members[memberIndex].email !=
                       state.loggedInUser?.email
-                        ? '/listings/' +
-                          selectedConvo?.members[memberIndex].email
+                        ? '/listings/' + selectedConvo?.members[memberIndex].id
                         : ''
                     }>
                     View Listing
@@ -454,49 +548,50 @@ const Messages = (props: Props) => {
                   className=" overflow-y-auto h-[50vh] py-6 px-2 md:px-10">
                   <div className="">
                     <ul className="flex flex-col gap-6 ">
-                      {messages?.map((message, index) => (
-                        <li
-                          key={index}
-                          className={` flex opacity-0 transition-all justify-end duration-75 ease-in-out  gap-4 ${
-                            message.sender_id == state.user?.id
-                              ? 'ml-auto  opacity-100' // Align to the right if it's my message
-                              : 'mr-auto  opacity-100'
-                          }`}>
-                          <Link
-                            href={
+                      {messages &&
+                        messages?.map((message, index) => (
+                          <li
+                            key={index}
+                            className={` flex opacity-0 transition-all justify-end duration-75 ease-in-out  gap-4 ${
                               message.sender_id == state.user?.id
-                                ? ''
-                                : '/listings/' +
-                                  selectedConvo.members[memberIndex].id
-                            }>
-                            <div className="relative w-[30px] h-[30px] my-auto flex">
-                              <Image
-                                src={
-                                  !selectedConvo.members[memberIndex]
-                                    .profileImage
-                                    ? '/profile/profile-pic-placeholder.png'
-                                    : message.sender_id == state.user.id
-                                    ? state.loggedInUser.profileImage
-                                    : selectedConvo?.members[memberIndex]
-                                        .profileImage
-                                }
-                                alt="hero"
-                                fill
-                                objectFit="cover"
-                                className="rounded-full my-auto"
-                              />
-                            </div>
-                          </Link>
-                          <p
-                            className={`my-auto py-2 font-sans md:text-lg px-10 rounded-3xl ${
-                              message?.sender_id === state.user?.id
-                                ? 'bg-[#dbd7d6]'
-                                : 'bg-[#E5DEDB]'
+                                ? 'ml-auto  opacity-100' // Align to the right if it's my message
+                                : 'mr-auto  opacity-100'
                             }`}>
-                            {message?.content}
-                          </p>
-                        </li>
-                      ))}
+                            <Link
+                              href={
+                                message.sender_id == state.user?.id
+                                  ? ''
+                                  : '/listings/' +
+                                    selectedConvo.members[memberIndex].id
+                              }>
+                              <div className="relative w-[30px] h-[30px] my-auto flex">
+                                {/* <Image
+                                  src={
+                                    !selectedConvo.members[memberIndex]
+                                      .profileImage
+                                      ? '/profile/profile-pic-placeholder.png'
+                                      : message.sender_id == state.user.id
+                                      ? state.user.profileImage
+                                      : selectedConvo?.members[memberIndex]
+                                          .profileImage
+                                  }
+                                  alt="hero"
+                                  fill
+                                  objectFit="cover"
+                                  className="rounded-full my-auto"
+                                /> */}
+                              </div>
+                            </Link>
+                            <p
+                              className={`my-auto py-2 font-sans md:text-lg px-10 rounded-3xl ${
+                                message?.sender_id === state.user?.id
+                                  ? 'bg-[#dbd7d6]'
+                                  : 'bg-[#E5DEDB]'
+                              }`}>
+                              {message?.content}
+                            </p>
+                          </li>
+                        ))}
                     </ul>
                   </div>
                 </div>

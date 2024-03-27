@@ -9,6 +9,7 @@ import {
   Rectangle,
   OverlayView,
   OverlayViewF,
+  Autocomplete,
 } from '@react-google-maps/api';
 import Image from 'next/image';
 import Link from 'next/link';
@@ -16,7 +17,7 @@ import ImageUrlBuilder from '@sanity/image-url';
 import { sanityClient } from '../utils/sanityClient';
 
 type Props = {
-  setWhereIsIt?: React.Dispatch<React.SetStateAction<string>>;
+  setWhereIsIt?: React.Dispatch<React.SetStateAction<object>>;
   setIsSearching?: React.Dispatch<React.SetStateAction<boolean>>;
   setIsIdle?: React.Dispatch<React.SetStateAction<boolean>>;
   newLocation?: (location: string) => void;
@@ -53,9 +54,7 @@ export default function GoogleMapComponent(props: Props) {
   const [activeMarker, setActiveMarker] = useState<any>(null);
   const [zoomLevel, setZoomLevel] = useState<number>(0);
   const [map, setMap] = useState<any>(null);
-  const [inputValue, setInputValue] = useState<any>(
-    props.exactAddress || props.city || ''
-  );
+  const [inputValue, setInputValue] = useState<any>(props.exactAddress || '');
   const [debouncedValue, setDebouncedValue] = useState(inputValue);
   const builder = ImageUrlBuilder(sanityClient);
 
@@ -69,6 +68,28 @@ export default function GoogleMapComponent(props: Props) {
 
   const zoomThreshold = 15;
 
+  const [autocomplete, setAutocomplete] = useState<any>(null);
+
+  const onPlaceChanged = () => {
+    if (autocomplete !== null) {
+      const place = autocomplete.getPlace();
+      const location = place.geometry?.location;
+      const address = place.formatted_address;
+      setCenter({
+        lat: location?.lat() ?? 0,
+        lng: location?.lng() ?? 0,
+      });
+      setInputValue(address ?? '');
+      props.setWhereIsIt &&
+        props.setWhereIsIt({
+          lat: location?.lat() ?? 0,
+          lng: location?.lng() ?? 0,
+        });
+    } else {
+      console.log('Autocomplete is not loaded yet!');
+    }
+  };
+
   const handleMarkerClick = (markerInfo: any) => {
     setActiveMarker(markerInfo);
   };
@@ -80,7 +101,7 @@ export default function GoogleMapComponent(props: Props) {
       if (props.listings && props.listings.length > 0) {
         props.listings.forEach((listing) => {
           geocoder.geocode(
-            { address: listing.homeInfo.address },
+            { address: listing?.homeInfo?.address },
             (results, status) => {
               if (status === 'OK' && results != null) {
                 const location = results[0].geometry.location;
@@ -131,7 +152,7 @@ export default function GoogleMapComponent(props: Props) {
           }
         });
         if (props.setWhereIsIt) {
-          props.setWhereIsIt(props.exactAddress);
+          props.setWhereIsIt({ lat: center.lat, lng: center.lng });
         }
       } else if ((location || props.city) && !inputValue) {
         console.log('(location || props.city) && !inputValue');
@@ -152,7 +173,7 @@ export default function GoogleMapComponent(props: Props) {
           }
         );
         if (props.setWhereIsIt) {
-          props.setWhereIsIt(location);
+          props.setWhereIsIt({ lat: center.lat, lng: center.lng });
         }
       } else if (inputValue) {
         // Get the latitude and longitude of the exact address
@@ -183,7 +204,27 @@ export default function GoogleMapComponent(props: Props) {
 
   useEffect(() => {
     // Update the local input state when the exactAddress prop changes
-    setInputValue(props.exactAddress || props.city);
+
+    // convert lat and lng to string for the input value using google maps geocoding
+    if (typeof props.exactAddress == 'object') {
+      if (!isLoaded) return;
+      const geocoder = new window.google.maps.Geocoder();
+      geocoder.geocode(
+        {
+          location: {
+            lat: props.exactAddress.lat,
+            lng: props.exactAddress.lng,
+          },
+        },
+        (results, status) => {
+          if (status === 'OK' && results != null) {
+            setInputValue(results[0].formatted_address);
+          }
+        }
+      );
+    } else {
+      setInputValue(props.city);
+    }
   }, [props.exactAddress, props.city]);
 
   // Debounce function
@@ -201,16 +242,25 @@ export default function GoogleMapComponent(props: Props) {
   // Use useCallback to memorize the debounced function
   const debouncedInputChange = useCallback(
     debounce((value) => {
-      setDebouncedValue(value);
+      const geocoder = new window.google.maps.Geocoder();
+      geocoder.geocode({ address: value }, (results, status) => {
+        if (status === 'OK' && results != null) {
+          const location = results[0].geometry.location;
+          const lat = location.lat();
+          const lng = location.lng();
+          setDebouncedValue({ lat, lng });
+        }
+      });
     }, 0.1),
     []
-  ); // Adjust the delay as needed
+  );
 
   // Effect to handle the debounced input value change
   useEffect(() => {
     if (props.setWhereIsIt) {
       props.setWhereIsIt(debouncedValue);
     }
+    console.log('debouncedValue', debouncedValue);
   }, [debouncedValue]);
 
   if (!isLoaded) {
@@ -240,7 +290,7 @@ export default function GoogleMapComponent(props: Props) {
 
   return (
     <>
-      {props.noSearch ? null : (
+      {/* {props.noSearch ? null : (
         <input
           className="w-full rounded-xl p-2 outline-none mb-2"
           value={inputValue}
@@ -262,6 +312,33 @@ export default function GoogleMapComponent(props: Props) {
               : 'Search for a city'
           }
         />
+      )} */}
+      {props.noSearch ? null : (
+        <Autocomplete
+          onLoad={(autocomplete) => setAutocomplete(autocomplete)}
+          onPlaceChanged={onPlaceChanged}>
+          <input
+            className="w-full rounded-xl p-2 outline-none mb-2"
+            value={inputValue}
+            onChange={(e) => {
+              debouncedInputChange(e.target.value);
+              setInputValue(e.target.value);
+              if (props.setIsSearching) {
+                props.setIsSearching(true);
+              }
+            }}
+            onBlur={() => {
+              if (props.setIsSearching) {
+                props.setIsSearching(false);
+              }
+            }}
+            placeholder={
+              typeof props.exactAddress == 'string'
+                ? props.exactAddress
+                : 'Search for a city'
+            }
+          />
+        </Autocomplete>
       )}
       <div
         className={`${
