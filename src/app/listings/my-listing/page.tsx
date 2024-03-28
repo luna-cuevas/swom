@@ -653,30 +653,10 @@ const Page = (props: Props) => {
             <div>
               {imageFiles.length > 0 && !state.imgUploadPopUp && (
                 <>
-                  <div className="relative mt-8 mb-6 w-[95%] mx-auto h-[50vh]">
-                    <Image
-                      src={
-                        imageFiles[selectedImage]
-                          ? URL.createObjectURL(imageFiles[selectedImage])
-                          : '/placeholder.png'
-                      }
-                      alt=""
-                      className="rounded-3xl object-contain"
-                      fill
-                      objectPosition="center"
-                    />
-                  </div>
-
-                  <div className="relative w-[95%] mx-auto h-[30vh]">
+                  <div className="relative w-[95%] mx-auto h-[40vh] md:h-[60vh]">
                     <CarouselPage
-                      picturesPerSlide={
-                        // check if mobile or desktop
-                        windowWidth > 1025 ? 4 : windowWidth > 768 ? 3 : 1
-                      }
-                      selectedImage={selectedImage}
-                      setSelectedImage={setSelectedImage}
+                      thumbnails={true}
                       overlay={false}
-                      contain={false}
                       images={imageFiles.map((file) => ({
                         src: URL.createObjectURL(file),
                       }))}
@@ -688,30 +668,10 @@ const Page = (props: Props) => {
                 imageFiles.length == 0 &&
                 !state.imgUploadPopUp && (
                   <>
-                    <div className="relative mt-8 mb-6 w-[95%] mx-auto h-[50vh]">
-                      <Image
-                        src={
-                          downloadedImages[selectedImage]
-                            ? downloadedImages[selectedImage]
-                            : '/placeholder.png'
-                        }
-                        alt=""
-                        className="rounded-3xl object-contain"
-                        fill
-                        objectPosition="center"
-                      />
-                    </div>
-
-                    <div className="relative w-[95%] mx-auto h-[30vh]">
+                    <div className="relative w-[95%] mx-auto h-[40vh] md:h-[60vh]">
                       <CarouselPage
-                        picturesPerSlide={
-                          // check if mobile or desktop
-                          windowWidth > 1025 ? 4 : windowWidth > 768 ? 3 : 1
-                        }
-                        selectedImage={selectedImage}
-                        setSelectedImage={setSelectedImage}
                         overlay={false}
-                        contain={false}
+                        thumbnails={true}
                         images={
                           downloadedImages.length > 0
                             ? downloadedImages.map((file: any) => ({

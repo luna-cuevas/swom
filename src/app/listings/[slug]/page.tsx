@@ -181,17 +181,17 @@ const Page = (props: Props) => {
           </div>
 
           {/* Listing Info Above Fold */}
-          <div className="flex my-8 justify-between">
+          <div className="flex flex-col md:flex-row my-8 justify-between">
             {/* User Info - Left Section */}
-            <div className="w-[25%]  flex flex-col">
-              <h1 className="font-sans mx-auto mb-8 font-light text-2xl border border-[#172544] py-2 px-8 rounded-xl w-fit">
+            <div className="md:w-[25%]  flex flex-col">
+              {/* <h1 className="font-sans mx-auto mb-8 font-light text-2xl border border-[#172544] py-2 px-8 rounded-xl w-fit">
                 Listing{' '}
                 <span className="font-bold">
                   {' '}
                   No.{' '}
                   {listings[0]?.listingNumber || listings[0]?._id.slice(0, 5)}
                 </span>
-              </h1>
+              </h1> */}
 
               <div className="mx-auto text-center">
                 <div className="relative m-auto  h-[100px] w-[100px]">
@@ -259,29 +259,26 @@ const Page = (props: Props) => {
             </div>
 
             {/* Listing Info - Right Section */}
-            <div className="w-2/3 flex flex-col">
-              <div className="flex flex-col relative h-[40vh] w-full mx-auto">
-                <Image
-                  src={
-                    imageFiles[selectedImage]
-                      ? imageFiles[selectedImage]
-                      : '/placeholder.png'
-                  }
-                  alt=""
-                  className="rounded-3xl object-cover "
-                  fill
-                  sizes="100%"
-                  objectPosition="center"
-                />
-              </div>
+            <div className="md:w-2/3 flex flex-col">
+              {/* <div className="flex flex-col relative h-[40vh] w-full mx-auto">
+                  <Image
+                    src={
+                      imageFiles[selectedImage]
+                        ? imageFiles[selectedImage]
+                        : '/placeholder.png'
+                    }
+                    alt=""
+                    className="rounded-3xl object-cover "
+                    fill
+                    sizes="100%"
+                    objectPosition="center"
+                  />
+                </div> */}
 
-              <div className="flex relative h-[30vh] gap-4 my-4">
+              <div className="flex relative  h-[60vh] my-4">
                 <CarouselPage
-                  picturesPerSlide={3}
-                  selectedImage={selectedImage}
-                  setSelectedImage={setSelectedImage}
                   overlay={false}
-                  contain={false}
+                  thumbnails={true}
                   images={
                     listings[0]?.homeInfo?.listingImages?.length > 0
                       ? listings[0]?.homeInfo?.listingImages
@@ -333,7 +330,7 @@ const Page = (props: Props) => {
                   />
                 </div>
                 <h1 className="font-bold">Type of property</h1>
-                <p className="capitalize text-xl">
+                <p className="capitalize text-base md:text-xl">
                   {listings[0]?.homeInfo?.property}
                 </p>
               </div>
@@ -347,7 +344,9 @@ const Page = (props: Props) => {
                   />
                 </div>
                 <h1 className="font-bold">Bedrooms</h1>
-                <p className="text-xl">{listings[0]?.homeInfo?.howManySleep}</p>
+                <p className="text-base md:text-xl">
+                  {listings[0]?.homeInfo?.howManySleep}
+                </p>
               </div>
               <div className="">
                 <div className="relative my-1 m-auto w-[40px] h-[40px] object-contain">
@@ -359,7 +358,7 @@ const Page = (props: Props) => {
                   />
                 </div>
                 <h1 className="font-bold">Property located in</h1>
-                <p className="capitalize text-xl">
+                <p className="capitalize text-base md:text-xl">
                   {listings[0]?.homeInfo?.locatedIn}
                 </p>
               </div>
@@ -376,7 +375,7 @@ const Page = (props: Props) => {
                   />
                 </div>
                 <h1 className="font-bold">Kind of property</h1>
-                <p className="capitalize text-xl">
+                <p className="capitalize text-base md:text-xl">
                   {listings[0]?.homeInfo?.mainOrSecond}
                 </p>
               </div>
@@ -390,7 +389,9 @@ const Page = (props: Props) => {
                   />
                 </div>
                 <h1 className="font-bold">Bathrooms</h1>
-                <p className="text-xl">{listings[0]?.homeInfo?.bathrooms}</p>
+                <p className="text-base md:text-xl">
+                  {listings[0]?.homeInfo?.bathrooms}
+                </p>
               </div>
               <div className="">
                 <div className="relative my-1 m-auto w-[40px] object-contain h-[40px]">
@@ -402,7 +403,7 @@ const Page = (props: Props) => {
                   />
                 </div>
                 <h1 className="font-bold">Area</h1>
-                <p className="text-xl">
+                <p className="text-base md:text-xl">
                   {listings[0]?.homeInfo?.area
                     ? `${listings[0]?.homeInfo?.area} sqm`
                     : ''}
@@ -443,12 +444,12 @@ const Page = (props: Props) => {
             </div>
           </div>
 
-          <div className="mt-14">
+          <div className="mt-14 mb-6">
             <h1 className="text-2xl flex justify-between w-full text-left my-4 py-4 border-y-[1px] border-[#172544] font-serif">
               Amenities & advantages
             </h1>
             <div className="flex gap-[5%]">
-              <ul className="grid w-full flex-wrap gap-4 text-center grid-cols-4">
+              <ul className="grid w-full flex-wrap break-all gap-4 text-center grid-cols-4">
                 {listings[0]?.amenities &&
                   Object.entries(listings[0]?.amenities).map(([key, value]) => {
                     if (value === true) {

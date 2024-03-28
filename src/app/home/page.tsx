@@ -57,7 +57,7 @@ const Page = async (props: Props) => {
         background: '#F7F1EE',
       }}>
       <div className="">
-        <div className="h-[80vh] bg-black relative">
+        <div className="md:h-[calc(92vh-69px)] h-[80vh] bg-black relative">
           <div className="absolute w-fit z-50 h-fit top-0 bottom-0 left-0 right-0 m-auto ">
             <h1 className="text-[#ffffff] font-bold uppercase text-4xl tracking-widest text-center">
               Make Memories <br /> All over the <br /> world
@@ -83,8 +83,9 @@ const Page = async (props: Props) => {
                 { src: '/homepage/hero-image-9.png', listingNum: '5202' },
               ]
             }
-            picturesPerSlide={1}
+            thumbnails={false}
             overlay={true}
+            homePage={true}
           />
         </div>
         <div className="flex bg-[#7F8119] flex-wrap   md:flex-row py-5  tracking-widest justify-center text-xl gap-2 md:gap-5">

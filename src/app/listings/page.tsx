@@ -15,6 +15,15 @@ const Page = (props: Props) => {
   const [state, setState] = useAtom(globalStateAtom);
   const [inputValue, setInputValue] = useState<string>('');
   const [page, setPage] = useState<number>(1);
+  const [loadedPages, setLoadedPages] = useState<any>({});
+  const listingsPerPage = 10;
+
+  const indexOfLastListing = page * listingsPerPage;
+  const indexOfFirstListing = indexOfLastListing - listingsPerPage;
+  const currentListings = listings.slice(
+    indexOfFirstListing,
+    indexOfLastListing
+  );
 
   useEffect(() => {
     if (state.loggedInUser && state.loggedInUser.id !== null) {
@@ -68,10 +77,19 @@ const Page = (props: Props) => {
     filteredListings();
   }, [whereIsIt]);
 
-  const fetchListings = async () => {
+  const fetchListings = async (pageNumber = 1) => {
+    if (loadedPages[pageNumber]) {
+      setPage(pageNumber);
+      return;
+    }
+
     setIsLoading(true);
     try {
-      const query = `*[_type == "listing" && subscribed == true]{..., "imageUrl": image.asset->url}`;
+      const startIndex = (pageNumber - 1) * 10; // Assuming 10 listings per page
+
+      const query = `*[_type == "listing" && subscribed == true][${startIndex}...${
+        startIndex + 10
+      }]{..., "imageUrl": image.asset->url}`;
 
       const data = await fetch('/api/getListings', {
         method: 'POST',
@@ -85,13 +103,26 @@ const Page = (props: Props) => {
       });
       const dataJson = await data.json();
 
-      setListings(dataJson);
-      setAllListings(dataJson);
-      setState((prev: any) => ({
-        ...prev,
-        allListings: dataJson,
-      }));
-      setIsLoading(false);
+      if (pageNumber === page + 1 && dataJson.length > 0) {
+        setListings(listings.concat(dataJson));
+        setAllListings(allListings.concat(dataJson));
+        setState((prev: any) => ({
+          ...prev,
+          allListings: prev.allListings.concat(dataJson),
+        }));
+        setIsLoading(false);
+      } else if (pageNumber === 1 && dataJson.length > 0) {
+        console.log('Data:', dataJson);
+        setListings(dataJson);
+        setAllListings(dataJson);
+        setState((prev: any) => ({
+          ...prev,
+          allListings: dataJson,
+        }));
+        setIsLoading(false);
+      }
+
+      setLoadedPages((prev: any) => ({ ...prev, [pageNumber]: true }));
     } catch (error: any) {
       console.error('Error fetching data:', error.message);
     }
@@ -99,6 +130,7 @@ const Page = (props: Props) => {
 
   const filteredListings = async (cityFilter = '', countryFilter = '') => {
     setIsLoading(true); // Consider managing loading state here if filtering takes time
+    setPage(1);
     let filtered = allListings;
 
     if (cityFilter) {
@@ -118,7 +150,7 @@ const Page = (props: Props) => {
 
   return (
     <main className="pt-6  flex   flex-col bg-[#F2E9E7] min-h-screen">
-      {isLoading ? (
+      {isLoading && currentListings ? (
         <div
           role="status"
           className=" flex min-h-screen m-auto h-fit w-fit my-auto mx-auto px-3 py-2 text-white rounded-xl">
@@ -179,6 +211,7 @@ const Page = (props: Props) => {
                       } else {
                         setListings(allListings);
                       }
+                      setPage(1);
                     }}
                     className=" w-fit hover:bg-[#686926] bg-[#7F8119] text-white px-2 py-1 rounded-md">
                     All Listings
@@ -187,13 +220,14 @@ const Page = (props: Props) => {
                   {listings.filter((listing: any) => listing.favorite === true)
                     .length > 0 && (
                     <button
-                      onClick={() =>
+                      onClick={() => {
                         setListings(
                           listings.filter(
                             (listing: any) => listing.favorite === true
                           )
-                        )
-                      }
+                        );
+                        setPage(1);
+                      }}
                       className=" w-fit hover:bg-[#686926] bg-[#7F8119] text-white px-2 py-1 rounded-md">
                       Favorites
                     </button>
@@ -201,8 +235,8 @@ const Page = (props: Props) => {
                 </div>
               )}
               <div className="m-auto justify-between max-w-[1000px] flex w-full flex-wrap">
-                {listings?.length > 0 ? (
-                  listings?.map((listing: any, index: number) => (
+                {currentListings?.length > 0 ? (
+                  currentListings?.map((listing: any, index: number) => (
                     <ListingCard
                       setListings={setListings}
                       setAllListings={setAllListings}
@@ -222,9 +256,7 @@ const Page = (props: Props) => {
               <div className="flex justify-center gap-4">
                 <button
                   type="button"
-                  onClick={() => {
-                    if (page > 1) setPage(page - 1);
-                  }}
+                  onClick={() => setPage(Math.max(page - 1, 1))}
                   className="hover:bg-[#686926] bg-[#7F8119] text-white px-2 py-1 rounded-md">
                   Prev
                 </button>
@@ -233,6 +265,7 @@ const Page = (props: Props) => {
                 <button
                   type="button"
                   onClick={() => {
+                    fetchListings(page + 1);
                     setPage(page + 1);
                   }}
                   className="hover:bg-[#686926] bg-[#7F8119] text-white px-2 py-1 rounded-md">

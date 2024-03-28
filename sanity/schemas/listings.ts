@@ -12,6 +12,15 @@ export default defineType({
       description: 'Whether the listing is a subscription or not',
     },
     {
+      name: 'slug',
+      title: 'Slug',
+      type: 'slug',
+      options: {
+        source: 'userInfo.name', // Assuming 'name' is a field under 'userInfo'
+        maxLength: 96,
+      },
+    },
+    {
       name: 'userInfo',
       title: 'User Information',
       type: 'userInfo', // Referencing the userInfo schema
@@ -29,13 +38,14 @@ export default defineType({
   ],
   preview: {
     select: {
+      slug: 'slug',
       title: 'userInfo.name', // Assuming 'name' is a field under 'userInfo'
       profileImage: 'userInfo.profileImage', // Path to the image URL
     },
     prepare(selection) {
-      const { title, profileImage } = selection;
+      const { title, profileImage, slug } = selection;
       return {
-        title,
+        title: slug ? `${title} - ${slug.current}` : title,
         media: profileImage ? profileImage : undefined,
       };
     },

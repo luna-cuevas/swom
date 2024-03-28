@@ -52,8 +52,8 @@ const Footer = (props: Props) => {
           />
         </div>
         <div className=" my-auto border-l-2 px-4 border-white">
-          <ul className="text-[#F4ECE8] gap-1 flex flex-col font-extralight">
-            <Link href="/about-us">What is Swom</Link>
+          <ul className="text-[#ffffff] gap-1 flex flex-col font-extralight">
+            <Link href="/how-it-works">What is Swom</Link>
             <Link href="/become-member">Become a member</Link>
             <Link href="/how-it-works">How it works</Link>
             <Link href="/about-us">About us</Link>
@@ -66,7 +66,7 @@ const Footer = (props: Props) => {
 
       <div className="md:w-1/3 w-3/4  m-auto flex flex-col">
         {messageSent ? (
-          <p className="text-[#F4ECE8]">
+          <p className="text-[#ffffff]">
             Thank you for contacting us. We will get back to you as soon as
             possible.
           </p>
@@ -75,7 +75,7 @@ const Footer = (props: Props) => {
             onSubmit={(e) => {
               handleSubmission(e);
             }}>
-            <p className="text-[#F4ECE8]">Contact us</p>
+            <p className="text-[#ffffff]">Contact us</p>
             <input
               name="email"
               onChange={(e) => {
@@ -85,7 +85,7 @@ const Footer = (props: Props) => {
                 });
               }}
               placeholder="Email"
-              className="w-full p-4  rounded-lg my-2 bg-[#F4ECE8]"
+              className="w-full p-4  rounded-lg my-2 bg-[#ffffff]"
               type="text"
             />
             <select
@@ -96,14 +96,14 @@ const Footer = (props: Props) => {
                   language: e.target.value,
                 });
               }}
-              className="w-fit p-4 rounded-lg my-1 bg-[#F4ECE8]"
+              className="w-fit p-4 rounded-lg my-1 bg-[#ffffff]"
               id="">
               <option value="English">English</option>
               <option value="Spanish">Spanish</option>
             </select>
             <button
               type="submit"
-              className="bg-[#F4ECE8] ml-4 w-fit  p-4 rounded-lg my-1">
+              className="bg-[#ffffff] ml-4 w-fit  p-4 rounded-lg my-1">
               Send
             </button>
           </form>

@@ -3,177 +3,196 @@ import { globalStateAtom } from '@/context/atoms';
 import { useAtom } from 'jotai';
 import Image from 'next/image';
 import Link from 'next/link';
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
+import Lightbox from 'yet-another-react-lightbox';
+import 'yet-another-react-lightbox/styles.css';
+import Inline from 'yet-another-react-lightbox/plugins/inline';
+import Thumbnails from 'yet-another-react-lightbox/plugins/thumbnails';
+import 'yet-another-react-lightbox/plugins/thumbnails.css';
+import Counter from 'yet-another-react-lightbox/plugins/counter';
+import 'yet-another-react-lightbox/plugins/counter.css';
+import Slideshow from 'yet-another-react-lightbox/plugins/slideshow';
+import 'yet-another-react-lightbox/styles.css';
 
 type Props = {
-  roundedLeft?: boolean;
-  roundedRight?: boolean;
   images: {
     src: string;
     listingNum?: string;
   }[];
-  listingPage?: boolean;
-  picturesPerSlide?: number | 1;
+  homePage?: boolean;
   overlay?: boolean;
-  contain?: boolean;
-  selectedImage?: number;
-  setSelectedImage?: React.Dispatch<React.SetStateAction<number>>;
+  lightbox?: boolean;
+  thumbnails?: boolean;
 };
 
 const CarouselPage = (props: Props) => {
-  const [currentSlide, setCurrentSlide] = useState(0);
   const [state, setState] = useAtom(globalStateAtom);
-
-  useEffect(() => {
-    // Automatically change slides every 5 seconds
-    const intervalId = setInterval(() => {
-      nextSlide();
-    }, 10000);
-
-    return () => {
-      // Clear the interval to prevent memory leaks
-      clearInterval(intervalId);
-    };
-  }, [currentSlide]);
-
-  const prevSlide = () => {
-    setCurrentSlide((prev) =>
-      prev === 0 && props.picturesPerSlide != undefined
-        ? Math.ceil(props.images.length / props.picturesPerSlide) - 1
-        : prev - 1
-    );
-  };
-
-  const nextSlide = () => {
-    setCurrentSlide((prev) => {
-      const totalSlides = Math.ceil(
-        props.images.length / (props.picturesPerSlide ?? 1)
-      );
-
-      if (props.picturesPerSlide !== undefined && prev < totalSlides - 1) {
-        return prev + 1;
-      }
-
-      return 0;
-    });
-  };
-
-  // Function to handle image selection
-  const handleImageSelection = (index: any) => {
-    if (props.setSelectedImage) {
-      props.setSelectedImage(index);
-    }
-  };
+  const [openLightbox, setOpenLightbox] = useState<boolean>(false);
+  const [selectedImage, setSelectedImage] = useState(0); // Updated
+  const slideshowRef = useRef(null);
 
   return (
-    <div className="relative h-full w-full">
-      <button
-        type="button"
-        onClick={() => prevSlide()}
-        className="absolute z-[200] bg-[#2c2c2c6a] text-white top-2/4 left-4 -translate-y-2/4 p-2 rounded-full">
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          className="h-6 w-6"
-          fill="none"
-          viewBox="0 0 24 24"
-          stroke="#fff">
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth={2}
-            d="M15 19l-7-7 7-7"
-          />
-        </svg>
-      </button>
-      <button
-        type="button"
-        onClick={() => nextSlide()}
-        className="absolute z-[200] bg-[#2c2c2c6a] text-white top-2/4 right-4 -translate-y-2/4 p-2 rounded-full">
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          className="h-6 w-6 rotate-180"
-          fill="none"
-          viewBox="0 0 24 24"
-          stroke="#fff">
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth={2}
-            d="M15 19l-7-7 7-7"
-          />
-        </svg>
-      </button>
-
-      <div
-        className={`relative h-full gap-8 flex w-full ${
-          props.roundedLeft && 'rounded-l-xl'
-        } ${props.roundedRight && 'rounded-r-xl'}`}>
-        {props.images?.map((image, index) => (
-          <div
-            key={index}
-            onClick={() => handleImageSelection(index)} // Add click handler
-            className={`h-full w-full overflow-hidden relative ${
-              props.picturesPerSlide != undefined &&
-              Math.floor(index / props.picturesPerSlide) === currentSlide
-                ? 'block'
-                : 'hidden'
-            } transition-transform z-0 duration-[2s] ease-in-out transform ${
-              props.picturesPerSlide != undefined &&
-              Math.floor(index / props.picturesPerSlide) === currentSlide
-                ? 'translate-x-0'
-                : 'translate-x-full'
-            }${
-              props.selectedImage === index
-                ? ' rounded-2xl border-4 border-[#7F8119]'
-                : ''
-            }`}>
-            <div className="w-full h-full z-[50] m-auto top-0  absolute ">
-              {props.listingPage && (
-                <div className=" absolute bg-white rounded-b-xl px-4 text-xs right-4">
-                  Listing No. {image.listingNum?.slice(-5)}
-                </div>
-              )}
-              {image.listingNum && !props.listingPage && (
-                <div className="absolute  top-[10%] -right-4 text-md ">
-                  <div className="absolute  inset-0 transform skew-x-[10deg]  bg-[#f4ece7b3]" />
-                  {state.user == null ? (
-                    <div className="relative  py-4 px-8 text-[#172544]">
-                      Let&apos;s meet your new favorite home. <br />
-                      <strong>Listing No. {image.listingNum}</strong>
-                    </div>
-                  ) : (
-                    <Link href={`/listings/${image.listingNum}`}>
-                      <div className="relative  py-4 px-8 text-[#172544]">
+    <div className=" overflow-hidden  h-full w-full gap-4 flex flex-col">
+      <div className={`relative h-full gap-4 md:gap-8 flex w-full`}>
+        <Lightbox
+          index={selectedImage}
+          slides={[
+            ...props.images.map((image) => ({
+              src: image.src,
+              listingNum: image.listingNum,
+            })),
+          ]}
+          styles={{
+            container: {
+              borderRadius: props.homePage ? '' : '20px 20px 0 0',
+            },
+            thumbnailsContainer: {
+              backgroundColor: '#7F8119',
+              borderRadius: '0 0 20px 20px',
+            },
+            thumbnail: {
+              border: 'none',
+              borderRadius: '10px',
+              backgroundColor: '#ffffff77',
+            },
+          }}
+          slideshow={{
+            ref: slideshowRef,
+            autoplay: true,
+            delay: 5000,
+          }}
+          plugins={[
+            Inline,
+            ...(props.thumbnails ? [Thumbnails] : []),
+            ...(props.thumbnails ? [Counter] : []),
+            Slideshow,
+          ]}
+          thumbnails={{
+            position: 'bottom',
+            padding: 0,
+            gap: 16,
+            showToggle: true,
+            vignette: false,
+            imageFit: 'cover',
+          }}
+          counter={{
+            container: {
+              style: {
+                top: 'unset',
+                bottom: 0,
+                right: 0,
+                left: 'unset',
+              },
+            },
+          }}
+          on={{
+            view: () => selectedImage,
+            click: (clickProps) => {
+              if (props.homePage) return null;
+              setSelectedImage(clickProps.index);
+              setOpenLightbox(true);
+            },
+          }}
+          carousel={{
+            padding: 0,
+            spacing: 0,
+            imageFit: 'cover',
+            preload: 2,
+          }}
+          inline={{
+            style: {
+              width: '100%',
+              maxWidth: '100%',
+              aspectRatio: '3 / 2',
+              margin: '0 auto',
+            },
+          }}
+          render={{
+            slideContainer: (slideProps) => {
+              return (
+                <div className="relative h-full my-auto w-full">
+                  <div
+                    className={`${props.overlay ? 'opacity-50' : ''} ${
+                      !props.homePage && 'cursor-pointer'
+                    } h-full`}>
+                    {slideProps.children}
+                  </div>
+                  <div
+                    className={`absolute top-[10%] -right-4 text-md ${
+                      !props.homePage && 'hidden'
+                    }`}>
+                    <div className="absolute inset-0 transform skew-x-[10deg]  bg-[#f4ece7b3]" />
+                    {state.user == null ? (
+                      <div className=" z-50  py-4 px-8 text-[#172544]">
                         Let&apos;s meet your new favorite home. <br />
                         <strong>
-                          Listing No. {image.listingNum.slice(-5)}
+                          {/* @ts-ignore */}
+                          Listing No. {slideProps.slide.listingNum}{' '}
                         </strong>
                       </div>
-                    </Link>
-                  )}
+                    ) : (
+                      <>
+                        {/* @ts-ignore */}
+                        <Link href={`/listings/${slideProps.slide.listingNum}`}>
+                          <div className="z-50  py-4 px-8 text-[#172544]">
+                            Let&apos;s meet your new favorite home. <br />
+                            <strong>
+                              {/* @ts-ignore */}
+                              Listing No. {slideProps.slide.listingNum}
+                            </strong>
+                          </div>
+                        </Link>
+                      </>
+                    )}
+                  </div>
                 </div>
-              )}
-            </div>
-
-            {props.overlay && (
-              <div className="w-full z-10 absolute top-0 left-0 right-0 bottom-0 h-full bg-[#00000080]" />
-            )}
-
-            <Image
-              className={`rounded-xl z-0 ${
-                props.contain ? 'object-contain' : 'object-cover'
-              } h-full`}
-              src={image.src || '/placeholder.png'}
-              alt="image"
-              fill
-              priority
-              placeholder="blur"
-              blurDataURL="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAARgAAABYCAYAA"
-              sizes=" (max-width: 768px) 100vw, (max-width: 1024px) 50vw, 33vw"
-            />
-          </div>
-        ))}
+              );
+            },
+          }}
+        />
       </div>
+
+      <Lightbox
+        className="!z-[20000000] "
+        open={openLightbox}
+        close={() => setOpenLightbox(false)}
+        index={selectedImage} // Use the selectedImage state
+        slides={[
+          ...props.images.map((image) => ({
+            src: image.src,
+            title: 'Image',
+          })),
+        ]}
+        styles={{
+          thumbnailsContainer: {
+            backgroundColor: '#7F8119',
+          },
+          thumbnail: {
+            border: 'none',
+            borderRadius: '10px',
+            backgroundColor: '#ffffff77',
+          },
+        }}
+        plugins={[Thumbnails, Counter]}
+        thumbnails={{
+          position: 'bottom',
+          padding: 0,
+          gap: 16,
+          showToggle: true,
+          vignette: false,
+          imageFit: 'cover',
+        }}
+        counter={{
+          container: {
+            style: {
+              top: 'unset',
+              bottom: 0,
+              right: 0,
+              left: 'unset',
+            },
+          },
+        }}
+      />
     </div>
   );
 };

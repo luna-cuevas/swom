@@ -26,12 +26,11 @@ export async function POST(req: Request, res: Response) {
   } else {
     let listings = await sanityClient.fetch(query);
 
+    console.log('Listings:', listings.length);
+
     let updatedListings = await Promise.all(
       listings &&
         listings.map(async (listing: any) => {
-          // Skip geocoding if lat or lng is null
-          console.log('Listing:', listing.homeInfo.address);
-
           const { lat, lng } = listing.homeInfo.address; // Adjust according to your data structure
 
           try {

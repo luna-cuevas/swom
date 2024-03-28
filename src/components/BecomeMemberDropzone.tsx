@@ -153,7 +153,7 @@ const BecomeMemberDropzone: React.FC<Props> = (props) => {
         <SortableList
           onSortEnd={onSortEnd}
           draggedItemClassName="dragged"
-          className="grid grid-cols-3 select-none gap-4 ">
+          className="grid grid-cols-1 md:grid-cols-3 select-none gap-4 ">
           {items.map(({ image, name, index }) => (
             <div
               key={name}
