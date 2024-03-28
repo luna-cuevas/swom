@@ -27,40 +27,45 @@ export async function POST(req: Request, res: Response) {
     let listings = await sanityClient.fetch(query);
 
     let updatedListings = await Promise.all(
-      listings.map(async (listing: any) => {
-        const { lat, lng } = listing.homeInfo.address; // Adjust according to your data structure
-        try {
-          const response = await googleMapsClient.geocode({
-            params: {
-              latlng: `${lat},${lng}`,
-              // @ts-ignore
-              key: process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY,
-            },
-          });
-          const results = response.data.results[0];
-          if (results) {
-            const addressComponents = results.address_components;
-            let city = '',
-              country = '';
+      listings &&
+        listings.map(async (listing: any) => {
+          // Skip geocoding if lat or lng is null
+          console.log('Listing:', listing.homeInfo.address);
 
-            for (const component of addressComponents) {
-              // @ts-ignore
-              if (component.types.includes('locality')) {
-                city = component.long_name;
+          const { lat, lng } = listing.homeInfo.address; // Adjust according to your data structure
+
+          try {
+            const response = await googleMapsClient.geocode({
+              params: {
+                latlng: `${lat},${lng}`,
                 // @ts-ignore
-              } else if (component.types.includes('country')) {
-                country = component.long_name;
-              }
-            }
+                key: process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY,
+              },
+            });
+            const results = response.data.results[0];
+            if (results) {
+              const addressComponents = results.address_components;
+              let city = '',
+                country = '';
 
-            return { ...listing, city, country };
+              for (const component of addressComponents) {
+                // @ts-ignore
+                if (component.types.includes('locality')) {
+                  city = component.long_name;
+                  // @ts-ignore
+                } else if (component.types.includes('country')) {
+                  country = component.long_name;
+                }
+              }
+
+              return { ...listing, city, country };
+            }
+            return listing;
+          } catch (error) {
+            console.error('Reverse geocoding failed:', error);
+            return listing; // Return original listing if geocoding fails
           }
-          return listing;
-        } catch (error) {
-          console.error('Reverse geocoding failed:', error);
-          return listing; // Return original listing if geocoding fails
-        }
-      })
+        })
     );
 
     const { data: user, error: userError } = await supabase

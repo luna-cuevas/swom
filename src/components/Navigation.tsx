@@ -49,6 +49,8 @@ const Navigation = (props: Props) => {
         loggedInUser: null,
         activeNavButtons: false,
         isSubscribed: false,
+        allListings: [],
+        session: null,
       });
       router.push('/home');
       toast.success('Signed out successfully');
