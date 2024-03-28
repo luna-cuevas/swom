@@ -26,7 +26,6 @@ const Page = (props: Props) => {
   const [citySearchOpen, setCitySearchOpen] = useState(false);
   const [imageFiles, setImageFiles] = useState<File[]>([]);
   const supabase = supabaseClient();
-  const [isSearching, setIsSearching] = useState<boolean>(false);
   const [selectedImage, setSelectedImage] = useState(0); // Track selected image
   const aboutYourHomeRef = useRef<HTMLTextAreaElement | null>(null);
   const [aboutYou, setAboutYou] = useState(false);
@@ -917,19 +916,10 @@ const Page = (props: Props) => {
             </div>
 
             <div className={`w-full h-[45vh] my-4 mb-8 rounded-xl`}>
-              {listings[0]?.homeInfo.address ? (
-                <GoogleMapComponent
-                  setIsSearching={setIsSearching}
-                  exactAddress={listings[0]?.homeInfo.address}
-                  setWhereIsIt={setWhereIsIt}
-                />
-              ) : (
-                <GoogleMapComponent
-                  setIsSearching={setIsSearching}
-                  city={listings[0]?.homeInfo.city}
-                  setWhereIsIt={setWhereIsIt}
-                />
-              )}
+              <GoogleMapComponent
+                exactAddress={listings[0]?.homeInfo.address}
+                setWhereIsIt={setWhereIsIt}
+              />
             </div>
 
             <div className="flex my-4  border-y border-[#172544] py-4 justify-between">

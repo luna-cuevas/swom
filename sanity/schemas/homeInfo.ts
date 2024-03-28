@@ -13,6 +13,7 @@ export default defineType({
     },
     {
       name: 'address', type: 'geopoint', title: 'Address',
+      validation: Rule => Rule.required().error('This field is required.')
     },
     {
       name: 'description', type: 'text', title: 'Description',

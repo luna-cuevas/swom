@@ -50,6 +50,17 @@ const ListingCard = (props: Props) => {
             return listing;
           });
         });
+        setState((prev: any) => {
+          return {
+            ...prev,
+            allListings: prev.allListings.map((listing: any) => {
+              if (listing.userInfo.email === listingId) {
+                return { ...listing, favorite: false };
+              }
+              return listing;
+            }),
+          };
+        });
       } else {
         // If not liked, add it to the favorites
         combinedFavorites = [...combinedFavorites, { listingId: listingId }];
@@ -89,6 +100,17 @@ const ListingCard = (props: Props) => {
             }
             return listing;
           });
+        });
+        setState((prev: any) => {
+          return {
+            ...prev,
+            allListings: prev.allListings.map((listing: any) => {
+              if (listing.userInfo.email === listingId) {
+                return { ...listing, favorite: !isLiked };
+              }
+              return listing;
+            }),
+          };
         });
       }
     }

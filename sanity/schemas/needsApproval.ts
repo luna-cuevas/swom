@@ -6,6 +6,12 @@ export default defineType({
   type: 'document',
   fields: [
     {
+      name: 'subscribed',
+      title: 'Subscription',
+      type: 'boolean',
+      description: 'Whether the listing is a subscription or not',
+    },
+    {
       name: 'userInfo',
       title: 'User Information',
       type: 'userInfo', // Referencing the userInfo schema
@@ -20,6 +26,7 @@ export default defineType({
       title: 'Amenities',
       type: 'amenities', // Referencing the amenities schema
     },
+
 
     // ... other fields like status, images, etc.
   ],

@@ -27,6 +27,10 @@
     url('/fonts/NotoSerifJP-Regular.otf') format('otf');
 }
 
+#sanityStudio > div {
+  height: calc(100vh - 68px) !important;
+}
+
 li {
   font-family: 'Kanit' !important;
 }

@@ -33,55 +33,55 @@ export function approveDocumentAction(props: any) {
             return;
           }
 
+
           const newDocument = {
             ...documentToApprove,
             _id: undefined,
-            _type: 'listing'
+            _type: 'listing',
           };
 
-          const createdListing = await sanityClient.create(newDocument);
+          const customerEmail = documentToApprove.userInfo.email;
 
+          const toSubscribe = documentToApprove.subscribed;
 
-          const customerEmail = newDocument.userInfo.email;
-
-          // Check if the Stripe customer exists or create a new one
-          let customers = await stripe.customers.list({
-            email: customerEmail,
-            limit: 1,
-          });
-
-          console.log('Customers:', customers);
-
-          let customerId;
-
-          if (customers.data.length === 0) {
-            // Create a new customer
-            const customer = await stripe.customers.create({
+          if (toSubscribe) {  // Check if the Stripe customer exists or create a new one
+            let customers = await stripe.customers.list({
               email: customerEmail,
-              // payment_method: paymentMethod.id, // Attach the payment method  
-              source: 'tok_visa'
+              limit: 1,
             });
-            customerId = customer.id;
-          } else {
-            customerId = customers.data[0].id;
-            await stripe.customers.createSource(customerId, {
-              source: 'tok_visa',
+
+            let customerId;
+
+            if (customers.data.length === 0) {
+              // Create a new customer
+              const customer = await stripe.customers.create({
+                email: customerEmail,
+                // payment_method: paymentMethod.id, // Attach the payment method  
+                source: 'tok_visa'
+              });
+              customerId = customer.id;
+            } else {
+              customerId = customers.data[0].id;
+              await stripe.customers.createSource(customerId, {
+                source: 'tok_visa',
+              });
+            }
+
+            const priceId = 'price_1ORU7BDhCJq1hRSteuSGgKDk';
+
+            // Create the subscription
+            const subscription = await stripe.subscriptions.create({
+              customer: customerId,
+              items: [{ price: priceId }],
+              // Add any other subscription details here
             });
+
+            console.log('Subscription created:', subscription);
+
+            newDocument.subscribed = true;
           }
 
-          console.log('Customer ID:', customerId);
-
-          // Assuming you have a price ID from your Stripe dashboard
-          const priceId = 'price_1ORU7BDhCJq1hRSteuSGgKDk';
-
-          // Create the subscription
-          const subscription = await stripe.subscriptions.create({
-            customer: customerId,
-            items: [{ price: priceId }],
-            // Add any other subscription details here
-          });
-
-          console.log('Subscription created:', subscription);
+          const createdListing = await sanityClient.create(newDocument);
 
           // const { data: userCreationData, error: userCreationError } =
           //   await supabase.auth.resetPasswordForEmail(
@@ -91,10 +91,6 @@ export function approveDocumentAction(props: any) {
           //         ? 'http://localhost:3000/sign-up'
           //         : 'https://swom.travel/sign-up',
           //     });
-
-          console.log(' documentToApprove._id:', documentToApprove._id);
-
-          // refresh supabase client to ensure i can add to listings page:
 
           const { data: userData, error } = await supabase.auth.admin.createUser({
             email: documentToApprove.userInfo.email,
@@ -107,10 +103,6 @@ export function approveDocumentAction(props: any) {
               role: 'member',
             },
           });
-
-          console.log('userData:', userData?.user?.id);
-
-
 
           if (documentToApprove && documentToApprove._id && userData.user && userData.user.id) {
             const { data: user, error: userError } = await supabase
@@ -138,10 +130,7 @@ export function approveDocumentAction(props: any) {
               })
           }
 
-
-
-          await sanityClient.delete(documentToApprove._id);
-
+          // await sanityClient.delete(documentToApprove._id);
 
           console.log('Listing approved and moved to listings:', createdListing);
         } catch (error) {

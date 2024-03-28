@@ -435,21 +435,11 @@ const Page = (props: Props) => {
               className={`w-full p-4 h-[40vh] ${
                 mapsActive ? 'block' : 'hidden'
               }`}>
-              {listings[0]?.homeInfo?.address ? (
-                <GoogleMapComponent
-                  exactAddress={listings[0]?.homeInfo?.address}
-                  noSearch={true}
-                  radius={300}
-                />
-              ) : listings[0]?.homeInfo?.city ? (
-                <GoogleMapComponent
-                  city={listings[0]?.homeInfo?.city}
-                  noSearch={true}
-                  radius={300}
-                />
-              ) : (
-                ''
-              )}
+              <GoogleMapComponent
+                exactAddress={listings[0]?.homeInfo?.address}
+                noSearch={true}
+                radius={300}
+              />
             </div>
           </div>
 

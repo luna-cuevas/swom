@@ -1,11 +1,7 @@
 'use client';
 import GoogleMapComponent from '@/components/GoogleMapComponent';
 import ListingCard from '@/components/ListingCard';
-import { supabaseClient } from '@/utils/supabaseClient';
-import React, { useEffect, useMemo, useState } from 'react';
-import Stripe from 'stripe';
-import { sanityClient } from '@/utils/sanityClient';
-import ImageUrlBuilder from '@sanity/image-url';
+import React, { use, useEffect, useMemo, useState } from 'react';
 import { useAtom } from 'jotai';
 import { globalStateAtom } from '@/context/atoms';
 
@@ -14,179 +10,111 @@ type Props = {};
 const Page = (props: Props) => {
   const [listings, setListings] = useState<any>([]);
   const [allListings, setAllListings] = useState<any>([]);
-  const [favorite, setFavorite] = useState(
-    [] as {
-      favorite: boolean;
-      listingId: string;
-    }[]
-  );
-
-  const stripeActivation = new Stripe(
-    process.env.NEXT_PUBLIC_STRIPE_SECRET_KEY!,
-    {
-      apiVersion: '2023-08-16',
-    }
-  );
-  const [isSearching, setIsSearching] = useState<boolean>(false);
-  const [whereIsIt, setWhereIsIt] = useState<any>(null);
-  const [isIdle, setIsIdle] = useState<boolean>(false);
+  const [whereIsIt, setWhereIsIt] = useState<any>({});
   const [isLoading, setIsLoading] = useState<boolean>(true);
-  const supabase = supabaseClient();
   const [state, setState] = useAtom(globalStateAtom);
   const [inputValue, setInputValue] = useState<string>('');
+  const [page, setPage] = useState<number>(1);
 
   useEffect(() => {
-    if (state.loggedInUser) {
-      memoizedListings;
+    if (state.loggedInUser && state.loggedInUser.id !== null) {
+      if (state.allListings.length > 0) {
+        setListings(state.allListings);
+        setAllListings(state.allListings);
+        return;
+      }
+      fetchListings();
     }
-  }, [state.user, state.loggedInUser, state.loggedInUser?.id]);
+  }, [state.loggedInUser, state]);
+
+  useEffect(() => {
+    setIsLoading(false);
+  }, [listings, allListings]);
+
+  useEffect(() => {
+    if (window.google === undefined || whereIsIt == null) {
+      return;
+    }
+    const geocoder = new window.google.maps.Geocoder();
+    geocoder.geocode(
+      { location: { lat: whereIsIt.lat, lng: whereIsIt.lng } },
+      async (results, status) => {
+        if (status === 'OK' && results != null) {
+          const addressComponents = results[0].address_components;
+          const countryComponent = addressComponents.find((component) =>
+            component.types.includes('country')
+          );
+          const country = countryComponent ? countryComponent.long_name : '';
+          // Assuming you want to keep the city filter functionality
+          const cityComponent = addressComponents.find(
+            (component) =>
+              component.types.includes('locality') ||
+              component.types.includes('administrative_area_level_2') ||
+              component.types.includes('administrative_area_level_1')
+          );
+          const city = cityComponent ? cityComponent.long_name : '';
+          setInputValue(city); // If you want to show city name in input
+          // Now filter listings by the country
+          await filteredListings(city.toLowerCase(), country.toLowerCase());
+        }
+      }
+    );
+
+    // if whereIsIt is empty, set input value to empty
+    if (whereIsIt.lat === null && whereIsIt.lng === null) {
+      setInputValue('');
+    }
+
+    filteredListings();
+  }, [whereIsIt]);
 
   const fetchListings = async () => {
     setIsLoading(true);
     try {
-      const query = `*[_type == "listing"]{
-        ...,
-      "imageUrl": image.asset->url
-    }`;
-      const data = await sanityClient.fetch(query);
+      const query = `*[_type == "listing" && subscribed == true]{..., "imageUrl": image.asset->url}`;
 
-      const subscribedListings = await Promise.all(
-        data.map(async (listing: any) => {
-          const isSubscribed = await isUserSubscribed(listing.userInfo.email);
-          if (isSubscribed) {
-            return listing;
-          } else {
-            return null;
-          }
-        })
-      );
+      const data = await fetch('/api/getListings', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          query: query,
+          userId: state.loggedInUser.id,
+        }),
+      });
+      const dataJson = await data.json();
 
-      const filteredListings = subscribedListings.filter(
-        (listing: any) => listing !== null
-      );
-
-      setAllListings(filteredListings);
-      setListings(filteredListings);
-
-      const { data: allLiked, error: allLikedError } = await supabase
-        .from('appUsers')
-        .select('favorites')
-        .eq('id', state.loggedInUser.id);
-
-      if (allLikedError) {
-        console.log('fetch liked listings error:', allLikedError);
-      }
-
-      if (allLiked) {
-        // setListing all liked listings
-        allLiked[0]?.favorites?.map((favorite: any) => {
-          setListings((prev: any) => {
-            return prev.map((listing: any) => {
-              if (listing.userInfo.email === favorite.listingId) {
-                return { ...listing, favorite: true };
-              }
-              return listing;
-            });
-          });
-          setAllListings((prev: any) => {
-            return prev.map((listing: any) => {
-              if (listing.userInfo.email === favorite.listingId) {
-                return { ...listing, favorite: true };
-              }
-              return listing;
-            });
-          });
-        });
-      }
+      setListings(dataJson);
+      setAllListings(dataJson);
+      setState((prev: any) => ({
+        ...prev,
+        allListings: dataJson,
+      }));
       setIsLoading(false);
     } catch (error: any) {
       console.error('Error fetching data:', error.message);
     }
   };
 
-  const memoizedListings = useMemo(() => fetchListings(), [state.loggedInUser]);
+  const filteredListings = async (cityFilter = '', countryFilter = '') => {
+    setIsLoading(true); // Consider managing loading state here if filtering takes time
+    let filtered = allListings;
 
-  const filteredListings = async () => {
-    if (inputValue.length > 0) {
-      const filteredListingsByLocation = allListings.filter((listing: any) => {
-        const city = listing.homeInfo.city.toLowerCase();
-        const searchQuery = inputValue.toLowerCase();
-        return city.includes(searchQuery);
-      });
-
-      setListings(filteredListingsByLocation);
-    } else {
-      setListings(allListings);
+    if (cityFilter) {
+      filtered = filtered.filter((listing: any) =>
+        listing.city.toLowerCase().includes(cityFilter)
+      );
+    } else if (countryFilter) {
+      filtered = filtered.filter((listing: any) =>
+        listing.country.toLowerCase().includes(countryFilter)
+      );
     }
+
+    setListings(filtered);
+
+    setIsLoading(false); // Stop loading indicator
   };
-
-  useEffect(() => {
-    if (window.google === undefined) return;
-    const geocoder = new window.google.maps.Geocoder();
-    geocoder.geocode(
-      {
-        location: {
-          lat: whereIsIt.lat,
-          lng: whereIsIt.lng,
-        },
-      },
-      (results, status) => {
-        if (status === 'OK' && results != null) {
-          setInputValue(results[0].formatted_address);
-        }
-      }
-    );
-  }, [whereIsIt]);
-
-  console.log('listings:', listings);
-  console.log('inputValue:', inputValue);
-
-  // Utility function to sleep for a given number of milliseconds
-  const sleep = (ms: number) =>
-    new Promise((resolve) => setTimeout(resolve, ms));
-
-  async function isUserSubscribed(
-    email: string,
-    attempts = 3,
-    delay = 1000
-  ): Promise<boolean> {
-    if (attempts <= 0) {
-      throw new Error('Maximum retry attempts reached');
-    }
-
-    try {
-      if (!stripeActivation) {
-        console.log('Stripe.js has not loaded yet.');
-        return false;
-      }
-
-      const customers = await stripeActivation.customers.list({ email: email });
-      const customer = customers.data[0];
-
-      if (customer) {
-        const subscriptions = await stripeActivation.subscriptions.list({
-          customer: customer.id,
-          limit: 1,
-        });
-
-        return subscriptions.data.length > 0;
-      } else {
-        console.log('Customer not found');
-        return false;
-      }
-    } catch (error) {
-      // Wait for delay milliseconds and then retry
-      console.log(`Retrying in ${delay}ms...`);
-      await sleep(delay);
-      return isUserSubscribed(email, attempts - 1, delay * 2);
-    }
-  }
-
-  useEffect(() => {
-    filteredListings();
-  }, [isIdle, whereIsIt]);
-
-  console.log('where is it:', typeof whereIsIt);
 
   return (
     <main className="pt-6  flex   flex-col bg-[#F2E9E7] min-h-screen">
@@ -215,36 +143,33 @@ const Page = (props: Props) => {
         <>
           <div className="md:w-3/4 w-[90%] h-fit pt-12 pb-4 max-w-[1000px] mx-auto mt-12 mb-4">
             <GoogleMapComponent
-              setIsSearching={setIsSearching}
-              hideMap={inputValue.length > 0 ? true : false}
-              listings={listings && listings}
+              hideMap={whereIsIt.lat && whereIsIt.lng ? false : true}
+              listings={listings}
               setWhereIsIt={setWhereIsIt}
-              // setIsIdle={setIsIdle}
             />
           </div>
-          <div className="flex flex-col  flex-grow mx-auto w-full mt-8 justify-between">
+          <div className="flex flex-col bg-[#EADEDB]  flex-grow mx-auto w-full mt-8 justify-between">
             <div className={`flex pb-8`}>
               <div
                 className={`m-auto  ${
-                  isSearching || inputValue.length > 0
+                  whereIsIt.lat && whereIsIt.lng
                     ? 'flex flex-col w-fit'
                     : 'hidden'
                 }`}>
                 <p className="text-2xl">Say hello to</p>
                 <h2 className="text-3xl capitalize">
-                  {isSearching ? 'the world' : inputValue}
+                  {whereIsIt.lat && whereIsIt.lng ? inputValue : 'the world.'}
                 </h2>
               </div>
               <h1
                 className={`text-3xl m-auto ${
-                  !isSearching && inputValue.length > 0 ? 'text-center' : ''
+                  whereIsIt.lat && whereIsIt.lng ? 'text-right' : 'text-center'
                 }
             `}>
-                Let&apos;s discover <br />
-                your new adventure.
+                Let&apos;s discover your <br /> new adventure.
               </h1>
             </div>
-            <div className="bg-[#EADEDB] pt-8  flex-grow h-full ">
+            <div className=" pt-8  flex-grow h-full ">
               {listings.length > 0 && (
                 <div className="m-auto gap-4 mb-4 justify-end max-w-[1000px] flex w-full flex-wrap">
                   <button
@@ -276,8 +201,8 @@ const Page = (props: Props) => {
                 </div>
               )}
               <div className="m-auto justify-between max-w-[1000px] flex w-full flex-wrap">
-                {listings.length > 0 ? (
-                  listings.map((listing: any, index: number) => (
+                {listings?.length > 0 ? (
+                  listings?.map((listing: any, index: number) => (
                     <ListingCard
                       setListings={setListings}
                       setAllListings={setAllListings}
@@ -290,6 +215,29 @@ const Page = (props: Props) => {
                     <p className="text-xl">No listings found</p>
                   </div>
                 )}
+              </div>
+            </div>
+            <div className="my-4">
+              {/* pagination functionality  */}
+              <div className="flex justify-center gap-4">
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (page > 1) setPage(page - 1);
+                  }}
+                  className="hover:bg-[#686926] bg-[#7F8119] text-white px-2 py-1 rounded-md">
+                  Prev
+                </button>
+                {/* current page number */}
+                <p className="text-xl">{page}</p>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setPage(page + 1);
+                  }}
+                  className="hover:bg-[#686926] bg-[#7F8119] text-white px-2 py-1 rounded-md">
+                  Next
+                </button>
               </div>
             </div>
           </div>
