@@ -7,18 +7,18 @@ import ImageUrlBuilder from '@sanity/image-url';
 import { sanityClient } from '../utils/sanityClient';
 import { useAtom } from 'jotai';
 import { globalStateAtom } from '@/context/atoms';
+import { usePathname } from 'next/navigation';
 
 type Props = {
   listingInfo: any;
-  setListings: any;
-  setAllListings: any;
+  setListings?: any;
+  setAllListings?: any;
+  myListingPage?: boolean;
 };
 
 const ListingCard = (props: Props) => {
   const [state, setState] = useAtom(globalStateAtom);
-
   const supabase = supabaseClient();
-
   const builder = ImageUrlBuilder(sanityClient);
 
   function urlFor(source: any) {
@@ -119,13 +119,12 @@ const ListingCard = (props: Props) => {
   return (
     <div className="rounded-xl p-[16px] flex-col md:m-2 bg-white relative flex h-auto my-2 m-auto w-[90%] md:w-[45%]">
       <div className="h-[25vh] relative">
-        {/* <div className="bg-white z-50 px-2 text-sm absolute top-0 right-2 rounded-b-lg">
-          Listing No. {props.listingInfo._id.slice(-5)}
-        </div> */}
         <Link
           href={
             props.listingInfo?.userInfo.email == state?.loggedInUser?.email
-              ? `listings/my-listing`
+              ? !props.myListingPage
+                ? `/listings/my-listing`
+                : `/listings/my-listing?listing=${props.listingInfo?._id}`
               : `/listings/${props.listingInfo?._id}`
           }>
           <Image
@@ -155,7 +154,7 @@ const ListingCard = (props: Props) => {
             <h1 className="text-xl">{props.listingInfo?.homeInfo?.title}</h1>
             <p className="">{props.listingInfo?.homeInfo?.city}</p>
           </Link>
-          <div className="flex">
+          <div className={`flex ${!props.setListings && 'hidden'}`}>
             <button
               onClick={() => {
                 handleFavorite(props.listingInfo.userInfo.email);

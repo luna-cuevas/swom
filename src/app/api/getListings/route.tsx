@@ -7,14 +7,17 @@ import { Client } from '@googlemaps/google-maps-services-js';
 export async function POST(req: Request, res: Response) {
   const supabase = supabaseClient();
   const body = await req.json();
-  const id = body.userId;
+  const email = body.email;
+  const id = body.id;
   const query = body.query;
   const googleMapsClient = new Client({});
 
-  if (id && !query) {
+  if (email && !query) {
     const data = await sanityClient.fetch(
-      `*[_type == 'user' && _id == $id][0]`,
-      { id }
+      `*[_type == 'listing' && userInfo.email == $email]`,
+      {
+        email,
+      }
     );
 
     if (!data) {

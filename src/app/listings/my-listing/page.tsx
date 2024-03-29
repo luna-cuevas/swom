@@ -3,18 +3,24 @@ import CarouselPage from '@/components/Carousel';
 import DropZone from '@/components/DropZone';
 import GoogleMapComponent from '@/components/GoogleMapComponent';
 import Image from 'next/image';
-import React, { use, useCallback, useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { set, useForm, Controller } from 'react-hook-form';
 import { supabaseClient } from '@/utils/supabaseClient';
 import ProfilePicDropZone from '@/components/ProfilePicDropZone';
 import BecomeMemberDropzone from '@/components/BecomeMemberDropzone';
-import { useRouter } from 'next/navigation';
+import {
+  useParams,
+  usePathname,
+  useRouter,
+  useSearchParams,
+} from 'next/navigation';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { sanityClient } from '@/utils/sanityClient';
 import ImageUrlBuilder from '@sanity/image-url';
 import { useAtom } from 'jotai';
 import { globalStateAtom } from '@/context/atoms';
+import ListingCard from '@/components/ListingCard';
 
 type Props = {};
 
@@ -43,6 +49,11 @@ const Page = (props: Props) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [cities, setCities] = useState<any>([]);
   const builder = ImageUrlBuilder(sanityClient);
+
+  const searchParams = useSearchParams();
+  const listingId = searchParams.get('listing');
+
+  console.log('listingId', listingId);
 
   function urlFor(source: any) {
     return builder.image(source);
@@ -156,19 +167,33 @@ const Page = (props: Props) => {
       if (state.user && state.user.email) {
         try {
           const loggedInUserEmail = state.user.email;
-          const query = `*[_type == "listing" && userInfo.email == $loggedInUserEmail]`;
-          const data = await sanityClient.fetch(query, { loggedInUserEmail });
+          const data = await fetch('/api/getListings', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ email: loggedInUserEmail }),
+          }).then((response) => response.json());
 
-          setListings(data);
-          console.log('sanity listing', data);
-          setIsLoaded(true);
+          // search through data for the listing that matches the listingId
+          if (listingId) {
+            const listing = data.filter(
+              (listing: any) => listing._id === listingId
+            );
+            setListings(listing);
+            setIsLoaded(true);
+          } else {
+            setListings(data);
+            console.log('sanity listing', data);
+            setIsLoaded(true);
+          }
         } catch (error: any) {
           console.error('Error fetching data:', error.message);
         }
       }
     };
     fetchListings();
-  }, [state.user]);
+  }, [state.user, listingId]);
 
   const handleInputChange = (e: any) => {
     const value = e.target.value;
@@ -293,8 +318,6 @@ const Page = (props: Props) => {
     }
   }, [listings]);
 
-  console.log('profileimg', profileImage);
-
   const onSubmit = async (data: any) => {
     setIsSubmitting(true);
 
@@ -381,12 +404,50 @@ const Page = (props: Props) => {
     console.log(errors, e);
   };
 
+  if (listings.length > 1) {
+    return (
+      <div className="bg-[#F7F1EE]  pt-8 h-[calc(100vh-69px)]">
+        <div className="h-fit flex mx-auto justify-center max-w-[1000px]">
+          {listings.map((listing: any) => (
+            <ListingCard
+              myListingPage={true}
+              listingInfo={listing}
+              key={listing._id}
+            />
+          ))}
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="bg-[#F7F1EE]">
       {isLoaded ? (
         <form
           onSubmit={handleSubmit(onSubmit, onError)}
           className=" max-w-[1200px] mx-auto relative">
+          <div className="flex ">
+            <button
+              type="button"
+              onClick={() => {
+                router.push('/listings/my-listing');
+              }}
+              className=" my-4 flex gap-2 bg-[#F87C1B] text-white py-2 px-4 rounded-xl">
+              {/* svg of back arrow */}
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 24 24"
+                fill="currentColor"
+                className="w-6 h-6">
+                <path
+                  fill-rule="evenodd"
+                  d="M9.53 2.47a.75.75 0 0 1 0 1.06L4.81 8.25H15a6.75 6.75 0 0 1 0 13.5h-3a.75.75 0 0 1 0-1.5h3a5.25 5.25 0 1 0 0-10.5H4.81l4.72 4.72a.75.75 0 1 1-1.06 1.06l-6-6a.75.75 0 0 1 0-1.06l6-6a.75.75 0 0 1 1.06 0Z"
+                  clip-rule="evenodd"
+                />
+              </svg>
+              To My Listings
+            </button>
+          </div>
           <div className="py-8  px-8 lg:px-16 flex-col lg:flex-row flex justify-between gap-4">
             <div className="lg:w-[35%] my-4 flex justify-center text-center flex-col">
               {editUserInfo ? (
