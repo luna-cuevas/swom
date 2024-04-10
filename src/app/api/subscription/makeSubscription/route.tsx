@@ -46,7 +46,7 @@ export async function POST(req: Request) {
           quantity: 1,
         },
       ],
-      discounts: [],
+      allow_promotion_codes: true,
       success_url: success_url,
       cancel_url: `${origin}/home`,
     });
