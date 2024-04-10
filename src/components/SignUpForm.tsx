@@ -11,6 +11,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import 'react-toastify/dist/ReactToastify.css';
 import { useAtom } from 'jotai';
 import { globalStateAtom } from '@/context/atoms';
+import { sanityClient } from '../../sanity/lib/client';
 
 type Props = {};
 
@@ -75,11 +76,32 @@ const SignUpForm = (props: Props) => {
     }
   };
 
+  // update sanity subscription field for this user to true
+  const updateSubscription = async (email: string) => {
+    const query = `*[_type == "listing" && userInfo.email == $email][0]`;
+    const params = { email: state.loggedInUser.email };
+    const document = await sanityClient.fetch(query, params);
+    const documentId = document._id;
+
+    console.log('document', document);
+
+    const updatedDocument = sanityClient
+      .patch(documentId)
+      .set({
+        ...document,
+        subscribed: true,
+      })
+      .commit();
+    console.log('updated document', updatedDocument);
+  };
+
   useEffect(() => {
     if (sessionId) {
       console.log('subscription result', sessionId);
       setState({ ...state, isSubscribed: true, activeNavButtons: true });
       toast.success('Subscribed successfully');
+      updateSubscription(state.loggedInUser.email);
+
       setTimeout(() => {
         router.push('/home');
       }, 2000);

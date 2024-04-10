@@ -289,7 +289,9 @@ const Page = (props: Props) => {
       );
       setValue(
         'userInfo.openToOtherDestinations',
-        listings[0].userInfo.openToOtherDestinations.toString()
+        listings[0].userInfo.openToOtherDestinations
+          ? listings[0].userInfo.openToOtherDestinations.toString()
+          : 'false'
       );
       setValue('homeInfo.city', listings[0].homeInfo.city);
       if (listings[0].homeInfo.city) {
