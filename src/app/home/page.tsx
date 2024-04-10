@@ -1,17 +1,15 @@
-'use client';
 import Carousel from '@/components/Carousel';
 import Image from 'next/image';
 import Link from 'next/link';
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 import { sanityClient } from '../../../sanity/lib/client';
 import { urlForImage } from '../../../sanity/lib/image';
-import GoogleMapComponent from '@/components/GoogleMapComponent';
-import { globalStateAtom } from '@/context/atoms';
-import { useAtom } from 'jotai';
+
+import HomeMapComponent from '@/components/HomeMapComponent';
 
 type Props = {};
 
-const Page = async (props: Props) => {
+const Page = (props: Props) => {
   // const updatePassword = async () => {
   //   const { data: user, error } = await supabase.auth.admin.updateUserById(
   //     'f9afa7b8-8005-454e-a74e-8e71670e2ce3',
@@ -54,12 +52,6 @@ const Page = async (props: Props) => {
 
   //   fetchListings();
   // }, []);
-
-  const [whereIsIt, setWhereIsIt] = useState({
-    lat: 0,
-    lng: 0,
-  });
-  const [state, setState] = useAtom(globalStateAtom);
 
   return (
     <main
@@ -206,35 +198,7 @@ const Page = async (props: Props) => {
           <div className="w-fit ">
             <h1 className="text-4xl font-bold  mb-4">Explore</h1>
           </div>
-          <form className=" w-full flex flex-col justify-center md:flex-row gap-4">
-            <div className="w-full">
-              <GoogleMapComponent hideMap={true} setWhereIsIt={setWhereIsIt} />
-            </div>
-            {/* <input
-              className="bg-[#F4ECE8] rounded-xl p-3 col-span-2"
-              placeholder="Location"
-              type="text"
-            /> */}
-            {/* <input
-              className="bg-[#F4ECE8] rounded-xl p-3 col-span-2"
-              placeholder="Anytime"
-              type="text"
-            /> */}
-            {/* <select className="bg-[#F4ECE8] text-center" name="" id="">
-              <option value="1">1 Guest</option>
-              <option value="2">2 Guest</option>
-              <option value="3">3 Guest</option>
-            </select> */}
-            <Link
-              href={
-                state.loggedInUser && whereIsIt.lat && whereIsIt.lng
-                  ? `/listings?lat=${whereIsIt.lat}&lng=${whereIsIt.lng}`
-                  : `/become-member`
-              }
-              className="bg-[#E88527] rounded-3xl mx-auto md:mx-0 text-white h-fit w-fit py-2 px-8 my-auto">
-              Search
-            </Link>
-          </form>
+          <HomeMapComponent />
         </div>
       </section>
 

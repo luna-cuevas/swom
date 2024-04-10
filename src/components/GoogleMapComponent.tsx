@@ -17,6 +17,7 @@ type Props = {
   setWhereIsIt?: React.Dispatch<
     React.SetStateAction<{ lat: number; lng: number }>
   >;
+  latLng?: { lat: number; lng: number };
   whereIsIt?: { lat: number; lng: number };
   noSearch?: boolean;
   exactAddress?: { lat: number; lng: number };
@@ -74,6 +75,12 @@ export default function GoogleMapComponent(props: Props) {
             lat: place.geometry.location.lat(),
             lng: place.geometry.location.lng(),
           });
+        if (props.latLng) {
+          props.latLng = {
+            lat: place.geometry.location.lat(),
+            lng: place.geometry.location.lng(),
+          };
+        }
         // convert lat and lng to string for the input value using google maps geocoding
         const geocoder = new window.google.maps.Geocoder();
         geocoder.geocode(
@@ -145,7 +152,7 @@ export default function GoogleMapComponent(props: Props) {
     }
   }, [props.exactAddress, isLoaded, props.listings]);
 
-  useEffect(() => { 
+  useEffect(() => {
     if (props.whereIsIt) {
       setCenter(props.whereIsIt);
     }
