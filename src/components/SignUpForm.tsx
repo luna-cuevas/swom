@@ -16,18 +16,13 @@ type Props = {};
 
 const SignUpForm = (props: Props) => {
   const supabase = supabaseClient();
-  const [selectedPlan, setSelectedPlan] = useState({
-    plan: '1 year',
-    interval: 'year',
-    amount: 20000,
-    planDescription: 'Subscribe for $200 per year.',
-  });
   const [state, setState] = useAtom(globalStateAtom);
   const [stripe, setStripe] = useState<Stripe | null>(null);
   const [subScreen, setSubScreen] = useState(false);
   const router = useRouter();
   const searchParams = useSearchParams();
   const sessionId = searchParams.get('session_id');
+  console.log('session id', sessionId);
 
   const {
     register,
@@ -49,10 +44,25 @@ const SignUpForm = (props: Props) => {
   }, []);
 
   useEffect(() => {
-    if (state.user?.email) {
-      setValue('email', state.user?.email);
-    }
-  }, [state.user]);
+    const { data: userData } = supabase.auth.onAuthStateChange(
+      (event, session) => {
+        console.log(event, session);
+        console.log('event', event, 'user session', session);
+
+        if (event === 'PASSWORD_RECOVERY' && session != null) {
+          setState({
+            ...state,
+            session,
+            user: session.user,
+            // isSubscribed: subbed,
+            // activeNavButtons: true,
+          });
+          setValue('email', session?.user?.email);
+          // handle initial session
+        }
+      }
+    );
+  }, []);
 
   const onSubmit = (data: any) => {
     const fullName = data.firstName + ' ' + data.lastName;
@@ -66,13 +76,13 @@ const SignUpForm = (props: Props) => {
   };
 
   useEffect(() => {
-    // check if  search params has session_id
     if (sessionId) {
       console.log('subscription result', sessionId);
       setState({ ...state, isSubscribed: true, activeNavButtons: true });
       toast.success('Subscribed successfully');
-      // navigate to the listings/my-listing page
-      router.push('/home');
+      setTimeout(() => {
+        router.push('/home');
+      }, 2000);
     }
   }, [sessionId]);
 
@@ -136,54 +146,6 @@ const SignUpForm = (props: Props) => {
     return false;
   };
 
-  const stripeActivation = new Stripe(
-    process.env.NEXT_PUBLIC_STRIPE_SECRET_KEY!,
-    {
-      apiVersion: '2023-08-16',
-    }
-  );
-
-  const fetchStripe = async (email: string) => {
-    console.log('fetching stripe');
-
-    const isSubscribed = await isUserSubscribed(email, stripeActivation);
-
-    return isSubscribed;
-  };
-
-  async function isUserSubscribed(
-    email: string,
-    stripe: any
-  ): Promise<boolean> {
-    console.log('checking subscription status');
-    try {
-      if (!stripe) {
-        console.log('Stripe.js has not loaded yet.');
-        return false;
-      }
-      // Retrieve the customer by email
-      const customers = await stripe.customers.list({ email: email });
-      const customer = customers.data[0]; // Assuming the first customer is the desired one
-
-      if (customer) {
-        // Retrieve the customer's subscriptions
-        const subscriptions = await stripe.subscriptions.list({
-          customer: customer.id,
-          limit: 1, // Assuming only checking the latest subscription
-        });
-
-        return subscriptions.data.length > 0; // User is subscribed if there's at least one subscription
-      } else {
-        // Customer not found
-        console.log('Customer not found');
-        return false;
-      }
-    } catch (error) {
-      console.error('Error checking subscription status:', error);
-      throw error;
-    }
-  }
-
   const fetchLoggedInUser = async (user: any) => {
     console.log('fetching logged in user', user);
 
@@ -234,8 +196,6 @@ const SignUpForm = (props: Props) => {
       const loggedInUser = await fetchLoggedInUser(session.user);
       setState({
         ...state,
-        session,
-        user: session.user,
         loggedInUser: loggedInUser,
       });
 

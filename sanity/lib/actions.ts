@@ -83,19 +83,12 @@ export function approveDocumentAction(props: any) {
 
           const createdListing = await sanityClient.create(newDocument);
 
-          // const { data: userCreationData, error: userCreationError } =
-          //   await supabase.auth.resetPasswordForEmail(
-          //     documentToApprove.userInfo.email,
-          //     {
-          //       redirectTo: isDev
-          //         ? 'http://localhost:3000/sign-up'
-          //         : 'https://swom.travel/sign-up',
-          //     });
+
 
           const { data: userData, error } = await supabase.auth.admin.createUser({
             email: documentToApprove.userInfo.email,
-            email_confirm: true,
-            password: 'password',
+            // email_confirm: true,
+            // password: 'password',
             user_metadata: {
               name: documentToApprove.userInfo.name,
               dob: documentToApprove.userInfo.dob || '',
@@ -104,7 +97,10 @@ export function approveDocumentAction(props: any) {
             },
           });
 
-          if (documentToApprove && documentToApprove._id && userData.user && userData.user.id) {
+
+
+          if (documentToApprove && documentToApprove._id && userData.user && userData.user.id && userData.user.email) {
+            console.log('userData:', userData);
             const { data: user, error: userError } = await supabase
               .from('listings')
               .insert(
@@ -117,6 +113,8 @@ export function approveDocumentAction(props: any) {
               )
               .select('*');
 
+            console.log('listing data:', user, "error", userError);
+
             const { data: appUserData, error: appUserDataError } = await supabase
               .from('appUsers')
               .insert({
@@ -128,7 +126,21 @@ export function approveDocumentAction(props: any) {
                 profileImage: documentToApprove.userInfo.profileImage,
                 role: 'member',
               })
+
+            console.log('appUserData:', appUserData, "error", appUserDataError);
+
+            const { data: inviteEmail, error } = await supabase.auth.resetPasswordForEmail(
+              userData.user.email,
+              {
+                redirectTo: isDev ? 'http://localhost:3000/sign-up' : 'https://swom.travel/sign-up',
+              }
+            );
+            console.log('inviteEmail:', inviteEmail, "error", error);
+
           }
+
+
+
 
           // await sanityClient.delete(documentToApprove._id);
 

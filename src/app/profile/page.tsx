@@ -50,15 +50,11 @@ const Page = (props: Props) => {
   });
 
   const handlePasswordChange = (password: any) => {
-    // i want it to add all the characters to the array to form newPassword
-    // then when the user clicks update details it will update the password in the database
     setNewPassword(password);
     setIsPasswordChanged(true);
   };
 
   const handleConfirmPasswordChange = (password: any) => {
-    // i want it to add all the characters to the array to form newPassword
-    // then when the user clicks update details it will update the password in the database
     setConfirmPassword(password);
   };
 
@@ -72,99 +68,8 @@ const Page = (props: Props) => {
     }
   };
 
-  // const uploadImageToCloudinary = async (imageFile: any, folder: string) => {
-  //   try {
-  //     const formData = new FormData();
-  //     formData.append('file', imageFile);
-  //     formData.append('upload_preset', 'zttdzjqk');
-  //     formData.append('folder', folder);
-
-  //     const response = await fetch(
-  //       'https://api.cloudinary.com/v1_1/dxfz8k7g8/image/upload',
-  //       {
-  //         method: 'POST',
-  //         body: formData,
-  //       }
-  //     );
-
-  //     if (!response.ok) {
-  //       throw new Error('Failed to upload image to Cloudinary');
-  //     }
-
-  //     const result = await response.json();
-  //     console.log('Uploaded image to Cloudinary:', result);
-
-  //     // Include transformation parameters to reduce image size
-  //     const transformedUrl = `${result.secure_url.replace(
-  //       '/upload/',
-  //       '/upload/w_auto,c_scale,q_auto:low/'
-  //     )}`;
-
-  //     console.log('Transformed URL:', transformedUrl);
-
-  //     return transformedUrl;
-  //   } catch (error) {
-  //     console.error('Error uploading image to Cloudinary:', error);
-  //     throw error;
-  //   }
-  // };
-
   const onSubmit = async (data: any) => {
     setIsLoading(true);
-    // const passwordResults = comparePasswords();
-    // if (passwordResults && newPassword !== '') {
-    //   setIsPasswordChanged(false);
-    //   const { data, error } = await supabase.auth.updateUser({
-    //     password: newPassword,
-    //   });
-    //   if (error) {
-    //     toast.error('Password not updated');
-    //   } else {
-    //     toast.success('Password updated');
-    //   }
-    // }
-
-    // if (profileImage && profileImage.length > 0) {
-    //   // Upload profile image to Cloudinary
-    //   const profileImageFile = profileImage[0];
-    //   const profileImageUrl = await uploadImageToCloudinary(
-    //     profileImageFile,
-    //     `${state.user?.id}/profileImage`
-    //   );
-    //   data.profileImage = profileImageUrl;
-    // }
-
-    // data.name = `${data.firstName} ${data.lastName}`;
-
-    // const editListingData = await fetch('/api/profile/editProfile', {
-    //   method: 'POST',
-    //   headers: {
-    //     'Content-Type': 'application/json',
-    //   },
-    //   body: JSON.stringify({
-    //     id: state.user.id,
-    //     data,
-    //   }),
-    // });
-    // const editListingJson = await editListingData?.json();
-
-    // if (!editListingJson) {
-    //   toast.error('Details not updated');
-    //   console.log('error', editListingJson);
-    // } else {
-    //   setIsLoading(false);
-    //   console.log('editListingJson', editListingJson);
-    //   setState({
-    //     ...state,
-    //     loggedInUser: {
-    //       ...state.loggedInUser,
-    //       name: data.name,
-    //       email: data.emailAddress,
-    //       profileImage: data.profileImage && data.profileImage,
-    //     },
-    //   });
-    //   toast.success('Details updated');
-    // }
 
     const passwordResults = comparePasswords();
     if (passwordResults && newPassword !== '') {
@@ -182,9 +87,10 @@ const Page = (props: Props) => {
     }
 
     try {
-      const query = `*[_type == "listing" && userInfo.email == $email][0]._id`;
+      const query = `*[_type == "listing" && userInfo.email == $email][0]`;
       const params = { email: state.loggedInUser.email };
-      const documentId = await sanityClient.fetch(query, params);
+      const document = await sanityClient.fetch(query, params);
+      const documentId = document._id;
       console.log('documentId', documentId);
 
       if (profileImage.length > 0) {
@@ -209,12 +115,26 @@ const Page = (props: Props) => {
 
       // Prepare the updated listing data with image references
       const updatedListingData = {
-        ...listingData,
+        ...document,
         userInfo: {
-          ...listingData.userInfo,
+          ...document.userInfo,
           profileImage: data.profileImage,
+          name: `${data.firstName} ${data.lastName}`,
         },
       };
+
+      const { data: supabaseData, error } = await supabase
+        .from('appUsers')
+        .update({
+          name: `${data.firstName} ${data.lastName}`,
+          profileImage: data.profileImage,
+        })
+        .eq('email', state.loggedInUser.email);
+
+      if (error) {
+        console.error('Error updating user:', error);
+        toast.error('Failed to update user.');
+      }
 
       console.log('updatedListingData', updatedListingData);
 
@@ -235,23 +155,33 @@ const Page = (props: Props) => {
   };
 
   const fetchListingData = async () => {
-    const query = `*[_type == "listing" && userInfo.email == $email][0]`;
-    const params = { email: state.loggedInUser.email };
-    const listingData = await sanityClient.fetch(query, params);
+    // const params = { email: state.loggedInUser.email };
+    // const listingData = await sanityClient.fetch(query, params);
+
+    // search supabase for the user
+    const { data, error } = await supabase
+      .from('appUsers')
+      .select('id, email, name, profileImage')
+      .eq('email', state.loggedInUser.email);
+
+    if (error) {
+      console.error('Error fetching listing data:', error);
+      return;
+    }
+
+    const listingData = data[0];
+    listingData.profileImage = JSON.parse(listingData.profileImage);
+
     console.log('listingData', listingData);
     setListingData(listingData);
   };
 
   useEffect(() => {
     if (listingData) {
-      setValue('firstName', listingData.userInfo.name.split(' ')[0]);
-      setValue('lastName', listingData.userInfo.name.split(' ')[1]);
-      setValue('emailAddress', listingData.userInfo.email);
-      setProfileImage(listingData.userInfo.profileImage || []);
-      console.log(
-        'listingData.userInfo.profileImage',
-        listingData.userInfo.profileImage
-      );
+      setValue('firstName', listingData.name.split(' ')[0]);
+      setValue('lastName', listingData.name.split(' ')[1]);
+      setValue('emailAddress', listingData.email);
+      // setProfileImage(listingData.profileImage || []);
     }
   }, [listingData]);
 
@@ -288,8 +218,8 @@ const Page = (props: Props) => {
                   src={
                     profileImage.length > 0
                       ? URL.createObjectURL(profileImage[0])
-                      : (listingData?.userInfo?.profileImage &&
-                          urlFor(listingData.userInfo.profileImage).url()) ||
+                      : (listingData?.profileImage &&
+                          urlFor(listingData.profileImage).url()) ||
                         '/placeholder.png'
                   }
                   alt="hero"

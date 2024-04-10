@@ -4,19 +4,25 @@ import ListingCard from '@/components/ListingCard';
 import React, { use, useEffect, useMemo, useState } from 'react';
 import { useAtom } from 'jotai';
 import { globalStateAtom } from '@/context/atoms';
+import { useSearchParams } from 'next/navigation';
 
 type Props = {};
 
 const Page = (props: Props) => {
   const [listings, setListings] = useState<any>([]);
   const [allListings, setAllListings] = useState<any>([]);
-  const [whereIsIt, setWhereIsIt] = useState<any>({});
+  const [whereIsIt, setWhereIsIt] = useState<any>({
+    lat: 0,
+    lng: 0,
+  });
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [state, setState] = useAtom(globalStateAtom);
   const [inputValue, setInputValue] = useState<string>('');
   const [page, setPage] = useState<number>(1);
   const [loadedPages, setLoadedPages] = useState<any>({});
   const listingsPerPage = 10;
+  const searchParams = useSearchParams();
+  console.log('searchParams', searchParams.get('lat'), searchParams.get('lng'));
 
   const indexOfLastListing = page * listingsPerPage;
   const indexOfFirstListing = indexOfLastListing - listingsPerPage;
@@ -30,24 +36,38 @@ const Page = (props: Props) => {
       if (state.allListings.length > 0) {
         setListings(state.allListings);
         setAllListings(state.allListings);
+        setIsLoading(false);
         return;
       }
+
       fetchListings();
+      setIsLoading(false);
     }
-  }, [state.loggedInUser, state]);
+  }, []);
 
   useEffect(() => {
-    setIsLoading(false);
-  }, [listings, allListings]);
+    console.log('isloading', isLoading);
+  }, [isLoading]);
+
+  useEffect(() => {
+    if (searchParams && searchParams.get('lat') && searchParams.get('lng')) {
+      setWhereIsIt({
+        lat: parseFloat(searchParams.get('lat') as string),
+        lng: parseFloat(searchParams.get('lng') as string),
+      });
+    }
+  }, [searchParams]);
 
   useEffect(() => {
     if (window.google === undefined || whereIsIt == null) {
       return;
     }
+    console.log('whereIsIt', whereIsIt);
     const geocoder = new window.google.maps.Geocoder();
     geocoder.geocode(
       { location: { lat: whereIsIt.lat, lng: whereIsIt.lng } },
       async (results, status) => {
+        console.log('results', results);
         if (status === 'OK' && results != null) {
           const addressComponents = results[0].address_components;
           const countryComponent = addressComponents.find((component) =>
@@ -61,6 +81,7 @@ const Page = (props: Props) => {
               component.types.includes('administrative_area_level_2') ||
               component.types.includes('administrative_area_level_1')
           );
+          console.log('cityComponent', cityComponent);
           const city = cityComponent ? cityComponent.long_name : '';
           setInputValue(city); // If you want to show city name in input
           // Now filter listings by the country
@@ -83,7 +104,6 @@ const Page = (props: Props) => {
       return;
     }
 
-    setIsLoading(true);
     try {
       const startIndex = (pageNumber - 1) * 10; // Assuming 10 listings per page
 
@@ -110,7 +130,6 @@ const Page = (props: Props) => {
           ...prev,
           allListings: prev.allListings.concat(dataJson),
         }));
-        setIsLoading(false);
       } else if (pageNumber === 1 && dataJson.length > 0) {
         console.log('Data:', dataJson);
         setListings(dataJson);
@@ -119,7 +138,6 @@ const Page = (props: Props) => {
           ...prev,
           allListings: dataJson,
         }));
-        setIsLoading(false);
       }
 
       setLoadedPages((prev: any) => ({ ...prev, [pageNumber]: true }));
@@ -129,7 +147,6 @@ const Page = (props: Props) => {
   };
 
   const filteredListings = async (cityFilter = '', countryFilter = '') => {
-    setIsLoading(true); // Consider managing loading state here if filtering takes time
     setPage(1);
     let filtered = allListings;
 
@@ -144,13 +161,11 @@ const Page = (props: Props) => {
     }
 
     setListings(filtered);
-
-    setIsLoading(false); // Stop loading indicator
   };
 
   return (
     <main className="pt-6  flex   flex-col bg-[#F2E9E7] min-h-screen">
-      {isLoading && currentListings ? (
+      {isLoading ? (
         <div
           role="status"
           className=" flex min-h-screen m-auto h-fit w-fit my-auto mx-auto px-3 py-2 text-white rounded-xl">
@@ -175,7 +190,12 @@ const Page = (props: Props) => {
         <>
           <div className="md:w-3/4 w-[90%] h-fit pt-12 pb-4 max-w-[1000px] mx-auto mt-12 mb-4">
             <GoogleMapComponent
-              hideMap={whereIsIt.lat && whereIsIt.lng ? false : true}
+              hideMap={
+                whereIsIt.lat && whereIsIt.lng && inputValue != ''
+                  ? false
+                  : true
+              }
+              whereIsIt={whereIsIt}
               listings={listings}
               setWhereIsIt={setWhereIsIt}
             />

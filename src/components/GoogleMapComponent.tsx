@@ -14,7 +14,10 @@ import { sanityClient } from '../utils/sanityClient';
 import { urlForImage } from '../../sanity/lib/image';
 
 type Props = {
-  setWhereIsIt?: React.Dispatch<React.SetStateAction<object>>;
+  setWhereIsIt?: React.Dispatch<
+    React.SetStateAction<{ lat: number; lng: number }>
+  >;
+  whereIsIt?: { lat: number; lng: number };
   noSearch?: boolean;
   exactAddress?: { lat: number; lng: number };
   radius?: number;
@@ -142,6 +145,12 @@ export default function GoogleMapComponent(props: Props) {
     }
   }, [props.exactAddress, isLoaded, props.listings]);
 
+  useEffect(() => { 
+    if (props.whereIsIt) {
+      setCenter(props.whereIsIt);
+    }
+  }, [props.whereIsIt]);
+
   if (!isLoaded) {
     return <div>Loading...</div>;
   }
@@ -157,7 +166,7 @@ export default function GoogleMapComponent(props: Props) {
             onChange={(e) => setAddressString(e.target.value)}
             onBlur={() => {
               if (addressString === '') {
-                props.setWhereIsIt && props.setWhereIsIt({});
+                props.setWhereIsIt && props.setWhereIsIt({ lat: 0, lng: 0 });
               }
             }}
           />

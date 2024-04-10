@@ -46,6 +46,7 @@ export async function POST(req: Request) {
           quantity: 1,
         },
       ],
+      discounts: [],
       success_url: success_url,
       cancel_url: `${origin}/home`,
     });
