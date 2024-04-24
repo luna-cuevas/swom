@@ -2,15 +2,7 @@
 
 import Image from 'next/image';
 import Link from 'next/link';
-import React, { use, useEffect, useState } from 'react';
-import {
-  Menu,
-  MenuHandler,
-  Button,
-  MenuList,
-  MenuItem,
-  Input,
-} from '@material-tailwind/react';
+import React, { useEffect, useState } from 'react';
 import SignIn from '@/components/SignIn';
 import { supabaseClient } from '@/utils/supabaseClient';
 import { ToastContainer, toast } from 'react-toastify';
