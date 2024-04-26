@@ -259,7 +259,7 @@ const Page = (props: Props) => {
                 </div>
               )}
               <div className="m-auto justify-between max-w-[1000px] flex w-full flex-wrap">
-                {currentListings?.length > 0 ? (
+                {listings.length > 0 ? (
                   currentListings?.map((listing: any, index: number) => (
                     <ListingCard
                       setListings={setListings}
