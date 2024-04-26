@@ -137,8 +137,8 @@ const CarouselPage = (props: Props) => {
                           <div className="z-50  py-4 px-8 text-[#172544]">
                             Let&apos;s meet your new favorite home. <br />
                             <strong>
-                              {/* @ts-ignore */}
-                              Listing No. {slideProps.slide.listingNum}
+                              Listing No. {/* @ts-ignore */}
+                              {slideProps.slide.listingNum?.slice(-6)}
                             </strong>
                           </div>
                         </Link>

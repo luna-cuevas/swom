@@ -9,6 +9,13 @@ export function approveDocumentAction(props: any) {
 
   const stripe = require('stripe')(process.env.NEXT_PUBLIC_STRIPE_SECRET_KEY);
 
+  async function getCurrentUserCount() {
+    let { count } = await supabase
+      .from('appUsers') // Assuming 'profiles' is your user table
+      .select('*', { count: 'exact' });
+    return count;
+  }
+
   return {
     label: 'Approve listing',
 
@@ -83,6 +90,8 @@ export function approveDocumentAction(props: any) {
 
           const createdListing = await sanityClient.create(newDocument);
 
+          console.log('Listing approved and moved to listings:', createdListing);
+
 
 
           const { data: userData, error } = await supabase.auth.admin.createUser({
@@ -129,18 +138,22 @@ export function approveDocumentAction(props: any) {
 
             console.log('appUserData:', appUserData, "error", appUserDataError);
 
-            const { data: inviteEmail, error } = await supabase.auth.resetPasswordForEmail(
-              userData.user.email,
-              {
+            const userCount = await getCurrentUserCount();
+            console.log('userCount:', userCount);
+
+            if (userCount != null && userCount > 100) {
+              const { data: inviteEmail, error } = await supabase.auth.resetPasswordForEmail(
+                userData.user.email,
+                {
+                  redirectTo: isDev ? 'http://localhost:3000/sign-up' : 'https://swom.travel/sign-up',
+                }
+              );
+            } else {
+              const { data, error } = await supabase.auth.admin.inviteUserByEmail(userData.user.email, {
                 redirectTo: isDev ? 'http://localhost:3000/sign-up' : 'https://swom.travel/sign-up',
-              }
-            );
-            console.log('inviteEmail:', inviteEmail, "error", error);
-
+              });
+            }
           }
-
-
-
 
           // await sanityClient.delete(documentToApprove._id);
 

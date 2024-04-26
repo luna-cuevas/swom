@@ -34,16 +34,20 @@ const Page = (props: Props) => {
   useEffect(() => {
     if (state.loggedInUser && state.loggedInUser.id !== null) {
       if (state.allListings.length > 0) {
+        console.log('state.allListings', state.allListings);
         setListings(state.allListings);
         setAllListings(state.allListings);
-        setIsLoading(false);
+        setTimeout(() => {
+          setIsLoading(false);
+        }, 2000);
         return;
       }
-
       fetchListings();
-      setIsLoading(false);
+      setTimeout(() => {
+        setIsLoading(false);
+      }, 3000);
     }
-  }, []);
+  }, [state]);
 
   useEffect(() => {
     console.log('isloading', isLoading);

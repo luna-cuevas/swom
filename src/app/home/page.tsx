@@ -9,49 +9,41 @@ import HomeMapComponent from '@/components/HomeMapComponent';
 
 type Props = {};
 
-const Page = (props: Props) => {
-  // const updatePassword = async () => {
-  //   const { data: user, error } = await supabase.auth.admin.updateUserById(
-  //     'f9afa7b8-8005-454e-a74e-8e71670e2ce3',
-  //     { password: 'password' }
-  //   );
-  //   if (error) console.log(error);
-  //   else console.log(user);
-  // };
-  // updatePassword();
+const fetchListings = async () => {
+  try {
+    const query = `
+      *[_type == 'highlightedListings']{
+        listings[]->{
+          _id,
+          title,
+          homeInfo,
+        }
+      }
+    `;
 
-  // const highlightedListings = await fetchListings();
+    const response = await sanityClient.fetch(query);
+    const data = response[0]?.listings || []; // Ensuring safety with fallback to an empty array
 
-  // const [listings, setListings] = useState([]);
+    const updatedData = data.map((listing: any) => ({
+      ...listing,
+      homeInfo: {
+        ...listing.homeInfo,
+        firstImage:
+          listing.homeInfo && listing.homeInfo.listingImages[0]
+            ? urlForImage(listing.homeInfo.listingImages[0])
+            : undefined,
+      },
+    }));
 
-  // useEffect(() => {
-  //   const fetchListings = async () => {
-  //     try {
-  //       const response = await fetch('api/getHighlightedListings');
-  //       if (!response.ok) {
-  //         throw new Error(`HTTP error! status: ${response.status}`);
-  //       }
-  //       const data = await response.json();
+    return updatedData;
+  } catch (error) {
+    console.error('Error fetching data:', error);
+    return []; // Returning an empty array on error
+  }
+};
 
-  //       const updatedData = data.map((listing: any) => {
-  //         return {
-  //           ...listing,
-  //           homeInfo: {
-  //             ...listing.homeInfo,
-  //             firstImage: urlForImage(listing.homeInfo.firstImage),
-  //           },
-  //         };
-  //       });
-
-  //       setListings(updatedData);
-  //     } catch (error) {
-  //       console.error('Error fetching data:', error);
-  //       setListings([]);
-  //     }
-  //   };
-
-  //   fetchListings();
-  // }, []);
+const Page = async (props: Props) => {
+  const highlightedListings = await fetchListings();
 
   return (
     <main
@@ -67,23 +59,23 @@ const Page = (props: Props) => {
           </div>
           <Carousel
             images={
-              // listings?.map((listing: any) => {
-              // return {
-              //   src: listing.homeInfo.firstImage,
-              //   listingNum: listing._id,
-              // };
-              // })
-              [
-                { src: '/homepage/hero-image-1.png', listingNum: '5201' },
-                { src: '/homepage/hero-image-2.png', listingNum: '103' },
-                { src: '/homepage/hero-image-3.png', listingNum: '5702' },
-                { src: '/homepage/hero-image-4.png', listingNum: '102' },
-                { src: '/homepage/hero-image-5.png', listingNum: '3401' },
-                { src: '/homepage/hero-image-6.png', listingNum: '5704' },
-                { src: '/homepage/hero-image-7.png', listingNum: '35801' },
-                { src: '/homepage/hero-image-8.png', listingNum: '6101' },
-                { src: '/homepage/hero-image-9.png', listingNum: '5202' },
-              ]
+              highlightedListings?.map((listing: any) => {
+                return {
+                  src: listing.homeInfo.firstImage,
+                  listingNum: listing._id,
+                };
+              })
+              // [
+              //   { src: '/homepage/hero-image-1.png', listingNum: '5201' },
+              //   { src: '/homepage/hero-image-2.png', listingNum: '103' },
+              //   { src: '/homepage/hero-image-3.png', listingNum: '5702' },
+              //   { src: '/homepage/hero-image-4.png', listingNum: '102' },
+              //   { src: '/homepage/hero-image-5.png', listingNum: '3401' },
+              //   { src: '/homepage/hero-image-6.png', listingNum: '5704' },
+              //   { src: '/homepage/hero-image-7.png', listingNum: '35801' },
+              //   { src: '/homepage/hero-image-8.png', listingNum: '6101' },
+              //   { src: '/homepage/hero-image-9.png', listingNum: '5202' },
+              // ]
             }
             thumbnails={false}
             overlay={true}
