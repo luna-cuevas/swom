@@ -114,7 +114,7 @@ const CarouselPage = (props: Props) => {
                   <div
                     className={`${props.overlay ? 'opacity-50' : ''} ${
                       !props.homePage && 'cursor-pointer'
-                    } h-full`}>
+                    } h-full object-cover`}>
                     {slideProps.children}
                   </div>
                   <div
@@ -146,6 +146,18 @@ const CarouselPage = (props: Props) => {
                     )}
                   </div>
                 </div>
+              );
+            },
+            slide: ({ slide }) => {
+              return (
+                <Image
+                  src={slide.src}
+                  alt={`Image ${slide.src}`}
+                  layout="fill"
+                  objectFit="cover"
+                  objectPosition="center"
+                  className="h-full w-full"
+                />
               );
             },
           }}

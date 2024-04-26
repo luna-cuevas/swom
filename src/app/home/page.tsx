@@ -62,7 +62,7 @@ const Page = async (props: Props) => {
               highlightedListings?.map((listing: any) => {
                 return {
                   src: listing.homeInfo.firstImage,
-                  listingNum: listing._id,
+                  listingNum: listing._id.slice(-6),
                 };
               })
               // [

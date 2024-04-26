@@ -180,20 +180,21 @@ const Messages = (props: Props) => {
       // then i want to set the profileImage for each member in the convo to the profileImage from the sanity backend
       const profileImages = await sanityClient.fetch(
         `*[_type == "listing" && userInfo.email in $emails]{
+          _id,          
           userInfo {
             email,
-            "profileImage": profileImage.asset->url
-
+            profileImage
           }
         }`,
         {
           emails:
-            // go through allConvoDataJson and get all the emails that don't match the loggedInUser email
-            allConvosDataJson.map((convo: any) => {
-              return convo.members[1].email != state.user.email
-                ? convo.members[1].email
-                : convo.members[2].email;
-            }),
+            // give me all the emails of the members in the convo
+            allConvosDataJson
+              .map((convo: any) => [
+                convo.members[1].email,
+                convo.members[2].email,
+              ])
+              .flat(),
         }
       );
 
@@ -208,9 +209,11 @@ const Messages = (props: Props) => {
             const profile = profileImages.find(
               (profile: any) => profile.userInfo.email === member.email
             );
+            console.log('profile', profile);
             if (profile && profile.userInfo.profileImage) {
               // Update the convo object directly with the found profile image URL
-              member.profileImage = profile.userInfo.profileImage;
+              member.profileImage = urlForImage(profile.userInfo.profileImage);
+              member.listingId = profile._id;
             }
           }
         );
@@ -536,7 +539,8 @@ const Messages = (props: Props) => {
                     href={
                       selectedConvo?.members[memberIndex].email !=
                       state.loggedInUser?.email
-                        ? '/listings/' + selectedConvo?.members[memberIndex].id
+                        ? '/listings/' +
+                          selectedConvo?.members[memberIndex].listingId
                         : ''
                     }>
                     View Listing

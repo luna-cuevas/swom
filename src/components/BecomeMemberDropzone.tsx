@@ -7,6 +7,7 @@ import 'react-toastify/dist/ReactToastify.css';
 import Image from 'next/image';
 import { useAtom } from 'jotai';
 import { globalStateAtom } from '@/context/atoms';
+import heic2any from 'heic2any';
 
 type Props = {
   setImageFiles: React.Dispatch<React.SetStateAction<File[]>>;
@@ -28,11 +29,11 @@ const BecomeMemberDropzone: React.FC<Props> = (props) => {
       fileRejectionErrors.forEach((error) => toast.error(error));
       toast.error("File rejected. Please check the file's size and type.");
     },
-    onDrop: (acceptedFiles) => {
+    onDrop: async (acceptedFiles) => {
       const totalFilesAfterAdding =
         orderedImageFiles.length + acceptedFiles.length;
-      if (totalFilesAfterAdding > 9) {
-        toast.error('You can only upload up to 9 images.');
+      if (totalFilesAfterAdding > 16) {
+        toast.error('You can only upload up to 15 images.');
         return;
       }
       const existingFileNames = orderedImageFiles.map((file) => file.name);
@@ -45,8 +46,27 @@ const BecomeMemberDropzone: React.FC<Props> = (props) => {
         toast.warn('Some images were not added as they are duplicates.');
       }
 
+      // Convert HEIC files to JPG
+      const convertedFiles = await Promise.all(
+        newImageFiles.map(async (file) => {
+          if (file.type === 'image/heic') {
+            const arrayBuffer = await file.arrayBuffer();
+            const jpegBlob = await heic2any({
+              blob: new Blob([arrayBuffer]),
+              toType: 'image/jpeg',
+            });
+            return new File(
+              [jpegBlob as Blob],
+              `${file.name.replace(/\.heic$/, '.jpg')}`,
+              { type: 'image/jpeg' }
+            );
+          }
+          return file;
+        })
+      );
+
       // Combine the new files with the existing files
-      const updatedImageFiles = [...orderedImageFiles, ...newImageFiles];
+      const updatedImageFiles = [...orderedImageFiles, ...convertedFiles];
 
       props.setImageFiles(updatedImageFiles);
       setOrderedImageFiles(updatedImageFiles);
@@ -145,7 +165,7 @@ const BecomeMemberDropzone: React.FC<Props> = (props) => {
 
       <div className="border-y-2 border-gray-400 py-2">
         <p className="text-center text-base">
-          You can upload up to 9 images. Drag to rearrange the order. The first
+          You can upload up to 15 images. Drag to rearrange the order. The first
           image will be the cover image.
         </p>
       </div>
