@@ -1,3 +1,4 @@
+'use client';
 import React, { useEffect, useState } from 'react';
 import { useDropzone } from 'react-dropzone';
 import { ToastContainer, toast } from 'react-toastify';
@@ -32,7 +33,7 @@ const BecomeMemberDropzone: React.FC<Props> = (props) => {
     onDrop: async (acceptedFiles) => {
       const totalFilesAfterAdding =
         orderedImageFiles.length + acceptedFiles.length;
-      if (totalFilesAfterAdding > 16) {
+      if (totalFilesAfterAdding > 15) {
         toast.error('You can only upload up to 15 images.');
         return;
       }
