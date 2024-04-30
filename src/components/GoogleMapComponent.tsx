@@ -64,7 +64,7 @@ export default function GoogleMapComponent(props: Props) {
   const zoomThreshold = 15;
 
   const onPlaceChanged = () => {
-    if (autocomplete !== null) {
+    if (autocomplete !== null && typeof window !== 'undefined') {
       const place = autocomplete.getPlace();
       if (place.geometry && isLoaded) {
         setCenter({
@@ -103,7 +103,7 @@ export default function GoogleMapComponent(props: Props) {
 
   // Directly set center from exactAddress or geocode city
   useEffect(() => {
-    if (props.exactAddress && isLoaded) {
+    if (props.exactAddress && isLoaded && typeof window !== 'undefined') {
       setCenter(props.exactAddress);
       // convert lat and lng to string for the input value using google maps geocoding
       const geocoder = new window.google.maps.Geocoder();

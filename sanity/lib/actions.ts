@@ -25,9 +25,11 @@ export function approveDocumentAction(props: any) {
       // console.log('Approving document:', id, published);
 
       if (published === undefined || !published) {
+        if (typeof window !== 'undefined' && window) {
 
-        typeof window !== 'undefined' && window.alert('Document is already published');
-        return;
+          window.alert('Document is already published');
+          return;
+        }
       } else {
 
 

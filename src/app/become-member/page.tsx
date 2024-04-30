@@ -5,7 +5,6 @@ import Link from 'next/link';
 import React, { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import generatePassword from '@/utils/generatePassword';
-import DropZone from '@/components/DropZone';
 import BecomeMemberDropzone from '@/components/BecomeMemberDropzone';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';

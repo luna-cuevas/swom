@@ -10,7 +10,9 @@ const CookieConsentComponent = (props: Props) => {
 
   // detect width of screen
   useEffect(() => {
-    setWidth(window.innerWidth);
+    if (typeof window !== 'undefined') {
+      setWidth(window.innerWidth);
+    }
   }, []);
   return (
     <CookieConsent

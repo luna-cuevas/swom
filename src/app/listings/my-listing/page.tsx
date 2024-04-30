@@ -1,6 +1,5 @@
 'use client';
 import CarouselPage from '@/components/Carousel';
-import DropZone from '@/components/DropZone';
 import GoogleMapComponent from '@/components/GoogleMapComponent';
 import Image from 'next/image';
 import React, { useEffect, useRef, useState } from 'react';
@@ -41,9 +40,6 @@ const Page = (props: Props) => {
   const router = useRouter();
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCity, setSelectedCity] = useState(null);
-  const [windowWidth, setWindowWidth] = useState(
-    typeof window !== 'undefined' ? window.innerWidth : 0
-  );
   const [showTooltip, setShowTooltip] = useState(false);
   const [isLoaded, setIsLoaded] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -133,24 +129,6 @@ const Page = (props: Props) => {
       },
     },
   });
-
-  useEffect(() => {
-    const handleResize = () => {
-      if (typeof window !== 'undefined') {
-        setWindowWidth(window.innerWidth);
-      }
-    };
-
-    if (typeof window !== 'undefined') {
-      window.addEventListener('resize', handleResize);
-    }
-    // Cleanup
-    return () => {
-      if (typeof window !== 'undefined') {
-        window.removeEventListener('resize', handleResize);
-      }
-    };
-  }, []);
 
   useEffect(() => {
     const fetchCities = async () => {

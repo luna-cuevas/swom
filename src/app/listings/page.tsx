@@ -65,7 +65,10 @@ const Page = (props: Props) => {
   }, [searchParams]);
 
   useEffect(() => {
-    if (window.google === undefined || whereIsIt == null) {
+    if (
+      (typeof window !== 'undefined' && window.google === undefined) ||
+      whereIsIt == null
+    ) {
       return;
     }
     console.log('whereIsIt', whereIsIt);
