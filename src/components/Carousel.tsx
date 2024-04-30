@@ -150,14 +150,18 @@ const CarouselPage = (props: Props) => {
             },
             slide: ({ slide }) => {
               return (
-                <Image
-                  src={slide.src}
-                  alt={`Image ${slide.src}`}
-                  layout="fill"
-                  objectFit="cover"
-                  objectPosition="center"
-                  className="h-full w-full"
-                />
+                <div className="relative h-full w-full">
+                  <Image
+                    src={slide.src}
+                    alt={`Image ${slide.src}`}
+                    layout="fill"
+                    priority
+                    sizes="(max-width: 768px) 100vw, (max-width: 1024px) 100vw, 100vw"
+                    objectFit="cover"
+                    objectPosition="center"
+                    className="h-full w-full"
+                  />
+                </div>
               );
             },
           }}

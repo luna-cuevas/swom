@@ -161,6 +161,7 @@ const Page = async (props: Props) => {
               className="m-auto object-contain"
               src="/swom-logo.jpg"
               alt="swom logo"
+              sizes="(max-width: 640px) 100vw, (max-width: 768px) 100vw, (max-width: 1024px) 100vw, 100vw"
               fill></Image>
           </div>
           <div className="w-fit justify-center text-center">
@@ -219,6 +220,7 @@ const Page = async (props: Props) => {
                 src="/homepage/bottom-1.jpg"
                 className="object-cover"
                 alt="bottom image"
+                sizes="(max-width: 640px) 100vw, (max-width: 768px) 100vw, (max-width: 1024px) 100vw, 100vw"
                 fill></Image>
             </div>
           </div>
@@ -229,6 +231,7 @@ const Page = async (props: Props) => {
                 src="/homepage/bottom-2.jpg"
                 className="object-cover"
                 alt="bottom image"
+                sizes="(max-width: 640px) 100vw, (max-width: 768px) 100vw, (max-width: 1024px) 100vw, 100vw"
                 fill></Image>
             </div>
             <div className="relative h-[40vh] md:h-auto row-span-2">
@@ -236,6 +239,7 @@ const Page = async (props: Props) => {
                 src="/homepage/bottom-3.jpg"
                 className="object-cover"
                 alt="bottom image"
+                sizes="(max-width: 640px) 100vw, (max-width: 768px) 100vw, (max-width: 1024px) 100vw, 100vw"
                 fill></Image>
             </div>
           </div>
@@ -252,6 +256,7 @@ const Page = async (props: Props) => {
                 src="/homepage/bottom-4.jpg"
                 className="object-cover"
                 alt="bottom image"
+                sizes="(max-width: 640px) 100vw, (max-width: 768px) 100vw, (max-width: 1024px) 100vw, 100vw"
                 fill></Image>
             </div>
 
@@ -260,6 +265,7 @@ const Page = async (props: Props) => {
                 src="/homepage/bottom-5.jpg"
                 className="object-cover"
                 alt="bottom image"
+                sizes="(max-width: 640px) 100vw, (max-width: 768px) 100vw, (max-width: 1024px) 100vw, 100vw"
                 fill></Image>
             </div>
           </div>
@@ -281,6 +287,7 @@ const Page = async (props: Props) => {
               src="/homepage/bottom-logo.png"
               className="object-contain"
               alt="bottom image"
+              sizes="(max-width: 640px) 100vw, (max-width: 768px) 100vw, (max-width: 1024px) 100vw, 100vw"
               fill></Image>
           </div>
         </div>
