@@ -6,7 +6,6 @@ import React, { useEffect, useRef, useState } from 'react';
 import { set, useForm, Controller } from 'react-hook-form';
 import { supabaseClient } from '@/utils/supabaseClient';
 import ProfilePicDropZone from '@/components/ProfilePicDropZone';
-import BecomeMemberDropzone from '@/components/BecomeMemberDropzone';
 import {
   useParams,
   usePathname,
@@ -20,6 +19,14 @@ import ImageUrlBuilder from '@sanity/image-url';
 import { useAtom } from 'jotai';
 import { globalStateAtom } from '@/context/atoms';
 import ListingCard from '@/components/ListingCard';
+import dynamic from 'next/dynamic';
+
+const BecomeMemberDropzone = dynamic(
+  () => import('@/components/BecomeMemberDropzone'),
+  {
+    loading: () => <p>Loading...</p>,
+  }
+);
 
 type Props = {};
 

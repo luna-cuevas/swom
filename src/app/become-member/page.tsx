@@ -5,17 +5,24 @@ import Link from 'next/link';
 import React, { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import generatePassword from '@/utils/generatePassword';
-import BecomeMemberDropzone from '@/components/BecomeMemberDropzone';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import ReCAPTCHA from 'react-google-recaptcha';
 import { sanityClient } from '@/utils/sanityClient';
+import dynamic from 'next/dynamic';
 
 type Props = {};
 
 type FormValues = {
   name: string;
 };
+
+const BecomeMemberDropzone = dynamic(
+  () => import('@/components/BecomeMemberDropzone'),
+  {
+    loading: () => <p>Loading...</p>,
+  }
+);
 
 const Page = (props: Props) => {
   const [signUpActive, setSignUpActive] = useState(false);
