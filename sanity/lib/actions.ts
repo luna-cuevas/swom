@@ -141,21 +141,21 @@ export function approveDocumentAction(props: any) {
             const userCount = await getCurrentUserCount();
             console.log('userCount:', userCount);
 
-            if (userCount != null && userCount > 100) {
-              const { data: inviteEmail, error } = await supabase.auth.resetPasswordForEmail(
-                userData.user.email,
-                {
-                  redirectTo: isDev ? 'http://localhost:3000/sign-up' : 'https://swom.travel/sign-up',
-                }
-              );
-            } else {
-              const { data, error } = await supabase.auth.admin.inviteUserByEmail(userData.user.email, {
-                redirectTo: isDev ? 'http://localhost:3000/sign-up' : 'https://swom.travel/sign-up',
-              });
-            }
+            // if (userCount != null && userCount > 100) {
+            //   const { data: inviteEmail, error } = await supabase.auth.resetPasswordForEmail(
+            //     userData.user.email,
+            //     {
+            //       redirectTo: isDev ? 'http://localhost:3000/sign-up' : 'https://swom.travel/sign-up',
+            //     }
+            //   );
+            // } else {
+            //   const { data, error } = await supabase.auth.admin.inviteUserByEmail(userData.user.email, {
+            //     redirectTo: isDev ? 'http://localhost:3000/sign-up' : 'https://swom.travel/sign-up',
+            //   });
+            // }
           }
 
-          // await sanityClient.delete(documentToApprove._id);
+          await sanityClient.delete(documentToApprove._id);
 
           console.log('Listing approved and moved to listings:', createdListing);
         } catch (error) {
