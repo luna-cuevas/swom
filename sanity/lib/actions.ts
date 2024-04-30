@@ -26,7 +26,7 @@ export function approveDocumentAction(props: any) {
 
       if (published === undefined || !published) {
 
-        window.alert('Must publish the document before approving it.');
+        typeof window !== 'undefined' && window.alert('Document is already published');
         return;
       } else {
 
