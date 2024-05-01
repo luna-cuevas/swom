@@ -169,20 +169,20 @@ const CarouselPage = (props: Props) => {
                 </div>
               );
             },
-            // slide: ({ slide }) => {
-            //   return (
-            //     <div className="relative h-full w-full">
-            //       <Image
-            //         src={slide.src}
-            //         alt={`Image ${slide.src}`}
-            //         fill
-            //         priority
-            //         sizes="(max-width: 768px) 100vw, (max-width: 1024px) 100vw, 100vw"
-            //         className="h-full w-full object-cover object-center"
-            //       />
-            //     </div>
-            //   );
-            // },
+            slide: ({ slide }) => {
+              return (
+                <div className="relative h-full w-full">
+                  <Image
+                    src={slide.src}
+                    alt={`Image ${slide.src}`}
+                    fill
+                    priority
+                    sizes="(max-width: 768px) 100vw, (max-width: 1024px) 100vw, 100vw"
+                    className="h-full w-full object-cover object-center"
+                  />
+                </div>
+              );
+            },
           }}
         />
       </div>
