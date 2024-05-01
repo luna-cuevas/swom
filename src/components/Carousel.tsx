@@ -103,6 +103,16 @@ const CarouselPage = (props: Props) => {
             padding: 0,
             spacing: 0,
             imageFit: 'cover',
+            imageProps: {
+              style: {
+                objectFit: 'cover',
+                objectPosition: 'center',
+                width: '100%',
+                height: '100%',
+                maxHeight: '100%',
+                maxWidth: '100%',
+              },
+            },
             preload: 2,
           }}
           inline={{
@@ -154,20 +164,20 @@ const CarouselPage = (props: Props) => {
                 </div>
               );
             },
-            slide: ({ slide }) => {
-              return (
-                <div className="relative h-full w-full">
-                  <Image
-                    src={slide.src}
-                    alt={`Image ${slide.src}`}
-                    fill
-                    priority
-                    sizes="(max-width: 768px) 100vw, (max-width: 1024px) 100vw, 100vw"
-                    className="h-full w-full object-cover object-center"
-                  />
-                </div>
-              );
-            },
+            // slide: ({ slide }) => {
+            //   return (
+            //     <div className="relative h-full w-full">
+            //       <Image
+            //         src={slide.src}
+            //         alt={`Image ${slide.src}`}
+            //         fill
+            //         priority
+            //         sizes="(max-width: 768px) 100vw, (max-width: 1024px) 100vw, 100vw"
+            //         className="h-full w-full object-cover object-center"
+            //       />
+            //     </div>
+            //   );
+            // },
           }}
         />
       </div>
