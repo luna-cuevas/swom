@@ -12,6 +12,15 @@ export default defineType({
       description: 'Whether the listing is a subscription or not',
     },
     {
+      name: 'slug',
+      title: 'Slug',
+      type: 'slug',
+      options: {
+        source: 'userInfo.name', // Assuming 'name' is a field under 'userInfo'
+        maxLength: 96,
+      },
+    },
+    {
       name: 'userInfo',
       title: 'User Information',
       type: 'userInfo', // Referencing the userInfo schema

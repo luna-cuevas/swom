@@ -17,6 +17,7 @@ import 'yet-another-react-lightbox/styles.css';
 type Props = {
   images: {
     src: string;
+    slug?: string;
     listingNum?: string;
   }[];
   homePage?: boolean;
@@ -39,6 +40,7 @@ const CarouselPage = (props: Props) => {
           slides={[
             ...props.images.map((image) => ({
               src: image.src,
+              slug: image.slug,
               listingNum: image.listingNum,
             })),
           ]}
@@ -138,7 +140,7 @@ const CarouselPage = (props: Props) => {
                             Let&apos;s meet your new favorite home. <br />
                             <strong>
                               Listing No. {/* @ts-ignore */}
-                              {slideProps.slide.listingNum?.slice(-6)}
+                              {slideProps.slide.slug}
                             </strong>
                           </div>
                         </Link>

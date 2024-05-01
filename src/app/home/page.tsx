@@ -15,6 +15,7 @@ const fetchListings = async () => {
       *[_type == 'highlightedListings']{
         listings[]->{
           _id,
+          slug,
           title,
           homeInfo,
         }
@@ -44,6 +45,7 @@ const fetchListings = async () => {
 
 const Page = async (props: Props) => {
   const highlightedListings = await fetchListings();
+  console.log('highlightedListings:', highlightedListings);
 
   return (
     <main
@@ -62,7 +64,8 @@ const Page = async (props: Props) => {
               highlightedListings?.map((listing: any) => {
                 return {
                   src: listing.homeInfo.firstImage,
-                  listingNum: listing._id.slice(-6),
+                  slug: listing.slug.current,
+                  listingNum: listing._id,
                 };
               })
               // [

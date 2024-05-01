@@ -132,20 +132,26 @@ const Page = (props: Props) => {
       });
       const dataJson = await data.json();
 
-      if (pageNumber === page + 1 && dataJson.length > 0) {
-        setListings(listings.concat(dataJson));
-        setAllListings(allListings.concat(dataJson));
+      const sortedDataJson = dataJson.sort(
+        (a: any, b: any) => Number(a.slug.current) - Number(b.slug.current)
+      );
+
+      console.log('sortedDataJson', sortedDataJson);
+
+      if (pageNumber === page + 1 && sortedDataJson.length > 0) {
+        setListings(listings.concat(sortedDataJson));
+        setAllListings(allListings.concat(sortedDataJson));
         setState((prev: any) => ({
           ...prev,
-          allListings: prev.allListings.concat(dataJson),
+          allListings: prev.allListings.concat(sortedDataJson),
         }));
-      } else if (pageNumber === 1 && dataJson.length > 0) {
-        console.log('Data:', dataJson);
-        setListings(dataJson);
-        setAllListings(dataJson);
+      } else if (pageNumber === 1 && sortedDataJson.length > 0) {
+        console.log('Data:', sortedDataJson);
+        setListings(sortedDataJson);
+        setAllListings(sortedDataJson);
         setState((prev: any) => ({
           ...prev,
-          allListings: dataJson,
+          allListings: sortedDataJson,
         }));
       }
 

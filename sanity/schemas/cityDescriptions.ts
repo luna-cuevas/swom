@@ -1,7 +1,7 @@
 import { defineType } from 'sanity';
 
 export default defineType({
-  title: 'City',
+  title: 'City Descriptions',
   name: 'city',
   type: 'document',
   fields: [
