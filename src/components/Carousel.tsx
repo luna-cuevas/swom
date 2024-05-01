@@ -123,6 +123,7 @@ const CarouselPage = (props: Props) => {
             style: {
               width: '100%',
               maxWidth: '100%',
+              height: '100%',
               aspectRatio: '3 / 2',
               margin: '0 auto',
             },
