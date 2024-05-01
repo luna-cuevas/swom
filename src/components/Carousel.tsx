@@ -143,7 +143,7 @@ const CarouselPage = (props: Props) => {
                       !props.homePage && 'hidden'
                     }`}>
                     <div className="absolute inset-0 transform skew-x-[10deg]  bg-[#f4ece7b3]" />
-                    {state.user == null ? (
+                    {state.session == null ? (
                       <div className=" z-50  py-4 px-8 text-[#172544]">
                         Let&apos;s meet your new favorite home. <br />
                         <strong>
