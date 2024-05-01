@@ -127,62 +127,64 @@ const CarouselPage = (props: Props) => {
               margin: '0 auto',
             },
           }}
-          render={{
-            slideContainer: (slideProps) => {
-              return (
-                <div className=" h-full my-auto w-full">
-                  <div
-                    className={`${props.overlay ? 'opacity-50' : ''} ${
-                      !props.homePage && 'cursor-pointer'
-                    } h-full  w-full`}>
-                    {slideProps.children}
-                  </div>
-                  <div
-                    className={`absolute top-[10%] -right-4 text-md ${
-                      !props.homePage && 'hidden'
-                    }`}>
-                    <div className="absolute inset-0 transform skew-x-[10deg]  bg-[#f4ece7b3]" />
-                    {state.user == null ? (
-                      <div className=" z-50  py-4 px-8 text-[#172544]">
-                        Let&apos;s meet your new favorite home. <br />
-                        <strong>
-                          {/* @ts-ignore */}
-                          Listing No. {slideProps.slide.slug}{' '}
-                        </strong>
-                      </div>
-                    ) : (
-                      <>
-                        {/* @ts-ignore */}
-                        <Link href={`/listings/${slideProps.slide.listingNum}`}>
-                          <div className="z-50  py-4 px-8 text-[#172544]">
-                            Let&apos;s meet your new favorite home. <br />
-                            <strong>
-                              Listing No. {/* @ts-ignore */}
-                              {slideProps.slide.slug}
-                            </strong>
-                          </div>
-                        </Link>
-                      </>
-                    )}
-                  </div>
-                </div>
-              );
-            },
-            // slide: ({ slide }) => {
-            //   return (
-            //     <div className="relative h-full w-full">
-            //       <Image
-            //         src={slide.src}
-            //         alt={`Image ${slide.src}`}
-            //         fill
-            //         priority
-            //         sizes="(max-width: 768px) 100vw, (max-width: 1024px) 100vw, 100vw"
-            //         className="h-full w-full object-cover object-center"
-            //       />
-            //     </div>
-            //   );
-            // },
-          }}
+          render={
+            {
+              // slideContainer: (slideProps) => {
+              //   return (
+              //     <div className=" h-full my-auto w-full">
+              //       <div
+              //         className={`${props.overlay ? 'opacity-50' : ''} ${
+              //           !props.homePage && 'cursor-pointer'
+              //         } h-full  w-full`}>
+              //         {slideProps.children}
+              //       </div>
+              //       <div
+              //         className={`absolute top-[10%] -right-4 text-md ${
+              //           !props.homePage && 'hidden'
+              //         }`}>
+              //         <div className="absolute inset-0 transform skew-x-[10deg]  bg-[#f4ece7b3]" />
+              //         {state.user == null ? (
+              //           <div className=" z-50  py-4 px-8 text-[#172544]">
+              //             Let&apos;s meet your new favorite home. <br />
+              //             <strong>
+              //               {/* @ts-ignore */}
+              //               Listing No. {slideProps.slide.slug}{' '}
+              //             </strong>
+              //           </div>
+              //         ) : (
+              //           <>
+              //             {/* @ts-ignore */}
+              //             <Link href={`/listings/${slideProps.slide.listingNum}`}>
+              //               <div className="z-50  py-4 px-8 text-[#172544]">
+              //                 Let&apos;s meet your new favorite home. <br />
+              //                 <strong>
+              //                   Listing No. {/* @ts-ignore */}
+              //                   {slideProps.slide.slug}
+              //                 </strong>
+              //               </div>
+              //             </Link>
+              //           </>
+              //         )}
+              //       </div>
+              //     </div>
+              //   );
+              // },
+              // slide: ({ slide }) => {
+              //   return (
+              //     <div className="relative h-full w-full">
+              //       <Image
+              //         src={slide.src}
+              //         alt={`Image ${slide.src}`}
+              //         fill
+              //         priority
+              //         sizes="(max-width: 768px) 100vw, (max-width: 1024px) 100vw, 100vw"
+              //         className="h-full w-full object-cover object-center"
+              //       />
+              //     </div>
+              //   );
+              // },
+            }
+          }
         />
       </div>
 
