@@ -34,7 +34,7 @@ const CarouselPage = (props: Props) => {
 
   return (
     <div className=" overflow-hidden  h-full w-full gap-4 flex flex-col">
-      <div className={`relative h-full gap-4 md:gap-8 flex w-full`}>
+      <div className={` h-full gap-4 md:gap-8 flex w-full`}>
         <Lightbox
           index={selectedImage}
           slides={[
@@ -47,6 +47,8 @@ const CarouselPage = (props: Props) => {
           styles={{
             container: {
               borderRadius: props.homePage ? '' : '20px 20px 0 0',
+              height: '100%',
+              width: '100%',
             },
             slide: {
               objectFit: 'cover',
@@ -104,6 +106,8 @@ const CarouselPage = (props: Props) => {
             spacing: 0,
             imageFit: 'cover',
             imageProps: {
+              height: '100%',
+              width: '100%',
               style: {
                 objectFit: 'cover',
                 objectPosition: 'center',
@@ -126,11 +130,11 @@ const CarouselPage = (props: Props) => {
           render={{
             slideContainer: (slideProps) => {
               return (
-                <div className="relative h-full my-auto w-full">
+                <div className=" h-full my-auto w-full">
                   <div
                     className={`${props.overlay ? 'opacity-50' : ''} ${
                       !props.homePage && 'cursor-pointer'
-                    } h-full relative w-full`}>
+                    } h-full  w-full`}>
                     {slideProps.children}
                   </div>
                   <div
