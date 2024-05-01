@@ -135,16 +135,16 @@ const CarouselPage = (props: Props) => {
                   <div
                     className={`${props.overlay ? 'opacity-50' : ''} ${
                       !props.homePage && 'cursor-pointer'
-                    } !h-full  w-full`}>
+                    } !h-full  w-full z-10`}>
                     {slideProps.children}
                   </div>
                   <div
                     className={`absolute top-[10%] -right-4 text-md ${
                       !props.homePage && 'hidden'
                     }`}>
-                    <div className="absolute inset-0 transform skew-x-[10deg]  bg-[#f4ece7b3]" />
+                    <div className="absolute z-0 inset-0 transform skew-x-[10deg]  bg-[#f4ece7b3]" />
                     {state.session == null ? (
-                      <div className=" z-50  py-4 px-8 text-[#172544]">
+                      <div className="relative !z-50  py-4 px-8 !text-[#172544]">
                         Let&apos;s meet your new favorite home. <br />
                         <strong>
                           {/* @ts-ignore */}

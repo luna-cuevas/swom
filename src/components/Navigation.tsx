@@ -28,6 +28,18 @@ const Navigation = (props: Props) => {
     setIsClient(true);
   }, []);
 
+  useEffect(() => {
+    if (
+      navigation !== '/home' &&
+      navigation !== '/become-member' &&
+      navigation !== '/about-us' &&
+      navigation !== '/how-it-works' &&
+      state.session === null
+    ) {
+      router.push('/home');
+    }
+  }, [navigation]);
+
   const handleSignOut = async () => {
     try {
       await supabase.auth.signOut();
@@ -72,11 +84,11 @@ const Navigation = (props: Props) => {
         </Link>
       </div>
       <div className="hidden 2xl:flex gap-4 align-middle">
+        <Link className="m-auto text-sm" href="/how-it-works">
+          HOW IT WORKS
+        </Link>
         {state && state.activeNavButtons && state.isSubscribed && isClient && (
           <>
-            <Link className="m-auto text-sm" href="/how-it-works">
-              HOW IT WORKS
-            </Link>
             <Link className="m-auto text-sm" href="/messages">
               MESSAGES
             </Link>
@@ -198,11 +210,11 @@ const Navigation = (props: Props) => {
           opacity: state.showMobileMenu ? '1' : '0',
         }}
         className={`2xl:hidden  align-middle gap-4  box-border top-full flex flex-col justify-center text-center transition-all duration-300 ease-in-out overflow-hidden max-h-[100vh] left-0 bg-white w-full absolute`}>
+        <Link className="m-auto" href="/how-it-works">
+          HOW IT WORKS
+        </Link>
         {state && state.activeNavButtons && state.isSubscribed && isClient && (
           <>
-            <Link className="m-auto" href="/how-it-works">
-              HOW IT WORKS
-            </Link>
             <Link className="m-auto" href="/messages">
               MESSAGES
             </Link>
