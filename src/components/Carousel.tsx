@@ -48,6 +48,10 @@ const CarouselPage = (props: Props) => {
             container: {
               borderRadius: props.homePage ? '' : '20px 20px 0 0',
             },
+            slide: {
+              objectFit: 'cover',
+              objectPosition: 'center',
+            },
             thumbnailsContainer: {
               backgroundColor: '#7F8119',
               borderRadius: '0 0 20px 20px',
@@ -116,7 +120,7 @@ const CarouselPage = (props: Props) => {
                   <div
                     className={`${props.overlay ? 'opacity-50' : ''} ${
                       !props.homePage && 'cursor-pointer'
-                    } h-full object-cover`}>
+                    } h-full relative w-full`}>
                     {slideProps.children}
                   </div>
                   <div
@@ -129,7 +133,7 @@ const CarouselPage = (props: Props) => {
                         Let&apos;s meet your new favorite home. <br />
                         <strong>
                           {/* @ts-ignore */}
-                          Listing No. {slideProps.slide.listingNum}{' '}
+                          Listing No. {slideProps.slide.slug}{' '}
                         </strong>
                       </div>
                     ) : (
@@ -156,12 +160,10 @@ const CarouselPage = (props: Props) => {
                   <Image
                     src={slide.src}
                     alt={`Image ${slide.src}`}
-                    layout="fill"
+                    fill
                     priority
                     sizes="(max-width: 768px) 100vw, (max-width: 1024px) 100vw, 100vw"
-                    objectFit="cover"
-                    objectPosition="center"
-                    className="h-full w-full"
+                    className="h-full w-full object-cover object-center"
                   />
                 </div>
               );

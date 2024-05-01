@@ -53,7 +53,7 @@ const Page = async (props: Props) => {
         background: '#F7F1EE',
       }}>
       <div className="">
-        <div className="md:h-[calc(92vh-69px)] h-[80vh] bg-black relative">
+        <div className="md:h-[calc(92vh-69px)] h-[80vh] bg-black relative w-screen">
           <div className="absolute w-fit z-50 h-fit top-0 bottom-0 left-0 right-0 m-auto ">
             <h1 className="text-[#ffffff] font-bold uppercase text-4xl tracking-widest text-center">
               Make Memories <br /> All over the <br /> world
