@@ -177,7 +177,7 @@ const CarouselPage = (props: Props) => {
                     alt={`Image ${slide.src}`}
                     fill
                     priority
-                    sizes="(max-width: 768px) 100vw, (max-width: 1024px) 100vw, 100vw"
+                    sizes="(max-width: 768px) 50vw, (max-width: 1024px) 100vw, 100vw"
                     className="h-full w-full object-cover object-center"
                   />
                 </div>
