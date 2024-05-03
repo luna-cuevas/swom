@@ -34,6 +34,7 @@ const Navigation = (props: Props) => {
       navigation !== '/become-member' &&
       navigation !== '/about-us' &&
       navigation !== '/how-it-works' &&
+      navigation !== '/sign-up' &&
       state.session === null
     ) {
       router.push('/home');
