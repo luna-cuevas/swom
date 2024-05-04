@@ -9,7 +9,10 @@ type State = {
   isSubscribed: boolean;
   loggedInUser: null | string;
   activeNavButtons: boolean;
-  allListings: any[];
+  allListings: {
+    listings: any[];
+    lastFetched: number;
+  };
 };
 
 // A helper function to work with localStorage and JSON serialization for the entire application state
@@ -52,7 +55,10 @@ const initialState: State = {
   isSubscribed: false,
   loggedInUser: null,
   activeNavButtons: false,
-  allListings: [],
+  allListings: {
+    listings: [],
+    lastFetched: 0,
+  },
 };
 
 // Create an atom with local storage persistence for the entire application state

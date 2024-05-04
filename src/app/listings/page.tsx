@@ -22,7 +22,7 @@ const Page = (props: Props) => {
   const [loadedPages, setLoadedPages] = useState<any>({});
   const listingsPerPage = 10;
   const searchParams = useSearchParams();
-  console.log('searchParams', searchParams.get('lat'), searchParams.get('lng'));
+  const fifteenMin = 1000 * 60 * 15; // 15 minutes
 
   const indexOfLastListing = page * listingsPerPage;
   const indexOfFirstListing = indexOfLastListing - listingsPerPage;
@@ -32,15 +32,22 @@ const Page = (props: Props) => {
   );
 
   useEffect(() => {
-    if (state.allListings.length > 0) {
-      console.log('state.allListings', state.allListings);
+    const lastFetched = state.allListings.lastFetched;
+    const currentTime = new Date().getTime();
+
+    if (
+      currentTime - lastFetched < fifteenMin &&
+      state.allListings.listings.length > 0
+    ) {
+      console.log('saved listings', state.allListings.listings);
 
       setTimeout(() => {
-        setListings(state.allListings);
-        setAllListings(state.allListings);
+        setListings(state.allListings.listings);
+        setAllListings(state.allListings.listings);
         setIsLoading(false);
       }, 2000);
     } else {
+      console.log('fetching listings');
       fetchListings();
 
       setTimeout(() => {
@@ -142,8 +149,11 @@ const Page = (props: Props) => {
         setListings(listings.concat(sortedDataJson));
         setAllListings(allListings.concat(sortedDataJson));
         setState((prev: any) => ({
-          ...prev,
-          allListings: prev.allListings.concat(sortedDataJson),
+          ...state,
+          allListings: {
+            listings: prev.allListings.listings.concat(sortedDataJson),
+            lastFetched: new Date().getTime(),
+          },
         }));
       } else if (pageNumber === 1 && sortedDataJson.length > 0) {
         console.log('Data:', sortedDataJson);
@@ -151,7 +161,10 @@ const Page = (props: Props) => {
         setAllListings(sortedDataJson);
         setState((prev: any) => ({
           ...prev,
-          allListings: sortedDataJson,
+          allListings: {
+            listings: sortedDataJson,
+            lastFetched: new Date().getTime(),
+          },
         }));
       }
 
