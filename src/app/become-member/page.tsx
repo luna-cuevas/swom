@@ -10,6 +10,7 @@ import 'react-toastify/dist/ReactToastify.css';
 import ReCAPTCHA from 'react-google-recaptcha';
 import { sanityClient } from '@/utils/sanityClient';
 import dynamic from 'next/dynamic';
+import GoogleMapComponent from '@/components/GoogleMapComponent';
 
 type Props = {};
 
@@ -31,6 +32,11 @@ const Page = (props: Props) => {
   const temporaryPassword = generatePassword();
   const [imageFiles, setImageFiles] = useState<File[]>([]);
   const [captchaToken, setCaptchaToken] = useState(false);
+  const [whereIsIt, setWhereIsIt] = useState<{ lat: number; lng: number }>({
+    lat: 0,
+    lng: 0,
+  });
+  console.log('whereIsIt:', whereIsIt);
 
   const {
     register,
@@ -154,6 +160,7 @@ const Page = (props: Props) => {
           },
           homeInfo: {
             ...data.homeInfo,
+            address: whereIsIt,
             howManySleep: parseInt(data.homeInfo.howManySleep),
             bathrooms: parseInt(data.homeInfo.bathrooms),
             listingImages: imageReferences,
@@ -485,24 +492,18 @@ const Page = (props: Props) => {
                   <label htmlFor="address">
                     What is the exact address of the property?
                   </label>
-                  <textarea
+                  <GoogleMapComponent
+                    hideMap={true}
+                    setWhereIsIt={setWhereIsIt}
+                  />
+                  {/* <textarea
                     rows={1}
                     id="address"
                     {...register('homeInfo.address', {
                       required: 'Please enter the address of the property',
                     })}
                     className="w-full bg-transparent border-b border-[#172544] focus:outline-none"
-                  />
-                </div>
-                <div className=" flex-col w-full flex">
-                  <label htmlFor="city">What is your city?</label>
-                  <input
-                    id="city"
-                    {...register('homeInfo.city', {
-                      required: 'Please enter the city of the property',
-                    })}
-                    className="w-full bg-transparent border-b border-[#172544] focus:outline-none"
-                  />
+                  /> */}
                 </div>
               </div>
 

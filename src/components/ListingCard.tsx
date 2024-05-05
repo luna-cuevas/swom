@@ -44,7 +44,7 @@ const ListingCard = (props: Props) => {
         );
         props.setListings((prev: any) => {
           return prev.map((listing: any) => {
-            if (listing.userInfo.email === listingId) {
+            if (listing._id === listingId) {
               return { ...listing, favorite: false };
             }
             return listing;
@@ -53,12 +53,15 @@ const ListingCard = (props: Props) => {
         setState((prev: any) => {
           return {
             ...prev,
-            allListings: prev.allListings.map((listing: any) => {
-              if (listing.userInfo.email === listingId) {
-                return { ...listing, favorite: false };
-              }
-              return listing;
-            }),
+            allListings: {
+              ...prev.allListings,
+              listings: prev.allListings.listings.map((listing: any) => {
+                if (listing._id === listingId) {
+                  return { ...listing, favorite: false };
+                }
+                return listing;
+              }),
+            },
           };
         });
       } else {
@@ -66,7 +69,7 @@ const ListingCard = (props: Props) => {
         combinedFavorites = [...combinedFavorites, { listingId: listingId }];
         props.setListings((prev: any) => {
           return prev.map((listing: any) => {
-            if (listing.userInfo.email === listingId) {
+            if (listing._id === listingId) {
               return { ...listing, favorite: true };
             }
             return listing;
@@ -95,7 +98,7 @@ const ListingCard = (props: Props) => {
         });
         props.setAllListings((prev: any) => {
           return prev.map((listing: any) => {
-            if (listing.userInfo.email === listingId) {
+            if (listing._id === listingId) {
               return { ...listing, favorite: !isLiked };
             }
             return listing;
@@ -104,12 +107,15 @@ const ListingCard = (props: Props) => {
         setState((prev: any) => {
           return {
             ...prev,
-            allListings: prev.allListings.map((listing: any) => {
-              if (listing.userInfo.email === listingId) {
-                return { ...listing, favorite: !isLiked };
-              }
-              return listing;
-            }),
+            allListings: {
+              ...prev.allListings,
+              listings: prev.allListings.listings.map((listing: any) => {
+                if (listing._id === listingId) {
+                  return { ...listing, favorite: !isLiked };
+                }
+                return listing;
+              }),
+            },
           };
         });
       }
@@ -157,7 +163,7 @@ const ListingCard = (props: Props) => {
           <div className={`flex ${!props.setListings && 'hidden'}`}>
             <button
               onClick={() => {
-                handleFavorite(props.listingInfo.userInfo.email);
+                handleFavorite(props.listingInfo._id);
               }}>
               <svg
                 stroke={

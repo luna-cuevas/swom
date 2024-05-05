@@ -19,11 +19,10 @@ const Page = (props: Props) => {
   const [state, setState] = useAtom(globalStateAtom);
   const [inputValue, setInputValue] = useState<string>('');
   const [page, setPage] = useState<number>(1);
-  const [loadedPages, setLoadedPages] = useState<any>({});
   const listingsPerPage = 10;
   const searchParams = useSearchParams();
   const fifteenMin = 1000 * 60 * 15; // 15 minutes
-
+  const totalPages = Math.ceil(allListings.length / listingsPerPage);
   const indexOfLastListing = page * listingsPerPage;
   const indexOfFirstListing = indexOfLastListing - listingsPerPage;
   const currentListings = listings.slice(
@@ -34,6 +33,10 @@ const Page = (props: Props) => {
   useEffect(() => {
     const lastFetched = state.allListings.lastFetched;
     const currentTime = new Date().getTime();
+    console.log(
+      'need to revalidate in:',
+      ((fifteenMin - (currentTime - lastFetched)) / 1000 / 60).toFixed(2)
+    );
 
     if (
       currentTime - lastFetched < fifteenMin &&
@@ -115,17 +118,8 @@ const Page = (props: Props) => {
   }, [whereIsIt]);
 
   const fetchListings = async (pageNumber = 1) => {
-    if (loadedPages[pageNumber]) {
-      setPage(pageNumber);
-      return;
-    }
-
     try {
-      const startIndex = (pageNumber - 1) * 10; // Assuming 10 listings per page
-
-      const query = `*[_type == "listing" && subscribed == true][${startIndex}...${
-        startIndex + 10
-      }]{..., "imageUrl": image.asset->url}`;
+      const query = `*[_type == "listing" && subscribed == true]{..., "imageUrl": image.asset->url}`;
 
       const data = await fetch('/api/getListings', {
         method: 'POST',
@@ -134,41 +128,32 @@ const Page = (props: Props) => {
         },
         body: JSON.stringify({
           query: query,
-          userId: state.loggedInUser.id,
+          id: state.loggedInUser.id,
         }),
       });
       const dataJson = await data.json();
-
-      const sortedDataJson = dataJson.sort(
-        (a: any, b: any) => Number(a.slug.current) - Number(b.slug.current)
+      const filteredDataJson = dataJson.filter(
+        (listing: any) => !listing._id.includes('drafts')
       );
+
+      const sortedDataJson = filteredDataJson.sort((a: any, b: any) => {
+        const aSlug = a.slug && a.slug.current ? Number(a.slug.current) : 0;
+        const bSlug = b.slug && b.slug.current ? Number(b.slug.current) : 0;
+        return aSlug - bSlug;
+      });
 
       console.log('sortedDataJson', sortedDataJson);
 
-      if (pageNumber === page + 1 && sortedDataJson.length > 0) {
-        setListings(listings.concat(sortedDataJson));
-        setAllListings(allListings.concat(sortedDataJson));
-        setState((prev: any) => ({
-          ...state,
-          allListings: {
-            listings: prev.allListings.listings.concat(sortedDataJson),
-            lastFetched: new Date().getTime(),
-          },
-        }));
-      } else if (pageNumber === 1 && sortedDataJson.length > 0) {
-        console.log('Data:', sortedDataJson);
-        setListings(sortedDataJson);
-        setAllListings(sortedDataJson);
-        setState((prev: any) => ({
-          ...prev,
-          allListings: {
-            listings: sortedDataJson,
-            lastFetched: new Date().getTime(),
-          },
-        }));
-      }
-
-      setLoadedPages((prev: any) => ({ ...prev, [pageNumber]: true }));
+      setAllListings(sortedDataJson);
+      setState((prev: any) => ({
+        ...prev,
+        allListings: {
+          listings: sortedDataJson,
+          lastFetched: new Date().getTime(),
+        },
+      }));
+      setListings(sortedDataJson);
+      setIsLoading(false);
     } catch (error: any) {
       console.error('Error fetching data:', error.message);
     }
@@ -309,14 +294,13 @@ const Page = (props: Props) => {
                   Prev
                 </button>
                 {/* current page number */}
-                <p className="text-xl">{page}</p>
+                <p className="text-xl">
+                  {page}/{totalPages}
+                </p>
                 <button
                   type="button"
-                  onClick={() => {
-                    fetchListings(page + 1);
-                    setPage(page + 1);
-                  }}
-                  className="hover:bg-[#686926] bg-[#7F8119] text-white px-2 py-1 rounded-md">
+                  className="hover:bg-[#686926] bg-[#7F8119] text-white px-2 py-1 rounded-md"
+                  onClick={() => setPage(Math.min(page + 1, totalPages))}>
                   Next
                 </button>
               </div>

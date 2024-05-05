@@ -77,11 +77,15 @@ export async function POST(req: Request, res: Response) {
 
     if (userError) {
       console.error('Error fetching user favorites:', userError);
-    } else if (user && user[0].favorites.length > 0 && !userError) {
-      const favoriteEmails = user[0].favorites.map((fav: any) => fav.listingId); // Extract listingId values into an array
+    } else if (
+      user[0].favorites &&
+      user[0].favorites.length > 0 &&
+      !userError
+    ) {
+      const favoriteIds = user[0].favorites.map((fav: any) => fav.listingId); // Extract listingId values into an array
       updatedListings = updatedListings.map((listing: any) => ({
         ...listing,
-        favorite: favoriteEmails.includes(listing.userInfo.email), // Check against array of favorite emails
+        favorite: favoriteIds.includes(listing._id), // Check against array of favorite emails
       }));
     }
 
