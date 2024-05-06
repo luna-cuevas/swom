@@ -292,11 +292,15 @@ const Page = (props: Props) => {
 
               <div
                 className={`flex gap-4 ${
-                  cityDescription[0]?.description ? 'flex-col' : 'flex-row'
+                  cityDescription[0]?.description ||
+                  listings[0]?.homeInfo?.description
+                    ? 'flex-col'
+                    : 'flex-row'
                 } border-t border-[#172544]`}>
                 <div
                   className={` mt-4 border-[#172544] ${
-                    cityDescription[0]?.description
+                    cityDescription[0]?.description ||
+                    listings[0]?.homeInfo?.description
                       ? 'w-full border-b-2 pb-4'
                       : 'w-1/2 border-r-2 '
                   }`}>
@@ -308,7 +312,10 @@ const Page = (props: Props) => {
                 </div>
                 <div
                   className={`${
-                    cityDescription[0]?.description ? 'w-full' : 'w-1/2'
+                    cityDescription[0]?.description ||
+                    listings[0]?.homeInfo?.description
+                      ? 'w-full'
+                      : 'w-1/2'
                   } mt-4 break-all`}>
                   <h1 className="font-bold text-xl">About my home</h1>
                   <p>{listings[0]?.homeInfo?.description}</p>
