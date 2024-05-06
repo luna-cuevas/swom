@@ -171,7 +171,16 @@ const CarouselPage = (props: Props) => {
             },
             slide: ({ slide }) => {
               return (
-                <div className="relative h-full w-full">
+                <div
+                  className="relative h-full w-full"
+                  onClick={() => {
+                    if (props.homePage) return null;
+                    const index = props.images.findIndex(
+                      (img) => img.src === slide.src
+                    );
+                    setSelectedImage(index);
+                    setOpenLightbox(true);
+                  }}>
                   <Image
                     src={slide.src}
                     alt={`Image ${slide.src}`}
