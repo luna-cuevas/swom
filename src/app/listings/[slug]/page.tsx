@@ -318,7 +318,10 @@ const Page = (props: Props) => {
                       : 'w-1/2'
                   } mt-4 break-all`}>
                   <h1 className="font-bold text-xl">About my home</h1>
-                  <p>{listings[0]?.homeInfo?.description}</p>
+                  <p>
+                    {listings[0]?.homeInfo?.description ||
+                      'No home description available.'}
+                  </p>
                 </div>
               </div>
             </div>
