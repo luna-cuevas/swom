@@ -34,7 +34,10 @@ export async function POST(req: Request, res: Response) {
     let updatedListings = await Promise.all(
       listings &&
         listings.map(async (listing: any) => {
-          const { lat, lng } = listing.homeInfo.address; // Adjust according to your data structure
+          const { lat, lng } =
+            listing.homeInfo.address !== undefined
+              ? listing.homeInfo.address
+              : { lat: 0, lng: 0 };
 
           try {
             const response = await googleMapsClient.geocode({
