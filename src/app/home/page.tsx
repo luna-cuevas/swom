@@ -1,11 +1,11 @@
-import Carousel from '@/components/Carousel';
-import Image from 'next/image';
-import Link from 'next/link';
-import React from 'react';
-import { sanityClient } from '../../../sanity/lib/client';
-import { urlForImage } from '../../../sanity/lib/image';
+import Carousel from "@/components/Carousel";
+import Image from "next/image";
+import Link from "next/link";
+import React from "react";
+import { sanityClient } from "../../../sanity/lib/client";
+import { urlForImage } from "../../../sanity/lib/image";
 
-import HomeMapComponent from '@/components/HomeMapComponent';
+import HomeMapComponent from "@/components/HomeMapComponent";
 
 type Props = {};
 
@@ -18,6 +18,7 @@ const fetchListings = async () => {
           slug,
           title,
           homeInfo,
+          highlightTag,
         }
       }
     `;
@@ -38,19 +39,19 @@ const fetchListings = async () => {
 
     return updatedData;
   } catch (error) {
-    console.error('Error fetching data:', error);
+    console.error("Error fetching data:", error);
     return []; // Returning an empty array on error
   }
 };
 
 const Page = async (props: Props) => {
   const highlightedListings = await fetchListings();
-  console.log('highlightedListings:', highlightedListings);
+  console.log("highlightedListings:", highlightedListings);
 
   return (
     <main
       style={{
-        background: '#F7F1EE',
+        background: "#F7F1EE",
       }}>
       <div className="">
         <div className="md:h-[calc(92vh-69px)] h-[80vh] bg-black relative w-screen">
@@ -64,6 +65,7 @@ const Page = async (props: Props) => {
               highlightedListings?.map((listing: any) => {
                 return {
                   src: listing.homeInfo.firstImage,
+                  highlightTag: listing.highlightTag,
                   slug: listing.slug.current,
                   listingNum: listing._id,
                 };
@@ -114,7 +116,7 @@ const Page = async (props: Props) => {
             <div className="main_circle_text">
               <svg
                 viewBox="0 -4 100 100"
-                style={{ borderRadius: '50%' }}
+                style={{ borderRadius: "50%" }}
                 width="200"
                 height="200">
                 <defs>
@@ -172,7 +174,7 @@ const Page = async (props: Props) => {
 
             <p className="my-4">
               Welcome to our members-only community of travelers around the
-              globe.{' '}
+              globe.{" "}
               <strong>
                 Exchange your home for free, for travel, for work, for fun!
               </strong>
@@ -186,8 +188,8 @@ const Page = async (props: Props) => {
 
       <section
         style={{
-          backgroundImage: 'url(/homepage/explore-bg.png)',
-          backgroundSize: 'cover',
+          backgroundImage: "url(/homepage/explore-bg.png)",
+          backgroundSize: "cover",
         }}
         className="md:h-[30vh] py-6  m-auto justify-center  flex flex-col">
         <div className="w-2/3 m-auto justify-center">

@@ -12,6 +12,12 @@ export default defineType({
       description: 'Whether the listing is a subscription or not',
     },
     {
+      name: 'orderRank',
+      title: 'Order Rank',
+      type: 'string',
+      hidden: true, // Hide this field in the studio
+    },
+    {
       name: 'slug',
       title: 'Slug',
       type: 'slug',
@@ -19,6 +25,12 @@ export default defineType({
         source: 'userInfo.name', // Assuming 'name' is a field under 'userInfo'
         maxLength: 96,
       },
+    },
+    {
+      name: 'highlightTag',
+      title: 'Highlight Tag',
+      type: 'string',
+      description: 'Small tag to include if listing is highlighted',
     },
     {
       name: 'userInfo',

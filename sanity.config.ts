@@ -7,6 +7,7 @@ import { defineConfig } from 'sanity'
 import { structureTool } from 'sanity/structure'
 import { approveDocumentAction } from './sanity/lib/actions'
 import { googleMapsInput } from '@sanity/google-maps-input'
+import { orderableDocumentListDeskItem } from '@sanity/orderable-document-list'
 
 // Go to https://www.sanity.io/docs/api-versioning to learn how API versioning works
 import { apiVersion, dataset, projectId, authToken, useCdn } from './sanity/env';
@@ -26,7 +27,20 @@ export default defineConfig({
 
   },
   plugins: [
-    structureTool(),
+    structureTool({
+      structure: (S, context) =>
+        S.list()
+          .title('Content')
+          .items([
+            orderableDocumentListDeskItem({
+              type: 'listing', // Replace with your document type
+              title: 'Reorder Listings',
+              context,
+              S,
+            }),
+            ...S.documentTypeListItems(),
+          ]),
+    }),
     googleMapsInput({
       apiKey: process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY as string,
     }),

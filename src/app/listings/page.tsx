@@ -1,10 +1,10 @@
-'use client';
-import GoogleMapComponent from '@/components/GoogleMapComponent';
-import ListingCard from '@/components/ListingCard';
-import React, { use, useEffect, useMemo, useState } from 'react';
-import { useAtom } from 'jotai';
-import { globalStateAtom } from '@/context/atoms';
-import { useSearchParams } from 'next/navigation';
+"use client";
+import GoogleMapComponent from "@/components/GoogleMapComponent";
+import ListingCard from "@/components/ListingCard";
+import React, { use, useEffect, useMemo, useState } from "react";
+import { useAtom } from "jotai";
+import { globalStateAtom } from "@/context/atoms";
+import { useSearchParams } from "next/navigation";
 
 type Props = {};
 
@@ -17,7 +17,7 @@ const Page = (props: Props) => {
   });
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [state, setState] = useAtom(globalStateAtom);
-  const [inputValue, setInputValue] = useState<string>('');
+  const [inputValue, setInputValue] = useState<string>("");
   const [page, setPage] = useState<number>(1);
   const listingsPerPage = 10;
   const searchParams = useSearchParams();
@@ -34,7 +34,7 @@ const Page = (props: Props) => {
     const lastFetched = state.allListings.lastFetched;
     const currentTime = new Date().getTime();
     console.log(
-      'need to revalidate in:',
+      "need to revalidate in:",
       ((fifteenMin - (currentTime - lastFetched)) / 1000 / 60).toFixed(2)
     );
 
@@ -42,7 +42,7 @@ const Page = (props: Props) => {
       currentTime - lastFetched < fifteenMin &&
       state.allListings.listings.length > 0
     ) {
-      console.log('saved listings', state.allListings.listings);
+      console.log("saved listings", state.allListings.listings);
 
       setTimeout(() => {
         setListings(state.allListings.listings);
@@ -50,7 +50,7 @@ const Page = (props: Props) => {
         setIsLoading(false);
       }, 2000);
     } else {
-      console.log('fetching listings');
+      console.log("fetching listings");
       fetchListings();
 
       setTimeout(() => {
@@ -59,49 +59,49 @@ const Page = (props: Props) => {
     }
   }, [state.allListings]);
 
-  console.log('listings', listings);
+  console.log("listings", listings);
 
   useEffect(() => {
-    console.log('isloading', isLoading);
+    console.log("isloading", isLoading);
   }, [isLoading]);
 
   useEffect(() => {
-    if (searchParams && searchParams.get('lat') && searchParams.get('lng')) {
+    if (searchParams && searchParams.get("lat") && searchParams.get("lng")) {
       setWhereIsIt({
-        lat: parseFloat(searchParams.get('lat') as string),
-        lng: parseFloat(searchParams.get('lng') as string),
+        lat: parseFloat(searchParams.get("lat") as string),
+        lng: parseFloat(searchParams.get("lng") as string),
       });
     }
   }, [searchParams]);
 
   useEffect(() => {
     if (
-      (typeof window !== 'undefined' && window.google === undefined) ||
+      (typeof window !== "undefined" && window.google === undefined) ||
       whereIsIt == null
     ) {
       return;
     }
-    console.log('whereIsIt', whereIsIt);
+    console.log("whereIsIt", whereIsIt);
     const geocoder = new window.google.maps.Geocoder();
     geocoder.geocode(
       { location: { lat: whereIsIt.lat, lng: whereIsIt.lng } },
       async (results, status) => {
-        console.log('results', results);
-        if (status === 'OK' && results != null) {
+        console.log("results", results);
+        if (status === "OK" && results != null) {
           const addressComponents = results[0].address_components;
           const countryComponent = addressComponents.find((component) =>
-            component.types.includes('country')
+            component.types.includes("country")
           );
-          const country = countryComponent ? countryComponent.long_name : '';
+          const country = countryComponent ? countryComponent.long_name : "";
           // Assuming you want to keep the city filter functionality
           const cityComponent = addressComponents.find(
             (component) =>
-              component.types.includes('locality') ||
-              component.types.includes('administrative_area_level_2') ||
-              component.types.includes('administrative_area_level_1')
+              component.types.includes("locality") ||
+              component.types.includes("administrative_area_level_2") ||
+              component.types.includes("administrative_area_level_1")
           );
-          console.log('cityComponent', cityComponent);
-          const city = cityComponent ? cityComponent.long_name : '';
+          console.log("cityComponent", cityComponent);
+          const city = cityComponent ? cityComponent.long_name : "";
           setInputValue(city); // If you want to show city name in input
           // Now filter listings by the country
           await filteredListings(city.toLowerCase(), country.toLowerCase());
@@ -111,7 +111,7 @@ const Page = (props: Props) => {
 
     // if whereIsIt is empty, set input value to empty
     if (whereIsIt.lat === null && whereIsIt.lng === null) {
-      setInputValue('');
+      setInputValue("");
     }
 
     filteredListings();
@@ -119,12 +119,12 @@ const Page = (props: Props) => {
 
   const fetchListings = async (pageNumber = 1) => {
     try {
-      const query = `*[_type == "listing" && subscribed == true]{..., "imageUrl": image.asset->url}`;
+      const query = `*[_type == "listing" && subscribed == true] | order(orderRank){..., "imageUrl": image.asset->url}`;
 
-      const data = await fetch('/api/getListings', {
-        method: 'POST',
+      const data = await fetch("/api/getListings", {
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
         body: JSON.stringify({
           query: query,
@@ -133,33 +133,34 @@ const Page = (props: Props) => {
       });
       const dataJson = await data.json();
       const filteredDataJson = dataJson.filter(
-        (listing: any) => !listing._id.includes('drafts')
+        (listing: any) => !listing._id.includes("drafts")
       );
 
-      const sortedDataJson = filteredDataJson.sort((a: any, b: any) => {
-        const aSlug = a.slug && a.slug.current ? Number(a.slug.current) : 0;
-        const bSlug = b.slug && b.slug.current ? Number(b.slug.current) : 0;
-        return aSlug - bSlug;
-      });
+      // sort by slug
+      // const sortedDataJson = filteredDataJson.sort((a: any, b: any) => {
+      //   const aSlug = a.slug && a.slug.current ? Number(a.slug.current) : 0;
+      //   const bSlug = b.slug && b.slug.current ? Number(b.slug.current) : 0;
+      //   return aSlug - bSlug;
+      // });
 
-      console.log('sortedDataJson', sortedDataJson);
+      // console.log('sortedDataJson', sortedDataJson);
 
-      setAllListings(sortedDataJson);
+      setAllListings(filteredDataJson);
       setState((prev: any) => ({
         ...prev,
         allListings: {
-          listings: sortedDataJson,
+          listings: filteredDataJson,
           lastFetched: new Date().getTime(),
         },
       }));
-      setListings(sortedDataJson);
+      setListings(filteredDataJson);
       setIsLoading(false);
     } catch (error: any) {
-      console.error('Error fetching data:', error.message);
+      console.error("Error fetching data:", error.message);
     }
   };
 
-  const filteredListings = async (cityFilter = '', countryFilter = '') => {
+  const filteredListings = async (cityFilter = "", countryFilter = "") => {
     setPage(1);
     let filtered = allListings;
 
@@ -204,7 +205,7 @@ const Page = (props: Props) => {
           <div className="md:w-3/4 w-[90%] h-fit pt-12 pb-4 max-w-[1000px] mx-auto mt-12 mb-4">
             <GoogleMapComponent
               hideMap={
-                whereIsIt.lat && whereIsIt.lng && inputValue != ''
+                whereIsIt.lat && whereIsIt.lng && inputValue != ""
                   ? false
                   : true
               }
@@ -218,17 +219,17 @@ const Page = (props: Props) => {
               <div
                 className={`m-auto  ${
                   whereIsIt.lat && whereIsIt.lng
-                    ? 'flex flex-col w-fit'
-                    : 'hidden'
+                    ? "flex flex-col w-fit"
+                    : "hidden"
                 }`}>
                 <p className="text-2xl">Say hello to</p>
                 <h2 className="text-3xl capitalize">
-                  {whereIsIt.lat && whereIsIt.lng ? inputValue : 'the world.'}
+                  {whereIsIt.lat && whereIsIt.lng ? inputValue : "the world."}
                 </h2>
               </div>
               <h1
                 className={`text-3xl m-auto ${
-                  whereIsIt.lat && whereIsIt.lng ? 'text-right' : 'text-center'
+                  whereIsIt.lat && whereIsIt.lng ? "text-right" : "text-center"
                 }
             `}>
                 Let&apos;s discover your <br /> new adventure.

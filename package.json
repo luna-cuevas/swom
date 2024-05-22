@@ -15,6 +15,7 @@
     "@react-google-maps/api": "^2.19.2",
     "@sanity/google-maps-input": "^3.0.2",
     "@sanity/image-url": "^1.0.2",
+    "@sanity/orderable-document-list": "^1.2.1",
     "@sanity/vision": "^3.25.0",
     "@stripe/react-stripe-js": "^2.3.0",
     "@stripe/stripe-js": "^2.1.5",
