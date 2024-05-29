@@ -1,5 +1,5 @@
-'use client';
-import React, { useEffect, useState } from 'react';
+"use client";
+import React, { useEffect, useState } from "react";
 import {
   GoogleMap,
   Marker,
@@ -8,11 +8,11 @@ import {
   InfoWindow,
   Autocomplete,
   MarkerF,
-} from '@react-google-maps/api';
-import Image from 'next/image';
-import Link from 'next/link';
-import { sanityClient } from '../utils/sanityClient';
-import { urlForImage } from '../../sanity/lib/image';
+} from "@react-google-maps/api";
+import Image from "next/image";
+import Link from "next/link";
+import { sanityClient } from "../utils/sanityClient";
+import { urlForImage } from "../../sanity/lib/image";
 
 type Props = {
   setWhereIsIt?: React.Dispatch<
@@ -47,24 +47,24 @@ export default function GoogleMapComponent(props: Props) {
   });
   const [autocomplete, setAutocomplete] = useState<any>(null);
   const { isLoaded } = useLoadScript({
-    googleMapsApiKey: process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY ?? '',
-    libraries: ['places', 'geometry'],
+    googleMapsApiKey: process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY ?? "",
+    libraries: ["places", "geometry"],
   });
 
-  const [addressString, setAddressString] = useState<string>('');
+  const [addressString, setAddressString] = useState<string>("");
   const [listingsLocations, setListingsLocations] = useState<any>([]);
   const [activeMarker, setActiveMarker] = useState<any>(null);
   const [zoomLevel, setZoomLevel] = useState<number>(0);
   const [map, setMap] = useState<any>(null);
   const mapContainerStyle: React.CSSProperties = {
-    width: '100%',
-    height: '100%',
+    width: "100%",
+    height: "100%",
   };
 
   const zoomThreshold = 15;
 
   const onPlaceChanged = () => {
-    if (autocomplete !== null && typeof window !== 'undefined') {
+    if (autocomplete !== null && typeof window !== "undefined") {
       const place = autocomplete.getPlace();
       if (place.geometry && isLoaded) {
         setCenter({
@@ -92,7 +92,7 @@ export default function GoogleMapComponent(props: Props) {
             },
           },
           (results, status) => {
-            if (status === 'OK' && results != null) {
+            if (status === "OK" && results != null) {
               setAddressString(results[0].formatted_address);
             }
           }
@@ -103,7 +103,7 @@ export default function GoogleMapComponent(props: Props) {
 
   // Directly set center from exactAddress or geocode city
   useEffect(() => {
-    if (props.exactAddress && isLoaded && typeof window !== 'undefined') {
+    if (props.exactAddress && isLoaded && typeof window !== "undefined") {
       setCenter(props.exactAddress);
       // convert lat and lng to string for the input value using google maps geocoding
       const geocoder = new window.google.maps.Geocoder();
@@ -115,7 +115,7 @@ export default function GoogleMapComponent(props: Props) {
           },
         },
         (results, status) => {
-          if (status === 'OK' && results != null) {
+          if (status === "OK" && results != null) {
             setAddressString(results[0].formatted_address);
           }
         }
@@ -127,7 +127,7 @@ export default function GoogleMapComponent(props: Props) {
         // If address already contains lat and lng, use them directly
         const lat = listing.homeInfo.address?.lat;
         const lng = listing.homeInfo.address?.lng;
-        if (typeof lat !== 'undefined' && typeof lng !== 'undefined') {
+        if (typeof lat !== "undefined" && typeof lng !== "undefined") {
           setListingsLocations((listingsLocations: any) => [
             ...listingsLocations,
             {
@@ -147,7 +147,7 @@ export default function GoogleMapComponent(props: Props) {
             },
           ]);
         } else {
-          console.log('No listings found');
+          console.log("No listings found");
         }
       });
     }
@@ -156,6 +156,20 @@ export default function GoogleMapComponent(props: Props) {
   useEffect(() => {
     if (props.whereIsIt) {
       setCenter(props.whereIsIt);
+      const geocoder = new window.google.maps.Geocoder();
+      geocoder.geocode(
+        {
+          location: {
+            lat: props.whereIsIt.lat,
+            lng: props.whereIsIt.lng,
+          },
+        },
+        (results, status) => {
+          if (status === "OK" && results != null) {
+            setAddressString(results[0].formatted_address);
+          }
+        }
+      );
     }
   }, [props.whereIsIt]);
 
@@ -173,7 +187,7 @@ export default function GoogleMapComponent(props: Props) {
             value={addressString}
             onChange={(e) => setAddressString(e.target.value)}
             onBlur={() => {
-              if (addressString === '') {
+              if (addressString === "") {
                 props.setWhereIsIt && props.setWhereIsIt({ lat: 0, lng: 0 });
               }
             }}
@@ -182,7 +196,7 @@ export default function GoogleMapComponent(props: Props) {
       )}
       <div
         className={`${
-          props.hideMap ? 'hidden' : 'flex'
+          props.hideMap ? "hidden" : "flex"
         } flex-grow w-full h-[40vh] rounded-xl`}>
         <GoogleMap
           mapContainerStyle={mapContainerStyle}
@@ -205,9 +219,9 @@ export default function GoogleMapComponent(props: Props) {
               center={center}
               radius={props.radius}
               options={{
-                fillColor: 'red',
+                fillColor: "red",
                 fillOpacity: 0.35,
-                strokeColor: 'red',
+                strokeColor: "red",
                 strokeOpacity: 1,
                 strokeWeight: 1,
               }}
@@ -229,9 +243,9 @@ export default function GoogleMapComponent(props: Props) {
                 onClick={() => setActiveMarker(location)}
                 radius={100}
                 options={{
-                  fillColor: 'red',
+                  fillColor: "red",
                   fillOpacity: 0.05,
-                  strokeColor: 'red',
+                  strokeColor: "red",
                   strokeOpacity: 1,
                   strokeWeight: 1,
                 }}
@@ -262,7 +276,7 @@ export default function GoogleMapComponent(props: Props) {
                 <p className="text-sm">
                   {activeMarker.homeInfo.description
                     ? activeMarker.homeInfo.description.slice(0, 2000)
-                    : 'No description available'}
+                    : "No description available"}
                 </p>
                 <button className="px-2 py-1 rounded-xl font-bold w-fit mx-auto text-white bg-[#F28A38] mt-2">
                   <Link href={`/listings/${activeMarker._id}`}>

@@ -134,7 +134,7 @@ const CarouselPage = (props: Props) => {
           }}
           render={{
             slideContainer: (slideProps: any) => {
-              console.log("slideProps", slideProps.slide.highlightTag);
+              // console.log("slideProps", slideProps.slide);
               return (
                 <div className=" !h-full my-auto w-full">
                   <div
@@ -152,7 +152,7 @@ const CarouselPage = (props: Props) => {
                       <div className="relative !z-50  py-4 px-8 !text-[#172544]">
                         {slideProps.slide.highlightTag
                           ? `${slideProps.slide.highlightTag}`
-                          : "Let & apos;s meet your new favorite home."}{" "}
+                          : "Let's meet your new favorite home."}{" "}
                         <br />
                         <strong>Listing No. {slideProps.slide.slug} </strong>
                       </div>

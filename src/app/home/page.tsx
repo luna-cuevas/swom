@@ -23,7 +23,7 @@ const fetchListings = async () => {
       }
     `;
 
-    const response = await sanityClient.fetch(query);
+    const response = await sanityClient.fetch(query, {}, { cache: "no-store" });
     const data = response[0]?.listings || []; // Ensuring safety with fallback to an empty array
 
     const updatedData = data.map((listing: any) => ({

@@ -45,7 +45,9 @@ const Page = (props: Props) => {
       console.log("saved listings", state.allListings.listings);
 
       setTimeout(() => {
-        setListings(state.allListings.listings);
+        if (!searchParams.get("lat") && !searchParams.get("lng")) {
+          setListings(state.allListings.listings);
+        }
         setAllListings(state.allListings.listings);
         setIsLoading(false);
       }, 2000);
@@ -82,32 +84,36 @@ const Page = (props: Props) => {
       return;
     }
     console.log("whereIsIt", whereIsIt);
-    const geocoder = new window.google.maps.Geocoder();
-    geocoder.geocode(
-      { location: { lat: whereIsIt.lat, lng: whereIsIt.lng } },
-      async (results, status) => {
-        console.log("results", results);
-        if (status === "OK" && results != null) {
-          const addressComponents = results[0].address_components;
-          const countryComponent = addressComponents.find((component) =>
-            component.types.includes("country")
-          );
-          const country = countryComponent ? countryComponent.long_name : "";
-          // Assuming you want to keep the city filter functionality
-          const cityComponent = addressComponents.find(
-            (component) =>
-              component.types.includes("locality") ||
-              component.types.includes("administrative_area_level_2") ||
-              component.types.includes("administrative_area_level_1")
-          );
-          console.log("cityComponent", cityComponent);
-          const city = cityComponent ? cityComponent.long_name : "";
-          setInputValue(city); // If you want to show city name in input
-          // Now filter listings by the country
-          await filteredListings(city.toLowerCase(), country.toLowerCase());
+
+    if (searchParams && searchParams.get("lat") && searchParams.get("lng")) {
+      const geocoder = new window.google.maps.Geocoder();
+      geocoder.geocode(
+        { location: { lat: whereIsIt.lat, lng: whereIsIt.lng } },
+        async (results, status) => {
+          console.log("results", results);
+          if (status === "OK" && results != null) {
+            const addressComponents = results[0].address_components;
+            const countryComponent = addressComponents.find((component) =>
+              component.types.includes("country")
+            );
+            const country = countryComponent ? countryComponent.long_name : "";
+            // Assuming you want to keep the city filter functionality
+            const cityComponent = addressComponents.find(
+              (component) =>
+                component.types.includes("locality") ||
+                component.types.includes("administrative_area_level_2") ||
+                component.types.includes("administrative_area_level_1")
+            );
+            console.log("cityComponent", cityComponent);
+            const city = cityComponent ? cityComponent.long_name : "";
+            setInputValue(city); // If you want to show city name in input
+            // Now filter listings by the city or country
+            await filteredListings(city.toLowerCase(), country.toLowerCase());
+          }
         }
-      }
-    );
+      );
+      return;
+    }
 
     // if whereIsIt is empty, set input value to empty
     if (whereIsIt.lat === null && whereIsIt.lng === null) {
@@ -136,15 +142,6 @@ const Page = (props: Props) => {
         (listing: any) => !listing._id.includes("drafts")
       );
 
-      // sort by slug
-      // const sortedDataJson = filteredDataJson.sort((a: any, b: any) => {
-      //   const aSlug = a.slug && a.slug.current ? Number(a.slug.current) : 0;
-      //   const bSlug = b.slug && b.slug.current ? Number(b.slug.current) : 0;
-      //   return aSlug - bSlug;
-      // });
-
-      // console.log('sortedDataJson', sortedDataJson);
-
       setAllListings(filteredDataJson);
       setState((prev: any) => ({
         ...prev,
@@ -162,19 +159,25 @@ const Page = (props: Props) => {
 
   const filteredListings = async (cityFilter = "", countryFilter = "") => {
     setPage(1);
-    let filtered = allListings;
+    let filtered = state.allListings.listings || allListings;
+    console.log("filtering", filtered, cityFilter, countryFilter);
 
-    if (cityFilter) {
+    if (cityFilter && filtered.length > 0) {
       filtered = filtered.filter((listing: any) =>
-        listing.city.toLowerCase().includes(cityFilter)
+        listing.city.toLowerCase().includes(cityFilter.toLowerCase())
       );
-    } else if (countryFilter) {
+
+      console.log("city filtered", filtered);
+    } else if (countryFilter && filtered.length > 0) {
       filtered = filtered.filter((listing: any) =>
         listing.country.toLowerCase().includes(countryFilter)
       );
+
+      console.log("country filtered", filtered);
     }
 
     setListings(filtered);
+    console.log("filtered listings", filtered);
   };
 
   return (
