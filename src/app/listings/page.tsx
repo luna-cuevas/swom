@@ -85,42 +85,39 @@ const Page = (props: Props) => {
     }
     console.log("whereIsIt", whereIsIt);
 
-    if (searchParams && searchParams.get("lat") && searchParams.get("lng")) {
-      const geocoder = new window.google.maps.Geocoder();
-      geocoder.geocode(
-        { location: { lat: whereIsIt.lat, lng: whereIsIt.lng } },
-        async (results, status) => {
-          console.log("results", results);
-          if (status === "OK" && results != null) {
-            const addressComponents = results[0].address_components;
-            const countryComponent = addressComponents.find((component) =>
-              component.types.includes("country")
-            );
-            const country = countryComponent ? countryComponent.long_name : "";
-            // Assuming you want to keep the city filter functionality
-            const cityComponent = addressComponents.find(
-              (component) =>
-                component.types.includes("locality") ||
-                component.types.includes("administrative_area_level_2") ||
-                component.types.includes("administrative_area_level_1")
-            );
-            console.log("cityComponent", cityComponent);
-            const city = cityComponent ? cityComponent.long_name : "";
-            setInputValue(city); // If you want to show city name in input
-            // Now filter listings by the city or country
-            await filteredListings(city.toLowerCase(), country.toLowerCase());
-          }
+    const geocoder = new window.google.maps.Geocoder();
+
+    geocoder.geocode(
+      { location: { lat: whereIsIt.lat, lng: whereIsIt.lng } },
+      async (results, status) => {
+        console.log("results", results);
+        if (status === "OK" && results != null) {
+          const addressComponents = results[0].address_components;
+          const countryComponent = addressComponents.find((component) =>
+            component.types.includes("country")
+          );
+          const country = countryComponent ? countryComponent.long_name : "";
+          // Assuming you want to keep the city filter functionality
+          const cityComponent = addressComponents.find(
+            (component) =>
+              component.types.includes("locality") ||
+              component.types.includes("administrative_area_level_2") ||
+              component.types.includes("administrative_area_level_1")
+          );
+          console.log("cityComponent", cityComponent);
+          const city = cityComponent ? cityComponent.long_name : "";
+          setInputValue(city); // If you want to show city name in input
+          // Now filter listings by the city or country
+          await filteredListings(city.toLowerCase(), country.toLowerCase());
         }
-      );
-      return;
-    }
+      }
+    );
 
     // if whereIsIt is empty, set input value to empty
-    if (whereIsIt.lat === null && whereIsIt.lng === null) {
+    if (whereIsIt.lat === 0 && whereIsIt.lng === 0) {
       setInputValue("");
+      setListings(allListings);
     }
-
-    filteredListings();
   }, [whereIsIt]);
 
   const fetchListings = async (pageNumber = 1) => {

@@ -1,17 +1,17 @@
-'use client';
-import React, { use, useEffect, useState } from 'react';
-import { set, useController, useForm } from 'react-hook-form';
-import { supabaseClient } from '@/utils/supabaseClient';
-import { CheckoutSubscriptionBody } from '@/app/api/subscription/makeSubscription/route';
-import { loadStripe } from '@stripe/stripe-js';
-import Stripe from 'stripe';
-import { ToastContainer, toast } from 'react-toastify';
-import { useRouter, useSearchParams } from 'next/navigation';
+"use client";
+import React, { use, useEffect, useState } from "react";
+import { set, useController, useForm } from "react-hook-form";
+import { supabaseClient } from "@/utils/supabaseClient";
+import { CheckoutSubscriptionBody } from "@/app/api/subscription/makeSubscription/route";
+import { loadStripe } from "@stripe/stripe-js";
+import Stripe from "stripe";
+import { ToastContainer, toast } from "react-toastify";
+import { useRouter, useSearchParams } from "next/navigation";
 
-import 'react-toastify/dist/ReactToastify.css';
-import { useAtom } from 'jotai';
-import { globalStateAtom } from '@/context/atoms';
-import { sanityClient } from '../../sanity/lib/client';
+import "react-toastify/dist/ReactToastify.css";
+import { useAtom } from "jotai";
+import { globalStateAtom } from "@/context/atoms";
+import { sanityClient } from "../../sanity/lib/client";
 
 type Props = {};
 
@@ -22,8 +22,8 @@ const SignUpForm = (props: Props) => {
   const [subScreen, setSubScreen] = useState(false);
   const router = useRouter();
   const searchParams = useSearchParams();
-  const sessionId = searchParams.get('session_id');
-  console.log('session id', sessionId);
+  const sessionId = searchParams.get("session_id");
+  console.log("session id", sessionId);
 
   const {
     register,
@@ -48,9 +48,12 @@ const SignUpForm = (props: Props) => {
     const { data: userData } = supabase.auth.onAuthStateChange(
       (event, session) => {
         console.log(event, session);
-        console.log('event', event, 'user session', session);
+        console.log("event", event, "user session", session);
 
-        if (event === 'PASSWORD_RECOVERY' && session != null) {
+        if (
+          (event === "PASSWORD_RECOVERY" || event === "INITIAL_SESSION") &&
+          session != null
+        ) {
           setState({
             ...state,
             session,
@@ -58,7 +61,7 @@ const SignUpForm = (props: Props) => {
             // isSubscribed: subbed,
             // activeNavButtons: true,
           });
-          setValue('email', session?.user?.email);
+          setValue("email", session?.user?.email);
           // handle initial session
         }
       }
@@ -66,7 +69,7 @@ const SignUpForm = (props: Props) => {
   }, []);
 
   const onSubmit = (data: any) => {
-    const fullName = data.firstName + ' ' + data.lastName;
+    const fullName = data.firstName + " " + data.lastName;
     if (!subScreen) {
       handleSignUp(fullName, data.email, data.password).then((result) => {
         setSubScreen(result);
@@ -83,7 +86,7 @@ const SignUpForm = (props: Props) => {
     const document = await sanityClient.fetch(query, params);
     const documentId = document._id;
 
-    console.log('document', document);
+    console.log("document", document);
 
     const updatedDocument = sanityClient
       .patch(documentId)
@@ -92,18 +95,24 @@ const SignUpForm = (props: Props) => {
         subscribed: true,
       })
       .commit();
-    console.log('updated document', updatedDocument);
+
+    setState((prev) => ({
+      ...prev,
+      isSubscribed: true,
+      activeNavButtons: true,
+    }));
+    console.log("updated document", updatedDocument);
   };
 
   useEffect(() => {
     if (sessionId) {
-      console.log('subscription result', sessionId);
-      setState({ ...state, isSubscribed: true, activeNavButtons: true });
-      toast.success('Subscribed successfully');
+      console.log("subscription result", sessionId);
+
+      toast.success("Subscribed successfully");
       updateSubscription(state.loggedInUser.email);
 
       setTimeout(() => {
-        router.push('/home');
+        router.push("/home");
       }, 2000);
     }
   }, [sessionId]);
@@ -115,26 +124,28 @@ const SignUpForm = (props: Props) => {
   const handleSubscription = async () => {
     if (stripe) {
       const body: CheckoutSubscriptionBody = {
-        interval: 'year',
-        amount: 20000,
-        plan: '1 year',
-        planDescription: 'Subscribe for $200 per year.',
+        priceId: "price_1PMZn5DhCJq1hRSt1v2StcWD",
+        // customerId: state.loggedInUser.id,
+        // interval: "year",
+        // amount: 20000,
+        // plan: "1 year",
+        // planDescription: "Subscribe for $200 per year.",
       };
 
       try {
         // Make a post fetch API call to /checkout-session handler
-        const result = await fetch('/api/subscription/makeSubscription', {
-          method: 'post',
+        const result = await fetch("/api/subscription/makeSubscription", {
+          method: "post",
           body: JSON.stringify(body),
           headers: {
-            'content-type': 'application/json',
+            "content-type": "application/json",
           },
         });
 
         if (!result.ok) {
           // Handle the case where subscription creation failed
-          console.error('Failed to create subscription:', result.statusText);
-          toast.error('Something went wrong');
+          console.error("Failed to create subscription:", result.statusText);
+          toast.error("Something went wrong");
           setSubScreen(true);
           return false;
         }
@@ -149,7 +160,7 @@ const SignUpForm = (props: Props) => {
           });
 
           if (error) {
-            console.error('Error redirecting to Checkout:', error);
+            console.error("Error redirecting to Checkout:", error);
             // Handle the error (e.g., show an error message to the user)
             return false;
           }
@@ -158,7 +169,7 @@ const SignUpForm = (props: Props) => {
           return true;
         }
       } catch (error) {
-        console.error('Error handling subscription:', error);
+        console.error("Error handling subscription:", error);
         // Handle unexpected errors
         return false;
       }
@@ -169,21 +180,21 @@ const SignUpForm = (props: Props) => {
   };
 
   const fetchLoggedInUser = async (user: any) => {
-    console.log('fetching logged in user', user);
+    console.log("fetching logged in user", user);
 
     try {
       // Make a GET request to the API route with the user ID as a query parameter
       const response = await fetch(`/api/getUser`, {
         headers: {
-          'Content-Type': 'application/json',
-          Accept: 'application/json',
+          "Content-Type": "application/json",
+          Accept: "application/json",
         },
-        method: 'POST',
+        method: "POST",
         body: JSON.stringify({ id: user.id }),
       });
 
       if (!response.ok) {
-        throw new Error('Failed to fetch user data');
+        throw new Error("Failed to fetch user data");
       }
 
       const data = await response.json();
@@ -191,11 +202,11 @@ const SignUpForm = (props: Props) => {
       if (data) {
         return data;
       } else {
-        console.log('No data found for the user');
+        console.log("No data found for the user");
         return null;
       }
     } catch (error: any) {
-      console.error('Error fetching user data:', error.message);
+      console.error("Error fetching user data:", error.message);
       return null;
     }
   };
@@ -209,7 +220,7 @@ const SignUpForm = (props: Props) => {
       password: password,
     });
 
-    console.log('session', session);
+    console.log("session", session);
 
     if (error) {
       toast.error(error.message);
@@ -221,7 +232,7 @@ const SignUpForm = (props: Props) => {
         loggedInUser: loggedInUser,
       });
 
-      toast.success('Signed up successfully');
+      toast.success("Signed up successfully");
       return true;
     }
   };
@@ -237,13 +248,13 @@ const SignUpForm = (props: Props) => {
             disabled={state.user?.email ? true : false}
             className="border-2 w-full focus:outline-none p-2 text-lg rounded-lg"
             placeholder="Email"
-            {...register('email', { required: true })}
+            {...register("email", { required: true })}
           />
           <input
             type="password"
             className="border-2 w-full focus:outline-none p-2 text-lg rounded-lg"
             placeholder="Password"
-            {...register('password', { required: true })}
+            {...register("password", { required: true })}
           />
         </div>
       ) : (
@@ -263,7 +274,7 @@ const SignUpForm = (props: Props) => {
       <button
         type="submit"
         className="p-4 bg-[#172644] text-white rounded-xl hover:bg-[#284276] m-auto border-2 border-gray-200">
-        {!subScreen ? 'Reset Password' : 'Sign Up'}
+        {!subScreen ? "Reset Password" : "Sign Up"}
       </button>
       <ToastContainer
         position="bottom-right"

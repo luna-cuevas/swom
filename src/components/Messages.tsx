@@ -1,23 +1,23 @@
-'use client';
-import { globalStateAtom } from '@/context/atoms';
-import { supabaseClient } from '@/utils/supabaseClient';
-import { useAtom } from 'jotai';
-import Image from 'next/image';
-import Link from 'next/link';
-import { useSearchParams } from 'next/navigation';
-import React, { useEffect, useRef, useState } from 'react';
-import { sanityClient } from '../../sanity/lib/client';
-import { urlForImage } from '../../sanity/lib/image';
+"use client";
+import { globalStateAtom } from "@/context/atoms";
+import { supabaseClient } from "@/utils/supabaseClient";
+import { useAtom } from "jotai";
+import Image from "next/image";
+import Link from "next/link";
+import { useSearchParams } from "next/navigation";
+import React, { useEffect, useRef, useState } from "react";
+import { sanityClient } from "../../sanity/lib/client";
+import { urlForImage } from "../../sanity/lib/image";
 
 type Props = {};
 
 const Messages = (props: Props) => {
   const queryParams = useSearchParams();
-  const contactedUserID = queryParams.get('contactedUser');
+  const contactedUserID = queryParams.get("contactedUser");
   const [mobileNavMenu, setMobileNavMenu] = useState<boolean>(false);
   const [conversations, setConversations] = useState<any[]>([]);
   const [messages, setMessages] = useState<any[]>([]);
-  const [newMessage, setNewMessage] = useState<string>(''); // New state to handle the input message
+  const [newMessage, setNewMessage] = useState<string>(""); // New state to handle the input message
   const [state, setState] = useAtom(globalStateAtom);
   const messagesContainerRef = useRef<HTMLDivElement>(null);
   const inboxRef = useRef<HTMLDivElement>(null);
@@ -49,7 +49,7 @@ const Messages = (props: Props) => {
 
         if (convoExist !== false) {
           if (convoExist) {
-            console.log('fetching convo exist');
+            console.log("fetching convo exist");
             fetchAllConversations();
 
             setSelectedConversation(
@@ -57,7 +57,7 @@ const Messages = (props: Props) => {
             );
           }
         } else {
-          console.log('creating new conversation');
+          console.log("creating new conversation");
 
           createNewConversation();
         }
@@ -72,7 +72,7 @@ const Messages = (props: Props) => {
 
   useEffect(() => {
     if (contactedUserID == null) {
-      console.log('fetchingAll conversations');
+      console.log("fetchingAll conversations");
       fetchAllConversations();
     }
   }, [state.user]);
@@ -99,16 +99,16 @@ const Messages = (props: Props) => {
   };
 
   const fetchContactedUserInfo = async () => {
-    const listings = await fetch('/api/getUser', {
-      method: 'POST',
+    const listings = await fetch("/api/getUser", {
+      method: "POST",
       headers: {
-        'Content-Type': 'application/json',
+        "Content-Type": "application/json",
       },
       body: JSON.stringify({ id: contactedUserID }),
     });
 
     const data = await listings.json();
-    console.log('contacted user info', data);
+    console.log("contacted user info", data);
 
     const profilePic = await sanityClient.fetch(
       `*[_type == "listing" && userInfo.email == $email]`,
@@ -118,58 +118,13 @@ const Messages = (props: Props) => {
     return data;
   };
 
-  // useEffect(() => {
-  //   const retrievePic = async () => {
-  //     const myProfilePic = await sanityClient.fetch(
-  //       `*[_type == "listing" && userInfo.email == $email]{
-  //           userInfo {
-  //             profileImage
-  //           }
-  //         }`,
-  //       { email: state.user.email }
-  //     );
-
-  //     console.log('profilePic', myProfilePic);
-
-  //     // look through selectedConvo.members and find the one that is not me
-  //     let retrieveContactedUserEmail;
-  //     for (let key in selectedConvo.members) {
-  //       if (selectedConvo.members[key].email !== state.user.email) {
-  //         retrieveContactedUserEmail = selectedConvo.members[key].email;
-  //         break;
-  //       }
-  //     }
-
-  //     console.log('retrieveContactedUserEmail', retrieveContactedUserEmail);
-
-  //     // const { data } = await supabase.auth.admin.getUserById(
-  //     //   contactedUserID as string
-  //     // );
-
-  //     // console.log('retrieveContactedUserEmail', data);
-
-  //     // const theirProfilePic = await sanityClient.fetch(
-  //     //   `*[_type == "listing" && userInfo.email == $email]`,
-  //     //   { email: retrieveContactedUserEmail.email }
-  //     // );
-
-  //     // console.log('theirProfilePic', theirProfilePic);
-  //   };
-  //   if (state.user !== null && selectedConvo !== undefined) {
-  //     retrievePic();
-  //   }
-
-  //   console.log('state.user', state.user);
-  //   console.log('selectedConvo', selectedConvo);
-  // }, [state.user, selectedConvo]);
-
   const fetchAllConversations = async () => {
     if (state.user !== null) {
       setIsCheckingConversation(true);
-      const allConvosData = await fetch('/api/messages/fetchAllConvos', {
-        method: 'POST',
+      const allConvosData = await fetch("/api/messages/fetchAllConvos", {
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
         body: JSON.stringify({ id: state.user.id }),
       });
@@ -198,7 +153,7 @@ const Messages = (props: Props) => {
         }
       );
 
-      console.log('profileImages', profileImages);
+      console.log("profileImages", profileImages);
 
       // now match the profileImages to the members in the convo
       // then set the profileImage for each member in the convo to the profileImage from the sanity backend
@@ -209,7 +164,7 @@ const Messages = (props: Props) => {
             const profile = profileImages.find(
               (profile: any) => profile.userInfo.email === member.email
             );
-            console.log('profile', profile);
+            console.log("profile", profile);
             if (profile && profile.userInfo.profileImage) {
               // Update the convo object directly with the found profile image URL
               member.profileImage = urlForImage(profile.userInfo.profileImage);
@@ -222,12 +177,12 @@ const Messages = (props: Props) => {
       // console.log('allConvosDataJson2', allConvosDataJson);
 
       if (allConvosDataJson.length === 0 || !allConvosDataJson) {
-        console.log('allConvosDataJson', allConvosDataJson);
+        console.log("allConvosDataJson", allConvosDataJson);
 
         setConversations([]);
         setIsCheckingConversation(false);
       } else {
-        console.log('allConvosDataJson', allConvosDataJson);
+        console.log("allConvosDataJson", allConvosDataJson);
         setConversations(allConvosDataJson);
         if (!contactedUserID) {
           setSelectedConversation(allConvosDataJson[0].conversation_id);
@@ -239,20 +194,20 @@ const Messages = (props: Props) => {
   };
 
   const fetchMessagesForSelectedConversation = async () => {
-    console.log('fetching messages for selected conversation');
+    console.log("fetching messages for selected conversation");
     if (selectedConversation !== null) {
-      const messagesData = await fetch('/api/messages/fetchMessages', {
-        method: 'POST',
+      const messagesData = await fetch("/api/messages/fetchMessages", {
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
         body: JSON.stringify({ id: selectedConversation }),
       });
       const messagesDataJson = await messagesData.json();
-      console.log('messagesDataJson', messagesDataJson);
+      console.log("messagesDataJson", messagesDataJson);
 
       if (!messagesDataJson) {
-        console.error('Error fetching messages:', messagesDataJson);
+        console.error("Error fetching messages:", messagesDataJson);
         return false;
       } else {
         setMessages(messagesDataJson[0].messagesObj || []);
@@ -267,20 +222,20 @@ const Messages = (props: Props) => {
       setIsCheckingConversation(true);
 
       const contactedUserInfo = await fetchContactedUserInfo();
-      const convoData = await fetch('/api/messages/createConvo', {
-        method: 'POST',
+      const convoData = await fetch("/api/messages/createConvo", {
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
         body: JSON.stringify({
           members: {
-            '1': {
+            "1": {
               name: state.loggedInUser.name,
               id: state.user.id,
               email: state.loggedInUser.email,
               profileImage: state.loggedInUser.profileImage,
             },
-            '2': {
+            "2": {
               name: contactedUserInfo.name,
               id: contactedUserInfo.id,
               email: contactedUserInfo?.email,
@@ -295,12 +250,12 @@ const Messages = (props: Props) => {
       if (
         convoDataJson.length === 0 ||
         !convoDataJson ||
-        convoDataJson == 'null'
+        convoDataJson == "null"
       ) {
         setIsCheckingConversation(false);
-        return console.error('Error creating new conversation:', convoDataJson);
+        return console.error("Error creating new conversation:", convoDataJson);
       } else {
-        console.log('new convo data', convoDataJson);
+        console.log("new convo data", convoDataJson);
 
         fetchAllConversations();
         setSelectedConversation(
@@ -314,41 +269,41 @@ const Messages = (props: Props) => {
 
   const checkIfConversationExists = async () => {
     if (state.user !== null && contactedUserID !== null) {
-      const checkConvoData = await fetch('/api/messages/checkConvoExists', {
+      const checkConvoData = await fetch("/api/messages/checkConvoExists", {
         body: JSON.stringify({
           1: { id: state.user.id },
           2: { id: contactedUserID },
         }),
-        method: 'POST',
+        method: "POST",
       });
 
       const checkConvoExistData = await checkConvoData.json();
 
-      console.log('checkConvoExistData', checkConvoExistData);
+      console.log("checkConvoExistData", checkConvoExistData);
 
       if (
         checkConvoExistData.length === 0 ||
         !checkConvoExistData ||
-        checkConvoExistData == 'null'
+        checkConvoExistData == "null"
       ) {
         return false;
       } else {
-        console.log('setting selected conversation');
+        console.log("setting selected conversation");
         return checkConvoExistData;
       }
     }
   };
 
   useEffect(() => {
-    console.log('subscribing to messages');
+    console.log("subscribing to messages");
     supabase
       .channel(`${selectedConversation}`)
       .on(
-        'postgres_changes',
+        "postgres_changes",
         {
-          event: '*',
-          schema: 'public',
-          table: 'messages',
+          event: "*",
+          schema: "public",
+          table: "messages",
         },
         (payload) => {
           setMessages((payload.new as { [key: string]: any }).messagesObj);
@@ -360,14 +315,14 @@ const Messages = (props: Props) => {
   }, [selectedConversation]);
 
   const sendMessage = async () => {
-    console.log('sending message', selectedConversation, newMessage);
-    if (selectedConversation !== null && newMessage.trim() !== '') {
+    console.log("sending message", selectedConversation, newMessage);
+    if (selectedConversation !== null && newMessage.trim() !== "") {
       setSendingMessage(true);
       // Perform the upsert with the updated messages
-      const sendMessageData = await fetch('/api/messages/sendMessage', {
-        method: 'POST',
+      const sendMessageData = await fetch("/api/messages/sendMessage", {
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
         body: JSON.stringify({
           conversation_id: selectedConversation,
@@ -379,9 +334,9 @@ const Messages = (props: Props) => {
       const sendMessageDataJson = await sendMessageData.json();
 
       if (!sendMessageDataJson) {
-        console.error('Error sending message:', sendMessageDataJson);
+        console.error("Error sending message:", sendMessageDataJson);
       } else {
-        setNewMessage(''); // Clear the input field after sending the message
+        setNewMessage(""); // Clear the input field after sending the message
         setSendingMessage(false);
       }
     }
@@ -431,8 +386,8 @@ const Messages = (props: Props) => {
               strokeWidth={2}
               d={
                 mobileNavMenu
-                  ? 'M6 18L18 6M6 6l12 12'
-                  : 'M4 6h16M4 12h16M4 18h16'
+                  ? "M6 18L18 6M6 6l12 12"
+                  : "M4 6h16M4 12h16M4 18h16"
               }
             />
           </svg>
@@ -445,7 +400,7 @@ const Messages = (props: Props) => {
         <div
           ref={inboxRef}
           className={`h-full overflow-y-auto py-2 transition-all duration-200 ease-in-out w-full ${
-            mobileNavMenu ? 'max-w-[35%]  border-r-2' : 'max-w-0'
+            mobileNavMenu ? "max-w-[35%]  border-r-2" : "max-w-0"
           } md:max-w-[30%] md:border-r-2 h-auto  border-[#172544] flex- flex-col`}>
           <div className="tracking-[0.3rem] w-full text-center mx-auto flex py-4 border-b-2 border-inherit uppercase md:text-xl gap-2 md:gap-4 pl-[8%]">
             <h1 className="m-auto w-fit font-sans font-bold">Inbox</h1>
@@ -455,11 +410,11 @@ const Messages = (props: Props) => {
               <li
                 key={convo.conversation_id} // Assuming conversation_id is the unique identifier
                 className={`cursor-pointer text-center flex-col xl:flex-row ${
-                  mobileNavMenu ? 'break-all ' : 'break-keep '
+                  mobileNavMenu ? "break-words " : "break-keep "
                 }  my-auto flex pl-[8%] gap-2 md:break-all  align-middle tracking-[0.3rem] py-4 border-b-2 border-[#172544] uppercase md:text-xl ${
                   selectedConversation === convo.conversation_id
-                    ? 'bg-gray-300'
-                    : ''
+                    ? "bg-gray-300"
+                    : ""
                 }`}
                 onClick={() => setSelectedConversation(convo.conversation_id)}>
                 <div className="relative w-[28px] mx-auto xl:mx-0  justify-center align-middle flex my-auto h-[28px]">
@@ -471,7 +426,7 @@ const Messages = (props: Props) => {
                         ? convo.members[
                             convo.members[1].id == state.user?.id ? 2 : 1
                           ].profileImage
-                        : '/profile/profile-pic-placeholder.png'
+                        : "/profile/profile-pic-placeholder.png"
                     } // Assuming convoPic is a property of the second member
                     alt="hero"
                     className="rounded-full flex mx-auto"
@@ -492,13 +447,16 @@ const Messages = (props: Props) => {
 
         <div
           className={`
-              ${mobileNavMenu ? 'max-w-[65%] md:w-2/3' : 'max-w-full md:w-full'}
+              ${mobileNavMenu ? "max-w-[65%] md:w-2/3" : "max-w-full md:w-full"}
               w-full transition-all ease-in-out duration-200`}>
           <div className="">
             {selectedConversation !== null && (
               <>
-                <div className="flex flex-wrap justify-center tracking-[0.3rem] px-[4%] py-4 border-b-2 border-[#172544] uppercase md:text-xl">
-                  <div className="flex gap-4 flex-1 justify-center">
+                <div
+                  className={`flex md:flex-row ${
+                    mobileNavMenu && "flex-col"
+                  }  justify-center tracking-[0.3rem] px-[4%] py-4 border-b-2 border-[#172544] uppercase md:text-xl`}>
+                  <div className="flex gap-4 flex-wrap flex-1 justify-center">
                     <div
                       className={`relative w-[28px] my-auto   flex h-[28px]`}>
                       <Image
@@ -521,7 +479,7 @@ const Messages = (props: Props) => {
                                   ? 1
                                   : 2
                               ]?.profileImage // Assuming convoPic is a property of the second member
-                            : '/profile/profile-pic-placeholder.png'
+                            : "/profile/profile-pic-placeholder.png"
                         }
                         alt="hero"
                         fill
@@ -529,19 +487,21 @@ const Messages = (props: Props) => {
                         className="rounded-full my-auto"
                       />
                     </div>
-                    <h1 className="my-auto font-bold w-fit text-center md:text-left font-serif break-all">
+                    <h1 className="my-auto font-bold w-fit text-center md:text-left font-serif break-words">
                       {selectedConvo?.members[memberIndex]?.name}
                     </h1>
                   </div>
                   <Link
                     type="button"
-                    className="bg-[#E88527] hover:bg-[#e88427ca] text-base tracking-normal capitalize h-fit w-fit my-auto px-2 py-1 text-white rounded-xl "
+                    className={`bg-[#E88527] hover:bg-[#e88427ca] ${
+                      mobileNavMenu && "mx-auto"
+                    } text-base tracking-normal capitalize h-fit w-fit my-auto px-2 py-1 text-white rounded-xl `}
                     href={
                       selectedConvo?.members[memberIndex].email !=
                       state.loggedInUser?.email
-                        ? '/listings/' +
+                        ? "/listings/" +
                           selectedConvo?.members[memberIndex].listingId
-                        : ''
+                        : ""
                     }>
                     View Listing
                   </Link>
@@ -558,14 +518,14 @@ const Messages = (props: Props) => {
                             key={index}
                             className={` flex opacity-0 transition-all justify-end duration-75 ease-in-out  gap-4 ${
                               message.sender_id == state.user?.id
-                                ? 'ml-auto  opacity-100' // Align to the right if it's my message
-                                : 'mr-auto  opacity-100'
+                                ? "ml-auto  opacity-100" // Align to the right if it's my message
+                                : "mr-auto  opacity-100"
                             }`}>
                             <Link
                               href={
                                 message.sender_id == state.user?.id
-                                  ? ''
-                                  : '/listings/' +
+                                  ? ""
+                                  : "/listings/" +
                                     selectedConvo.members[memberIndex].id
                               }>
                               <div className="relative w-[30px] h-[30px] my-auto flex">
@@ -589,8 +549,8 @@ const Messages = (props: Props) => {
                             <p
                               className={`my-auto py-2 font-sans md:text-lg px-10 rounded-3xl ${
                                 message?.sender_id === state.user?.id
-                                  ? 'bg-[#dbd7d6]'
-                                  : 'bg-[#E5DEDB]'
+                                  ? "bg-[#dbd7d6]"
+                                  : "bg-[#E5DEDB]"
                               }`}>
                               {message?.content}
                             </p>
