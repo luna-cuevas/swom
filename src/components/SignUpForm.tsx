@@ -23,7 +23,6 @@ const SignUpForm = (props: Props) => {
   const router = useRouter();
   const searchParams = useSearchParams();
   const sessionId = searchParams.get("session_id");
-  console.log("session id", sessionId);
 
   const {
     register,
@@ -71,7 +70,8 @@ const SignUpForm = (props: Props) => {
         if (
           (event === "PASSWORD_RECOVERY" ||
             event === "INITIAL_SESSION" ||
-            event === "TOKEN_REFRESHED") &&
+            event === "TOKEN_REFRESHED" ||
+            event === "USER_UPDATED") &&
           session != null
         ) {
           setState({
@@ -85,6 +85,7 @@ const SignUpForm = (props: Props) => {
           // handle initial session
         } else {
           if (state.session) {
+            console.log("refreshing session");
             await refreshSession(state.session.refresh_token);
           }
         }
@@ -96,9 +97,11 @@ const SignUpForm = (props: Props) => {
     const fullName = data.firstName + " " + data.lastName;
     if (!subScreen) {
       handleSignUp(fullName, data.email, data.password).then((result) => {
+        console.log("result", result);
         setSubScreen(result);
       });
     } else {
+      console.log("handle subscription");
       handleSubscription();
     }
   };
@@ -224,6 +227,7 @@ const SignUpForm = (props: Props) => {
       const data = await response.json();
 
       if (data) {
+        console.log("User data found:", data);
         return data;
       } else {
         console.log("No data found for the user");
