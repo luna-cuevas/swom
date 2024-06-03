@@ -44,14 +44,34 @@ const SignUpForm = (props: Props) => {
     fetchStripe();
   }, []);
 
+  const refreshSession = async (refresh_token: string) => {
+    const { data, error } = await supabase.auth.refreshSession({
+      refresh_token,
+    });
+    console.log("refresh session data", data);
+
+    if (error) {
+      console.error("Error refreshing session:", error.message);
+      return;
+    } else {
+      setState({
+        ...state,
+        session: data,
+        user: data.user,
+      });
+    }
+  };
+
   useEffect(() => {
     const { data: userData } = supabase.auth.onAuthStateChange(
-      (event, session) => {
+      async (event, session) => {
         console.log(event, session);
         console.log("event", event, "user session", session);
 
         if (
-          (event === "PASSWORD_RECOVERY" || event === "INITIAL_SESSION") &&
+          (event === "PASSWORD_RECOVERY" ||
+            event === "INITIAL_SESSION" ||
+            event === "TOKEN_REFRESHED") &&
           session != null
         ) {
           setState({
@@ -63,6 +83,10 @@ const SignUpForm = (props: Props) => {
           });
           setValue("email", session?.user?.email);
           // handle initial session
+        } else {
+          if (state.session) {
+            await refreshSession(state.session.refresh_token);
+          }
         }
       }
     );
