@@ -23,6 +23,7 @@ const SignUpForm = (props: Props) => {
   const router = useRouter();
   const searchParams = useSearchParams();
   const sessionId = searchParams.get("session_id");
+  const [authSessionMissing, setAuthSessionMissing] = useState(false);
 
   const {
     register,
@@ -51,6 +52,8 @@ const SignUpForm = (props: Props) => {
 
     if (error) {
       console.error("Error refreshing session:", error.message);
+      setAuthSessionMissing(true);
+      console.log("auth session missing", authSessionMissing);
       return;
     } else {
       setState({
@@ -96,6 +99,10 @@ const SignUpForm = (props: Props) => {
   const onSubmit = (data: any) => {
     const fullName = data.firstName + " " + data.lastName;
     if (!subScreen) {
+      if (authSessionMissing) {
+        requestNewAuth(data.email);
+        return;
+      }
       handleSignUp(fullName, data.email, data.password).then((result) => {
         console.log("result", result);
         setSubScreen(result);
@@ -265,11 +272,54 @@ const SignUpForm = (props: Props) => {
     }
   };
 
+  const requestNewAuth = async (email: string) => {
+    const { data, error } = await supabase.auth.resetPasswordForEmail(email, {
+      redirectTo:
+        process.env.NODE_ENV === "development"
+          ? "http://localhost:3000/sign-up"
+          : "https://swom.travel/sign-up",
+    });
+    console.log("request new auth data", data);
+
+    if (error) {
+      toast.error(error.message);
+      return false;
+    } else {
+      toast.success("Password reset email sent. Look for an email from us.");
+      return true;
+    }
+  };
+
   return (
     <form
       onSubmit={handleSubmit(onSubmit, onError)}
       className="w-11/12  md:w-2/3 max-w-[800px] flex flex-col my-12 m-auto border-4 bg-gray-100 border-[#c9c9c9] rounded-xl p-12">
-      {!subScreen ? (
+      {subScreen ? (
+        <div className="flex my-8 justify-evenly">
+          <div
+            className={`rounded-md  text-center p-8 flex flex-col gap-2 items-start`}>
+            <h2 className="text-2xl font-bold text-gray-700">
+              1 Year Subscription
+            </h2>
+            <p className="text-gray-800 text-center w-fit mx-auto text-lg">
+              $200 per year
+            </p>
+          </div>
+        </div>
+      ) : authSessionMissing ? (
+        <div className="my-3 flex flex-col gap-2">
+          <h2 className="text-center text-xl">
+            Authentication session missing from URL, please request a new Magic
+            Link below.
+          </h2>
+          <input
+            type="email"
+            className="border-2 w-full focus:outline-none p-2 text-lg rounded-lg"
+            placeholder="Email"
+            {...register("email", { required: true })}
+          />
+        </div>
+      ) : (
         <div className="gap-8 mb-8 flex justify-between">
           <input
             type="email"
@@ -285,25 +335,18 @@ const SignUpForm = (props: Props) => {
             {...register("password", { required: true })}
           />
         </div>
-      ) : (
-        <div className="flex my-8 justify-evenly">
-          <div
-            className={`rounded-md  text-center p-8 flex flex-col gap-2 items-start`}>
-            <h2 className="text-2xl font-bold text-gray-700">
-              1 Year Subscription
-            </h2>
-            <p className="text-gray-800 text-center w-fit mx-auto text-lg">
-              $200 per year
-            </p>
-          </div>
-        </div>
       )}
 
       <button
         type="submit"
         className="p-4 bg-[#172644] text-white rounded-xl hover:bg-[#284276] m-auto border-2 border-gray-200">
-        {!subScreen ? "Reset Password" : "Sign Up"}
+        {subScreen
+          ? "Sign-Up"
+          : authSessionMissing
+          ? "Resend Auth Email"
+          : "Subscribe"}
       </button>
+
       <ToastContainer
         position="bottom-right"
         autoClose={5000}
