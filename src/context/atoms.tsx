@@ -1,4 +1,4 @@
-import { atom } from 'jotai';
+import { atom } from "jotai";
 
 type State = {
   session: null | string;
@@ -18,13 +18,13 @@ type State = {
 // A helper function to work with localStorage and JSON serialization for the entire application state
 const atomWithLocalStorage = (key: string, initialValue: any) => {
   const getInitialValue = () => {
-    if (typeof window !== 'undefined') {
+    if (typeof window !== "undefined") {
       const item = localStorage.getItem(key);
       if (item !== null) {
         try {
           return JSON.parse(item);
         } catch {
-          console.error('Could not parse the stored value in localStorage.');
+          console.error("Could not parse the stored value in localStorage.");
         }
       }
     }
@@ -36,7 +36,7 @@ const atomWithLocalStorage = (key: string, initialValue: any) => {
     (get) => get(baseAtom),
     (get, set, update: ((prevState: State) => State) | State) => {
       const nextValue =
-        typeof update === 'function' ? update(get(baseAtom)) : update;
+        typeof update === "function" ? update(get(baseAtom)) : update;
       set(baseAtom, nextValue);
       localStorage.setItem(key, JSON.stringify(nextValue));
     }
@@ -48,7 +48,7 @@ const atomWithLocalStorage = (key: string, initialValue: any) => {
 // Define your initial state
 const initialState: State = {
   session: null,
-  user: { email: '' },
+  user: { email: "" },
   showMobileMenu: false,
   noUser: false,
   imgUploadPopUp: false,
@@ -63,6 +63,6 @@ const initialState: State = {
 
 // Create an atom with local storage persistence for the entire application state
 export const globalStateAtom = atomWithLocalStorage(
-  'globalState',
+  "SWOMGlobalState",
   initialState
 );

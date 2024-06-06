@@ -9,6 +9,7 @@ type Props = {};
 
 const HomeMapComponent = (props: Props) => {
   const [whereIsIt, setWhereIsIt] = useState({
+    query: "",
     lat: 0,
     lng: 0,
   });
@@ -33,7 +34,9 @@ const HomeMapComponent = (props: Props) => {
           <Link
             href={
               state.loggedInUser && whereIsIt.lat !== 0 && whereIsIt.lng !== 0
-                ? `/listings?lat=${whereIsIt.lat}&lng=${whereIsIt.lng}`
+                ? `/listings?query=${encodeURI(whereIsIt.query)}&lat=${
+                    whereIsIt.lat
+                  }&lng=${whereIsIt.lng}`
                 : `/become-member`
             }
             className={`${

@@ -42,12 +42,11 @@ const Page = (props: Props) => {
       currentTime - lastFetched < fifteenMin &&
       state.allListings.listings.length > 0
     ) {
-      console.log("saved listings", state.allListings.listings);
-
       setTimeout(() => {
-        if (!searchParams.get("lat") && !searchParams.get("lng")) {
-          setListings(state.allListings.listings);
-        }
+        console.log("saved listings", state.allListings.listings);
+
+        setListings(state.allListings.listings);
+
         setAllListings(state.allListings.listings);
         setIsLoading(false);
       }, 2000);
@@ -61,8 +60,6 @@ const Page = (props: Props) => {
     }
   }, [state.allListings]);
 
-  console.log("listings", listings);
-
   useEffect(() => {
     console.log("isloading", isLoading);
   }, [isLoading]);
@@ -70,20 +67,19 @@ const Page = (props: Props) => {
   useEffect(() => {
     if (searchParams && searchParams.get("lat") && searchParams.get("lng")) {
       setWhereIsIt({
+        query: searchParams.get("query") as string,
         lat: parseFloat(searchParams.get("lat") as string),
         lng: parseFloat(searchParams.get("lng") as string),
       });
     }
   }, [searchParams]);
 
-  useEffect(() => {
-    if (
-      (typeof window !== "undefined" && window.google === undefined) ||
-      whereIsIt == null
-    ) {
+  const searchingParamLocation = async () => {
+    if (typeof window !== "undefined" && window.google === undefined) {
+      console.log("google not loaded");
       return;
     }
-    console.log("whereIsIt", whereIsIt);
+    console.log("searching location", whereIsIt);
 
     const geocoder = new window.google.maps.Geocoder();
 
@@ -108,17 +104,31 @@ const Page = (props: Props) => {
           const city = cityComponent ? cityComponent.long_name : "";
           setInputValue(city); // If you want to show city name in input
           // Now filter listings by the city or country
+          console.log("city", city, "country", country);
           await filteredListings(city.toLowerCase(), country.toLowerCase());
         }
       }
     );
+  };
 
-    // if whereIsIt is empty, set input value to empty
-    if (whereIsIt.lat === 0 && whereIsIt.lng === 0) {
-      setInputValue("");
-      setListings(allListings);
-    }
-  }, [whereIsIt]);
+  useEffect(() => {
+    setTimeout(() => {
+      if (
+        (typeof window !== "undefined" && window.google === undefined) ||
+        whereIsIt == null ||
+        allListings.length === 0
+      ) {
+        console.log("google not loaded");
+        return;
+      }
+      searchingParamLocation();
+      // if whereIsIt is empty, set input value to empty
+      if (whereIsIt.lat === 0 && whereIsIt.lng === 0) {
+        setInputValue("");
+        setListings(allListings);
+      }
+    }, 1000);
+  }, [whereIsIt, allListings]);
 
   const fetchListings = async (pageNumber = 1) => {
     try {

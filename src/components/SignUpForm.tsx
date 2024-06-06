@@ -293,7 +293,7 @@ const SignUpForm = (props: Props) => {
   return (
     <form
       onSubmit={handleSubmit(onSubmit, onError)}
-      className="w-11/12  md:w-2/3 max-w-[800px] flex flex-col my-12 m-auto border-4 bg-gray-100 border-[#c9c9c9] rounded-xl p-12">
+      className="w-11/12  md:w-2/3 max-w-[800px] relative flex flex-col my-12 m-auto border-4 bg-gray-100 border-[#c9c9c9] rounded-xl p-12">
       {subScreen ? (
         <div className="flex my-8 justify-evenly">
           <div
@@ -345,6 +345,13 @@ const SignUpForm = (props: Props) => {
           : authSessionMissing
           ? "Resend Auth Email"
           : "Subscribe"}
+      </button>
+
+      <button
+        type="button"
+        onClick={() => setAuthSessionMissing(true)}
+        className="text-blue-400 m-auto absolute bottom-0 flex w-fit left-0 right-0">
+        <a>Resend Magic Link</a>
       </button>
 
       <ToastContainer

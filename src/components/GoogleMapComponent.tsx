@@ -16,10 +16,10 @@ import { urlForImage } from "../../sanity/lib/image";
 
 type Props = {
   setWhereIsIt?: React.Dispatch<
-    React.SetStateAction<{ lat: number; lng: number }>
+    React.SetStateAction<{ lat: number; lng: number; query: string }>
   >;
   latLng?: { lat: number; lng: number };
-  whereIsIt?: { lat: number; lng: number };
+  whereIsIt?: { lat: number; lng: number; query: string };
   noSearch?: boolean;
   exactAddress?: { lat: number; lng: number };
   radius?: number;
@@ -66,13 +66,16 @@ export default function GoogleMapComponent(props: Props) {
   const onPlaceChanged = () => {
     if (autocomplete !== null && typeof window !== "undefined") {
       const place = autocomplete.getPlace();
-      if (place.geometry && isLoaded) {
+      console.log("place", place);
+
+      if (place.geometry && isLoaded && place !== undefined) {
         setCenter({
           lat: place.geometry.location.lat(),
           lng: place.geometry.location.lng(),
         });
         props.setWhereIsIt &&
           props.setWhereIsIt({
+            query: place.formatted_address,
             lat: place.geometry.location.lat(),
             lng: place.geometry.location.lng(),
           });
@@ -82,21 +85,8 @@ export default function GoogleMapComponent(props: Props) {
             lng: place.geometry.location.lng(),
           };
         }
-        // convert lat and lng to string for the input value using google maps geocoding
-        const geocoder = new window.google.maps.Geocoder();
-        geocoder.geocode(
-          {
-            location: {
-              lat: place.geometry.location.lat(),
-              lng: place.geometry.location.lng(),
-            },
-          },
-          (results, status) => {
-            if (status === "OK" && results != null) {
-              setAddressString(results[0].formatted_address);
-            }
-          }
-        );
+
+        setAddressString(place.formatted_address);
       }
     }
   };
@@ -154,24 +144,26 @@ export default function GoogleMapComponent(props: Props) {
   }, [props.exactAddress, isLoaded, props.listings]);
 
   useEffect(() => {
-    if (props.whereIsIt) {
+    if (props.whereIsIt && isLoaded && typeof window !== "undefined") {
       setCenter(props.whereIsIt);
-      const geocoder = new window.google.maps.Geocoder();
-      geocoder.geocode(
-        {
-          location: {
-            lat: props.whereIsIt.lat,
-            lng: props.whereIsIt.lng,
-          },
-        },
-        (results, status) => {
-          if (status === "OK" && results != null) {
-            setAddressString(results[0].formatted_address);
-          }
-        }
-      );
+      setAddressString(props.whereIsIt.query);
+
+      // const geocoder = new window.google.maps.Geocoder();
+      // geocoder.geocode(
+      //   {
+      //     location: {
+      //       lat: props.whereIsIt.lat,
+      //       lng: props.whereIsIt.lng,
+      //     },
+      //   },
+      //   (results, status) => {
+      //     if (status === "OK" && results != null) {
+      //       console.log("results", results);
+      //     }
+      //   }
+      // );
     }
-  }, [props.whereIsIt]);
+  }, [props.whereIsIt, isLoaded]);
 
   if (!isLoaded) {
     return <div>Loading...</div>;
@@ -188,7 +180,8 @@ export default function GoogleMapComponent(props: Props) {
             onChange={(e) => setAddressString(e.target.value)}
             onBlur={() => {
               if (addressString === "") {
-                props.setWhereIsIt && props.setWhereIsIt({ lat: 0, lng: 0 });
+                props.setWhereIsIt &&
+                  props.setWhereIsIt({ lat: 0, lng: 0, query: "" });
               }
             }}
           />
