@@ -1,16 +1,16 @@
-'use client';
-import { supabaseClient } from '@/utils/supabaseClient';
-import Image from 'next/image';
-import Link from 'next/link';
-import React, { useState } from 'react';
-import { useForm } from 'react-hook-form';
-import generatePassword from '@/utils/generatePassword';
-import { ToastContainer, toast } from 'react-toastify';
-import 'react-toastify/dist/ReactToastify.css';
-import ReCAPTCHA from 'react-google-recaptcha';
-import { sanityClient } from '@/utils/sanityClient';
-import dynamic from 'next/dynamic';
-import GoogleMapComponent from '@/components/GoogleMapComponent';
+"use client";
+import { supabaseClient } from "@/utils/supabaseClient";
+import Image from "next/image";
+import Link from "next/link";
+import React, { useState } from "react";
+import { useForm } from "react-hook-form";
+import generatePassword from "@/utils/generatePassword";
+import { ToastContainer, toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
+import ReCAPTCHA from "react-google-recaptcha";
+import { sanityClient } from "@/utils/sanityClient";
+import dynamic from "next/dynamic";
+import GoogleMapComponent from "@/components/GoogleMapComponent";
 
 type Props = {};
 
@@ -19,7 +19,7 @@ type FormValues = {
 };
 
 const BecomeMemberDropzone = dynamic(
-  () => import('@/components/BecomeMemberDropzone'),
+  () => import("@/components/BecomeMemberDropzone"),
   {
     loading: () => <p>Loading...</p>,
   }
@@ -32,11 +32,16 @@ const Page = (props: Props) => {
   const temporaryPassword = generatePassword();
   const [imageFiles, setImageFiles] = useState<File[]>([]);
   const [captchaToken, setCaptchaToken] = useState(false);
-  const [whereIsIt, setWhereIsIt] = useState<{ lat: number; lng: number }>({
+  const [whereIsIt, setWhereIsIt] = useState<{
+    lat: number;
+    lng: number;
+    query: string;
+  }>({
+    query: "",
     lat: 0,
     lng: 0,
   });
-  console.log('whereIsIt:', whereIsIt);
+  console.log("whereIsIt:", whereIsIt);
 
   const {
     register,
@@ -46,32 +51,32 @@ const Page = (props: Props) => {
   } = useForm({
     defaultValues: {
       userInfo: {
-        name: '',
-        dob: '',
-        email: '',
-        phone: '',
-        profession: '',
-        about_me: '',
-        children: '',
-        recommended: '',
+        name: "",
+        dob: "",
+        email: "",
+        phone: "",
+        profession: "",
+        about_me: "",
+        children: "",
+        recommended: "",
         openToOtherCities: {
-          cityVisit1: '',
-          cityVisit2: '',
-          cityVisit3: '',
+          cityVisit1: "",
+          cityVisit2: "",
+          cityVisit3: "",
         },
-        openToOtherDestinations: 'false',
+        openToOtherDestinations: "false",
       },
       homeInfo: {
-        title: '',
-        property: '',
-        description: '',
-        locatedIn: '',
-        bathrooms: '',
-        area: '',
-        mainOrSecond: '',
-        address: '',
-        city: '',
-        howManySleep: '',
+        title: "",
+        property: "",
+        description: "",
+        locatedIn: "",
+        bathrooms: "",
+        area: "",
+        mainOrSecond: "",
+        address: "",
+        city: "",
+        howManySleep: "",
       },
 
       amenities: {
@@ -110,11 +115,11 @@ const Page = (props: Props) => {
 
   const onSubmit = async (data: any) => {
     if (imageFiles.length === 0) {
-      toast.error('Please upload at least one image');
+      toast.error("Please upload at least one image");
       return;
     }
     if (!captchaToken) {
-      toast.error('Please complete the captcha');
+      toast.error("Please complete the captcha");
       return;
     }
 
@@ -126,7 +131,7 @@ const Page = (props: Props) => {
         name: data.userInfo.name,
         dob: data.userInfo.dob,
         phone: data.userInfo.phone,
-        role: 'member',
+        role: "member",
       },
     });
 
@@ -137,26 +142,26 @@ const Page = (props: Props) => {
       try {
         // Upload Images
         const uploadPromises = imageFiles.map((file) => {
-          return sanityClient.assets.upload('image', file);
+          return sanityClient.assets.upload("image", file);
         });
         const imageAssets = await Promise.all(uploadPromises);
         const imageReferences = imageAssets.map((asset) => ({
-          _type: 'image',
+          _type: "image",
           _key: asset._id,
           asset: {
-            _type: 'reference',
+            _type: "reference",
             _ref: asset._id,
           },
         }));
 
         // Prepare New Listing Data
         const newListingData = {
-          _type: 'needsApproval',
+          _type: "needsApproval",
           ...data,
           userInfo: {
             ...data.userInfo,
             openToOtherDestinations:
-              data.userInfo.openToOtherDestinations === 'true',
+              data.userInfo.openToOtherDestinations === "true",
           },
           homeInfo: {
             ...data.homeInfo,
@@ -170,16 +175,16 @@ const Page = (props: Props) => {
 
         // Create the New Listing Document
         const createdListing = await sanityClient.create(newListingData);
-        console.log('New listing created:', createdListing);
+        console.log("New listing created:", createdListing);
 
         // Handle success
-        toast.success('New listing created successfully!');
+        toast.success("New listing created successfully!");
         setSignUpActive(false);
         setSubmitted(true);
         // ... update local state and UI as needed
       } catch (error) {
-        console.error('Error creating new listing:', error);
-        toast.error('Failed to create new listing.');
+        console.error("Error creating new listing:", error);
+        toast.error("Failed to create new listing.");
       }
     }
   };
@@ -187,7 +192,7 @@ const Page = (props: Props) => {
   const onError = (errors: any, e: any) => {
     const printErrorMessages = (errorObject: any) => {
       Object.entries(errorObject).forEach(([key, value]: [string, any]) => {
-        if (typeof value === 'object' && value !== null && !value.message) {
+        if (typeof value === "object" && value !== null && !value.message) {
           printErrorMessages(value);
         } else {
           console.log(value.message);
@@ -202,14 +207,14 @@ const Page = (props: Props) => {
   };
 
   const formatPhoneNumber = (phoneNumber: string) => {
-    const cleaned = phoneNumber.replace(/\D/g, '');
-    let formattedNumber = '';
+    const cleaned = phoneNumber.replace(/\D/g, "");
+    let formattedNumber = "";
 
     for (let i = 0; i < cleaned.length; i++) {
-      if (i === 0) formattedNumber += '+';
-      if (i === 1) formattedNumber += ' (';
-      if (i === 4) formattedNumber += ') ';
-      if (i === 7) formattedNumber += '-';
+      if (i === 0) formattedNumber += "+";
+      if (i === 1) formattedNumber += " (";
+      if (i === 4) formattedNumber += ") ";
+      if (i === 7) formattedNumber += "-";
 
       formattedNumber += cleaned[i];
     }
@@ -219,7 +224,7 @@ const Page = (props: Props) => {
 
   const handlePhoneInputChange = (e: React.FocusEvent<HTMLInputElement>) => {
     const formattedNumber = formatPhoneNumber(e.target.value);
-    setValue('userInfo.phone', formattedNumber);
+    setValue("userInfo.phone", formattedNumber);
   };
 
   return (
@@ -263,8 +268,8 @@ const Page = (props: Props) => {
         SWOM&apos;s selection process is rigorous and highly selective. All
         applicants must pass a screening process that verifies their
         trustworthiness, reveals their familiarity with family and friends, and
-        assesses how well they fit into the design values of the community.{' '}
-        <Link className="text-blue-500 w-fit" href={'/terms-conditions'}>
+        assesses how well they fit into the design values of the community.{" "}
+        <Link className="text-blue-500 w-fit" href={"/terms-conditions"}>
           Read our terms and conditions.
         </Link>
       </p>
@@ -285,8 +290,8 @@ const Page = (props: Props) => {
               <div className="m-auto flex-col w-full flex">
                 <label htmlFor="name">Name</label>
                 <input
-                  {...register('userInfo.name', {
-                    required: 'Please enter your name',
+                  {...register("userInfo.name", {
+                    required: "Please enter your name",
                   })}
                   className="w-full bg-transparent border-b border-[#172544] focus:outline-none"
                   type="text"
@@ -296,8 +301,8 @@ const Page = (props: Props) => {
               <div className="m-auto flex-col w-full flex">
                 <label htmlFor="email">Email</label>
                 <input
-                  {...register('userInfo.email', {
-                    required: 'Please enter your email',
+                  {...register("userInfo.email", {
+                    required: "Please enter your email",
                   })}
                   className="w-full bg-transparent border-b border-[#172544] focus:outline-none"
                   type="email"
@@ -310,12 +315,12 @@ const Page = (props: Props) => {
               <div className="m-auto flex-col w-2/3 flex">
                 <label htmlFor="phone">Phone</label>
                 <input
-                  {...register('userInfo.phone', {
-                    required: 'Please enter your phone number',
+                  {...register("userInfo.phone", {
+                    required: "Please enter your phone number",
                     pattern: {
                       value: /^\+\d{1} \(\d{3}\) \d{3}-\d{4}$/, // Update this regex based on your formatting
                       message:
-                        'Please enter a valid phone number with country code',
+                        "Please enter a valid phone number with country code",
                     },
                   })}
                   onChange={handlePhoneInputChange}
@@ -331,8 +336,8 @@ const Page = (props: Props) => {
               <div className="m-auto flex-col w-2/3 flex">
                 <label htmlFor="dob">What is your date of birth?</label>
                 <input
-                  {...register('userInfo.dob', {
-                    required: 'Please enter your date of birth',
+                  {...register("userInfo.dob", {
+                    required: "Please enter your date of birth",
                   })}
                   className="w-full bg-transparent border-b border-[#172544] focus:outline-none"
                   type="date"
@@ -344,8 +349,8 @@ const Page = (props: Props) => {
             <div className="m-auto flex-col w-2/3 flex">
               <label htmlFor="profession">What do you do for a living?</label>
               <input
-                {...register('userInfo.profession', {
-                  required: 'Please enter your profession',
+                {...register("userInfo.profession", {
+                  required: "Please enter your profession",
                 })}
                 className="w-full bg-transparent border-b border-[#172544] focus:outline-none"
                 type="input"
@@ -355,8 +360,8 @@ const Page = (props: Props) => {
             <div className="m-auto flex-col w-2/3 flex">
               <label htmlFor="about_me">Tell us more about yourself.</label>
               <input
-                {...register('userInfo.about_me', {
-                  required: 'Please tell us more about yourself.',
+                {...register("userInfo.about_me", {
+                  required: "Please tell us more about yourself.",
                 })}
                 className="w-full bg-transparent border-b border-[#172544] focus:outline-none"
                 type="input"
@@ -369,7 +374,7 @@ const Page = (props: Props) => {
               </label>
               <div className="flex gap-2">
                 <input
-                  {...register('userInfo.children')}
+                  {...register("userInfo.children")}
                   className="bg-transparent checked:bg-[#7F8119] appearance-none border border-[#172544] rounded-xl p-[6px] my-auto"
                   type="radio"
                   value="always"
@@ -377,7 +382,7 @@ const Page = (props: Props) => {
                 />
                 <label htmlFor="always">Always</label>
                 <input
-                  {...register('userInfo.children')}
+                  {...register("userInfo.children")}
                   className="bg-transparent checked:bg-[#7F8119] appearance-none border border-[#172544] rounded-xl p-[6px] my-auto"
                   type="radio"
                   value="sometimes"
@@ -385,7 +390,7 @@ const Page = (props: Props) => {
                 />
                 <label htmlFor="sometimes">Sometimes</label>
                 <input
-                  {...register('userInfo.children')}
+                  {...register("userInfo.children")}
                   className="bg-transparent checked:bg-[#7F8119] appearance-none border border-[#172544] rounded-xl p-[6px] my-auto"
                   type="radio"
                   value="never"
@@ -399,9 +404,9 @@ const Page = (props: Props) => {
                 Name of the person who invited you to SWOM?
               </label>
               <input
-                {...register('userInfo.recommended', {
+                {...register("userInfo.recommended", {
                   required:
-                    'Please enter the name of the person who invited you',
+                    "Please enter the name of the person who invited you",
                 })}
                 className="w-full bg-transparent border-b border-[#172544] focus:outline-none"
                 type="text"
@@ -420,7 +425,7 @@ const Page = (props: Props) => {
                     className="w-fit bg-transparent checked:bg-[#7F8119] appearance-none border border-[#172544] rounded-xl p-[6px] my-auto"
                     type="radio"
                     value="House"
-                    {...register('homeInfo.property')}
+                    {...register("homeInfo.property")}
                     id="house"
                   />
                   <label htmlFor="house">House</label>
@@ -430,7 +435,7 @@ const Page = (props: Props) => {
                     className="w-fit bg-transparent checked:bg-[#7F8119] appearance-none border border-[#172544] rounded-xl p-[6px] my-auto"
                     type="radio"
                     value="Apartment"
-                    {...register('homeInfo.property')}
+                    {...register("homeInfo.property")}
                     id="apartment"
                   />
                   <label htmlFor="Apartment">Apartment</label>
@@ -440,7 +445,7 @@ const Page = (props: Props) => {
                     className="w-fit bg-transparent checked:bg-[#7F8119] appearance-none border border-[#172544] rounded-xl p-[6px] my-auto"
                     type="radio"
                     value="Villa"
-                    {...register('homeInfo.property')}
+                    {...register("homeInfo.property")}
                     id="villa"
                   />
 
@@ -451,7 +456,7 @@ const Page = (props: Props) => {
                     className="w-fit bg-transparent checked:bg-[#7F8119] appearance-none border border-[#172544] rounded-xl p-[6px] my-auto"
                     type="radio"
                     value="Farm"
-                    {...register('homeInfo.property')}
+                    {...register("homeInfo.property")}
                     id="farm"
                   />
                   <label htmlFor="farm">Farm</label>
@@ -461,14 +466,14 @@ const Page = (props: Props) => {
                     className="w-fit bg-transparent checked:bg-[#7F8119] appearance-none border border-[#172544] rounded-xl p-[6px] my-auto"
                     type="radio"
                     value="Boat"
-                    {...register('homeInfo.property')}
+                    {...register("homeInfo.property")}
                     id="boat"
                   />
                   <label htmlFor="boat">Boat</label>
                 </div>
                 <div className="gap-2 flex">
                   <input
-                    {...register('homeInfo.property')}
+                    {...register("homeInfo.property")}
                     className="w-fit bg-transparent checked:bg-[#7F8119] appearance-none border border-[#172544] rounded-xl p-[6px] my-auto"
                     type="radio"
                     value="RV"
@@ -481,7 +486,7 @@ const Page = (props: Props) => {
                     className="w-fit bg-transparent checked:bg-[#7F8119] appearance-none border border-[#172544] rounded-xl p-[6px] my-auto"
                     type="radio"
                     value="Other"
-                    {...register('homeInfo.property')}
+                    {...register("homeInfo.property")}
                     id="otherProperty"
                   />
                   <label htmlFor="otherProperty">Other</label>
@@ -516,7 +521,7 @@ const Page = (props: Props) => {
                       type="radio"
                       id="condominium"
                       value="a condominium"
-                      {...register('homeInfo.locatedIn', {})}
+                      {...register("homeInfo.locatedIn", {})}
                     />
                     <label htmlFor="condominium">a condominium</label>
                   </div>
@@ -526,7 +531,7 @@ const Page = (props: Props) => {
                       type="radio"
                       id="gated"
                       value="a gated community"
-                      {...register('homeInfo.locatedIn')}
+                      {...register("homeInfo.locatedIn")}
                     />
                     <label htmlFor="gated">a gated community</label>
                   </div>
@@ -536,7 +541,7 @@ const Page = (props: Props) => {
                       type="radio"
                       id="itRestsFreely"
                       value="it rests freely"
-                      {...register('homeInfo.locatedIn')}
+                      {...register("homeInfo.locatedIn")}
                     />
                     <label htmlFor="itRestsFreely">it rests freely</label>
                   </div>
@@ -546,7 +551,7 @@ const Page = (props: Props) => {
                       type="radio"
                       id="other"
                       value="other"
-                      {...register('homeInfo.locatedIn')}
+                      {...register("homeInfo.locatedIn")}
                     />
                     <label htmlFor="other">other</label>
                   </div>
@@ -556,8 +561,8 @@ const Page = (props: Props) => {
                 <label htmlFor="">How many people does it sleep?</label>
                 <select
                   className="bg-transparent focus:outline-none  rounded-xl border w-fit px-2 border-[#172544]"
-                  {...register('homeInfo.howManySleep', {
-                    required: 'Please select how many people it sleeps',
+                  {...register("homeInfo.howManySleep", {
+                    required: "Please select how many people it sleeps",
                   })}
                   id="">
                   <option value="1">1</option>
@@ -573,8 +578,8 @@ const Page = (props: Props) => {
                 <label htmlFor="">How many bathrooms?</label>
                 <select
                   className="bg-transparent focus:outline-none  rounded-xl border w-fit px-2 border-[#172544]"
-                  {...register('homeInfo.bathrooms', {
-                    required: 'Please select how many bathrooms',
+                  {...register("homeInfo.bathrooms", {
+                    required: "Please select how many bathrooms",
                   })}
                   id="">
                   <option value="1">1</option>
@@ -589,9 +594,9 @@ const Page = (props: Props) => {
                 </label>
                 <select
                   className="bg-transparent focus:outline-none  rounded-xl border w-fit px-2 border-[#172544]"
-                  {...register('homeInfo.mainOrSecond', {
+                  {...register("homeInfo.mainOrSecond", {
                     required:
-                      'Please select if this is your main or second home',
+                      "Please select if this is your main or second home",
                   })}
                   id="">
                   <option value="main">Main</option>
@@ -602,8 +607,8 @@ const Page = (props: Props) => {
                 <label htmlFor="">Size in square meters.</label>
                 <select
                   className="bg-transparent focus:outline-none  rounded-xl border w-fit px-2 border-[#172544]"
-                  {...register('homeInfo.area', {
-                    required: 'Please select the size of your home',
+                  {...register("homeInfo.area", {
+                    required: "Please select the size of your home",
                   })}
                   id="">
                   <option value="60-100">60 - 100 m2</option>
@@ -629,8 +634,8 @@ const Page = (props: Props) => {
               <div>
                 <label htmlFor="">Give your property a title.</label>
                 <input
-                  {...register('homeInfo.title', {
-                    required: 'Please give your listing a title.',
+                  {...register("homeInfo.title", {
+                    required: "Please give your listing a title.",
                   })}
                   className="w-full mb-4 bg-transparent border-b border-[#172544] focus:outline-none"
                   type="text"
@@ -639,8 +644,8 @@ const Page = (props: Props) => {
                 <label htmlFor="">Write a description of the property.</label>
                 <textarea
                   id="description"
-                  {...register('homeInfo.description', {
-                    required: 'Please enter a description of your property',
+                  {...register("homeInfo.description", {
+                    required: "Please enter a description of your property",
                   })}
                   className="w-full bg-transparent border-b border-[#172544] focus:outline-none"
                 />
@@ -648,15 +653,15 @@ const Page = (props: Props) => {
                 <div className="flex gap-8">
                   <input
                     className="w-1/3 bg-transparent border-b border-[#172544] focus:outline-none"
-                    {...register('userInfo.openToOtherCities.cityVisit1')}
+                    {...register("userInfo.openToOtherCities.cityVisit1")}
                   />
                   <input
                     className="w-1/3 bg-transparent border-b border-[#172544] focus:outline-none"
-                    {...register('userInfo.openToOtherCities.cityVisit2')}
+                    {...register("userInfo.openToOtherCities.cityVisit2")}
                   />
                   <input
                     className="w-1/3 bg-transparent border-b border-[#172544] focus:outline-none"
-                    {...register('userInfo.openToOtherCities.cityVisit3')}
+                    {...register("userInfo.openToOtherCities.cityVisit3")}
                   />
                 </div>
                 <div className="flex gap-4 mt-4">
@@ -666,9 +671,9 @@ const Page = (props: Props) => {
                       className="bg-transparent checked:bg-[#7F8119] appearance-none border border-[#172544] rounded-xl p-[6px] my-auto"
                       type="radio"
                       value="true"
-                      {...register('userInfo.openToOtherDestinations', {
+                      {...register("userInfo.openToOtherDestinations", {
                         required:
-                          'Please select if you are open to other destinations',
+                          "Please select if you are open to other destinations",
                       })}
                       id="true"
                     />
@@ -677,9 +682,9 @@ const Page = (props: Props) => {
                       className="bg-transparent checked:bg-[#7F8119] appearance-none border border-[#172544] rounded-xl p-[6px] my-auto"
                       type="radio"
                       value="false"
-                      {...register('userInfo.openToOtherDestinations', {
+                      {...register("userInfo.openToOtherDestinations", {
                         required:
-                          'Please select if you are open to other destinations',
+                          "Please select if you are open to other destinations",
                       })}
                       id="false"
                     />
@@ -697,7 +702,7 @@ const Page = (props: Props) => {
                   <input
                     className="bg-transparent checked:bg-[#7F8119] appearance-none border border-[#172544] rounded-xl p-[6px] my-auto"
                     type="checkbox"
-                    {...register('amenities.bike')}
+                    {...register("amenities.bike")}
                     id="bike"
                   />
                   <label className="" htmlFor="bike">
@@ -708,7 +713,7 @@ const Page = (props: Props) => {
                   <input
                     className="bg-transparent checked:bg-[#7F8119] appearance-none border border-[#172544] rounded-xl p-[6px] my-auto"
                     type="checkbox"
-                    {...register('amenities.car')}
+                    {...register("amenities.car")}
                     id="car"
                   />
                   <label className="" htmlFor="car">
@@ -720,7 +725,7 @@ const Page = (props: Props) => {
                   <input
                     className="bg-transparent checked:bg-[#7F8119] appearance-none border border-[#172544] rounded-xl p-[6px] my-auto"
                     type="checkbox"
-                    {...register('amenities.tv')}
+                    {...register("amenities.tv")}
                     id="tv"
                   />
                   <label className="" htmlFor="tv">
@@ -732,7 +737,7 @@ const Page = (props: Props) => {
                   <input
                     className="bg-transparent checked:bg-[#7F8119] appearance-none border border-[#172544] rounded-xl p-[6px] my-auto"
                     type="checkbox"
-                    {...register('amenities.dishwasher')}
+                    {...register("amenities.dishwasher")}
                     id="dishwasher"
                   />
                   <label className="" htmlFor="dishwasher">
@@ -744,7 +749,7 @@ const Page = (props: Props) => {
                   <input
                     className="bg-transparent checked:bg-[#7F8119] appearance-none border border-[#172544] rounded-xl p-[6px] my-auto"
                     type="checkbox"
-                    {...register('amenities.pingpong')}
+                    {...register("amenities.pingpong")}
                     id="pingpong"
                   />
                   <label className="" htmlFor="pingpong">
@@ -756,7 +761,7 @@ const Page = (props: Props) => {
                   <input
                     className="bg-transparent checked:bg-[#7F8119] appearance-none border border-[#172544] rounded-xl p-[6px] my-auto"
                     type="checkbox"
-                    {...register('amenities.billiards')}
+                    {...register("amenities.billiards")}
                     id="billiards"
                   />
                   <label className="" htmlFor="billiards">
@@ -770,7 +775,7 @@ const Page = (props: Props) => {
                   <input
                     className="bg-transparent checked:bg-[#7F8119] appearance-none border border-[#172544] rounded-xl p-[6px] my-auto"
                     type="checkbox"
-                    {...register('amenities.washer')}
+                    {...register("amenities.washer")}
                     id="washer"
                   />
                   <label className="" htmlFor="washer">
@@ -781,7 +786,7 @@ const Page = (props: Props) => {
                   <input
                     className="bg-transparent checked:bg-[#7F8119] appearance-none border border-[#172544] rounded-xl p-[6px] my-auto"
                     type="checkbox"
-                    {...register('amenities.dryer')}
+                    {...register("amenities.dryer")}
                     id="dryer"
                   />
                   <label className="" htmlFor="dryer">
@@ -793,7 +798,7 @@ const Page = (props: Props) => {
                   <input
                     className="bg-transparent checked:bg-[#7F8119] appearance-none border border-[#172544] rounded-xl p-[6px] my-auto"
                     type="checkbox"
-                    {...register('amenities.wifi')}
+                    {...register("amenities.wifi")}
                     id="wifi"
                   />
                   <label className="" htmlFor="wifi">
@@ -805,7 +810,7 @@ const Page = (props: Props) => {
                   <input
                     className="bg-transparent checked:bg-[#7F8119] appearance-none border border-[#172544] rounded-xl p-[6px] my-auto"
                     type="checkbox"
-                    {...register('amenities.elevator')}
+                    {...register("amenities.elevator")}
                     id="elevator"
                   />
                   <label className="" htmlFor="elevator">
@@ -817,7 +822,7 @@ const Page = (props: Props) => {
                   <input
                     className="bg-transparent checked:bg-[#7F8119] appearance-none border border-[#172544] rounded-xl p-[6px] my-auto"
                     type="checkbox"
-                    {...register('amenities.terrace')}
+                    {...register("amenities.terrace")}
                     id="terrace"
                   />
                   <label className="" htmlFor="terrace">
@@ -829,7 +834,7 @@ const Page = (props: Props) => {
                   <input
                     className="bg-transparent checked:bg-[#7F8119] appearance-none border border-[#172544] rounded-xl p-[6px] my-auto"
                     type="checkbox"
-                    {...register('amenities.scooter')}
+                    {...register("amenities.scooter")}
                     id="scooter"
                   />
                   <label className="" htmlFor="scooter">
@@ -843,7 +848,7 @@ const Page = (props: Props) => {
                   <input
                     className="bg-transparent checked:bg-[#7F8119] appearance-none border border-[#172544] rounded-xl p-[6px] my-auto"
                     type="checkbox"
-                    {...register('amenities.bbq')}
+                    {...register("amenities.bbq")}
                     id="bbq"
                   />
                   <label className="" htmlFor="bbq">
@@ -854,7 +859,7 @@ const Page = (props: Props) => {
                   <input
                     className="bg-transparent checked:bg-[#7F8119] appearance-none border border-[#172544] rounded-xl p-[6px] my-auto"
                     type="checkbox"
-                    {...register('amenities.computer')}
+                    {...register("amenities.computer")}
                     id="computer"
                   />
                   <label className="" htmlFor="computer">
@@ -865,7 +870,7 @@ const Page = (props: Props) => {
                 <div className="flex gap-2">
                   <input
                     className="bg-transparent checked:bg-[#7F8119] appearance-none border border-[#172544] rounded-xl p-[6px] my-auto"
-                    {...register('amenities.wcAccess')}
+                    {...register("amenities.wcAccess")}
                     type="checkbox"
                     id="wc"
                   />
@@ -878,7 +883,7 @@ const Page = (props: Props) => {
                   <input
                     className="bg-transparent checked:bg-[#7F8119] appearance-none border border-[#172544] rounded-xl p-[6px] my-auto"
                     type="checkbox"
-                    {...register('amenities.pool')}
+                    {...register("amenities.pool")}
                     id="pool"
                   />
                   <label className="" htmlFor="pool">
@@ -890,7 +895,7 @@ const Page = (props: Props) => {
                   <input
                     className="bg-transparent checked:bg-[#7F8119] appearance-none border border-[#172544] rounded-xl p-[6px] my-auto"
                     type="checkbox"
-                    {...register('amenities.playground')}
+                    {...register("amenities.playground")}
                     id="playground"
                   />
                   <label className="" htmlFor="playground">
@@ -902,7 +907,7 @@ const Page = (props: Props) => {
                   <input
                     className="bg-transparent checked:bg-[#7F8119] appearance-none border border-[#172544] rounded-xl p-[6px] my-auto"
                     type="checkbox"
-                    {...register('amenities.babyGear')}
+                    {...register("amenities.babyGear")}
                     id="babyGear"
                   />
                   <label className="" htmlFor="babyGear">
@@ -916,7 +921,7 @@ const Page = (props: Props) => {
                   <input
                     className="bg-transparent checked:bg-[#7F8119] appearance-none border border-[#172544] rounded-xl p-[6px] my-auto"
                     type="checkbox"
-                    {...register('amenities.ac')}
+                    {...register("amenities.ac")}
                     id="ac"
                   />
                   <label className="" htmlFor="ac">
@@ -927,7 +932,7 @@ const Page = (props: Props) => {
                   <input
                     className="bg-transparent checked:bg-[#7F8119] appearance-none border border-[#172544] rounded-xl p-[6px] my-auto"
                     type="checkbox"
-                    {...register('amenities.fireplace')}
+                    {...register("amenities.fireplace")}
                     id="fireplace"
                   />
                   <label className="" htmlFor="fireplace">
@@ -939,7 +944,7 @@ const Page = (props: Props) => {
                   <input
                     className="bg-transparent checked:bg-[#7F8119] appearance-none border border-[#172544] rounded-xl p-[6px] my-auto"
                     type="checkbox"
-                    {...register('amenities.parking')}
+                    {...register("amenities.parking")}
                     id="parking"
                   />
                   <label className="" htmlFor="parking">
@@ -951,7 +956,7 @@ const Page = (props: Props) => {
                   <input
                     className="bg-transparent checked:bg-[#7F8119] appearance-none border border-[#172544] rounded-xl p-[6px] my-auto"
                     type="checkbox"
-                    {...register('amenities.hotTub')}
+                    {...register("amenities.hotTub")}
                     id="hotTub"
                   />
                   <label className="" htmlFor="hotTub">
@@ -963,7 +968,7 @@ const Page = (props: Props) => {
                   <input
                     className="bg-transparent checked:bg-[#7F8119] appearance-none border border-[#172544] rounded-xl p-[6px] my-auto"
                     type="checkbox"
-                    {...register('amenities.sauna')}
+                    {...register("amenities.sauna")}
                     id="sauna"
                   />
                   <label className="" htmlFor="sauna">
@@ -975,7 +980,7 @@ const Page = (props: Props) => {
                   <input
                     className="bg-transparent checked:bg-[#7F8119] appearance-none border border-[#172544] rounded-xl p-[6px] my-auto"
                     type="checkbox"
-                    {...register('amenities.other')}
+                    {...register("amenities.other")}
                     id="other"
                   />
                   <label className="" htmlFor="other">
@@ -989,7 +994,7 @@ const Page = (props: Props) => {
                   <input
                     className="bg-transparent checked:bg-[#7F8119] appearance-none border border-[#172544] rounded-xl p-[6px] my-auto"
                     type="checkbox"
-                    {...register('amenities.doorman')}
+                    {...register("amenities.doorman")}
                     id="doorman"
                   />
                   <label className="" htmlFor="doorman">
@@ -1000,7 +1005,7 @@ const Page = (props: Props) => {
                   <input
                     className="bg-transparent checked:bg-[#7F8119] appearance-none border border-[#172544] rounded-xl p-[6px] my-auto"
                     type="checkbox"
-                    {...register('amenities.cleaningService')}
+                    {...register("amenities.cleaningService")}
                     id="cleaningService"
                   />
                   <label className="" htmlFor="cleaningService">
@@ -1012,7 +1017,7 @@ const Page = (props: Props) => {
                   <input
                     className="bg-transparent checked:bg-[#7F8119] appearance-none border border-[#172544] rounded-xl p-[6px] my-auto"
                     type="checkbox"
-                    {...register('amenities.videoGames')}
+                    {...register("amenities.videoGames")}
                     id="videoGames"
                   />
                   <label className="" htmlFor="videoGames">
@@ -1024,7 +1029,7 @@ const Page = (props: Props) => {
                   <input
                     className="bg-transparent checked:bg-[#7F8119] appearance-none border border-[#172544] rounded-xl p-[6px] my-auto"
                     type="checkbox"
-                    {...register('amenities.tennisCourt')}
+                    {...register("amenities.tennisCourt")}
                     id="tennisCourt"
                   />
                   <label className="" htmlFor="tennisCourt">
@@ -1036,7 +1041,7 @@ const Page = (props: Props) => {
                   <input
                     className="bg-transparent checked:bg-[#7F8119] appearance-none border border-[#172544] rounded-xl p-[6px] my-auto"
                     type="checkbox"
-                    {...register('amenities.gym')}
+                    {...register("amenities.gym")}
                     id="gym"
                   />
                   <label className="" htmlFor="gym">
@@ -1048,7 +1053,7 @@ const Page = (props: Props) => {
             <div className="flex w-fit m-auto">
               <ReCAPTCHA
                 sitekey={
-                  process.env.NEXT_PUBLIC_GOOGLE_RECAPTCHA_SITE_KEY || ''
+                  process.env.NEXT_PUBLIC_GOOGLE_RECAPTCHA_SITE_KEY || ""
                 }
                 onChange={() => setCaptchaToken(true)}
               />
@@ -1061,7 +1066,7 @@ const Page = (props: Props) => {
             </button>
           </form>
         </div>
-      )}{' '}
+      )}{" "}
       {submitted && (
         // thank you for your submission, someone will be in touch with you shortly
         <div className="flex flex-col my-8 justify-center items-center">
