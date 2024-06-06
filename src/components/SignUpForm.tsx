@@ -344,7 +344,7 @@ const SignUpForm = (props: Props) => {
           ? "Sign-Up"
           : authSessionMissing
           ? "Resend Auth Email"
-          : "Subscribe"}
+          : "Change Password"}
       </button>
 
       <button
