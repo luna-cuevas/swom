@@ -24,6 +24,7 @@ const Page = (props: Props) => {
   const [cities, setCities] = useState<any>([]);
   const [mapsActive, setMapsActive] = useState(true);
   const [listings, setListings] = useState<any>([]);
+  const [contactedUser, setContactedUser] = useState(null);
 
   const builder = ImageUrlBuilder(sanityClient);
 
@@ -46,7 +47,6 @@ const Page = (props: Props) => {
     }
   };
 
-  const [contactedUser, setContactedUser] = useState(null);
 
   useEffect(() => {
     const fetchCities = async () => {
@@ -217,11 +217,21 @@ const Page = (props: Props) => {
                     ? `${listings[0]?.userInfo?.age} years old`
                     : ''}
                 </p>
-                <Link
-                  href={`/messages?contactedUser=${contactedUser}&userId=${state?.user?.id}`}
-                  className="bg-[#E78426] w-fit hover:bg-[#e78326d8] text-[#fff] mx-auto  my-2 px-3 py-1 rounded-xl">
-                  Contact me
-                </Link>
+
+                {/* Make sure user cant send themselves message from their own listing*/}
+                {contactedUser === state?.user?.id ? (
+                  <Link
+                    href="/profile"
+                    className="bg-[#E78426] w-fit hover:bg-[#e78326d8] text-[#fff] mx-auto my-2 px-3 py-1 rounded-xl">
+                    Profile
+                  </Link>
+                ) : (
+                  <Link
+                    href={`/messages?contactedUser=${contactedUser}&userId=${state?.user?.id}`}
+                    className="bg-[#E78426] w-fit hover:bg-[#e78326d8] text-[#fff] mx-auto my-2 px-3 py-1 rounded-xl">
+                    Contact me
+                  </Link>
+                )}
               </div>
 
               <div className="my-2 break-all">
