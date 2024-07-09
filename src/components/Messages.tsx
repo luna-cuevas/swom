@@ -11,9 +11,35 @@ import { urlForImage } from "../../sanity/lib/image";
 
 type Props = {};
 
+type Member = {
+  id: string;
+  name: string;
+  email: string;
+  profileImage: string;
+  listingId: string;
+};
+
+type Conversation = {
+  created_at: string;
+  conversation_id: string;
+  members: {
+      [key: string]: Member;
+  };
+};
+
+function getPartnerUserId(conversation: Conversation, providedUserId: string): string | null {
+  for (const memberId in conversation.members) {
+      if (conversation.members[memberId].id !== providedUserId) {
+          return conversation.members[memberId].id;
+      }
+  }
+  return null;
+}
+
 const Messages = (props: Props) => {
   const queryParams = useSearchParams();
   const contactedUserID = queryParams.get("contactedUser");
+  const [partner, setPartner] = useState<string | null>("");
   const [mobileNavMenu, setMobileNavMenu] = useState<boolean>(false);
   const [conversations, setConversations] = useState<any[]>([]);
   const [messages, setMessages] = useState<any[]>([]);
@@ -46,12 +72,11 @@ const Messages = (props: Props) => {
         state.loggedInUser !== null
       ) {
         const convoExist = await checkIfConversationExists();
-
+        console.log("Convo Exit", convoExist)
         if (convoExist !== false) {
           if (convoExist) {
             console.log("fetching convo exist");
             fetchAllConversations();
-
             setSelectedConversation(
               convoExist[0].conversation_id as unknown as number
             );
@@ -81,11 +106,17 @@ const Messages = (props: Props) => {
     // const convoExists = fetchMessagesForSelectedConversation();
     if (!selectedConversation && conversations.length > 0) {
       setSelectedConversation(conversations[0].conversation_id);
+      if(selectedConversation){
+        setPartnerId(selectedConversation);
+      }
     }
   }, [conversations]);
 
   useEffect(() => {
     fetchMessagesForSelectedConversation();
+    if(selectedConversation){
+      setPartnerId(selectedConversation);
+    }
   }, [selectedConversation, sendingMessage]);
 
   const scrollToBottom = () => {
@@ -96,6 +127,25 @@ const Messages = (props: Props) => {
     if (inboxRef.current && conversations.length > 7) {
       inboxRef.current.scrollTop = inboxRef.current.scrollHeight;
     }
+  };
+  
+  //sets the ID of the person user is communicating with. 
+  const setPartnerId = async (conversationId: string) => {
+    const response = await fetch('/api/messages/getConvo', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ id: conversationId }),
+    });
+  
+    if (!response.ok) {
+      throw new Error(`Error fetching conversation data: ${response.statusText}`);
+    }
+  
+    const data = await response.json();
+    setPartner(getPartnerUserId(data[0], state.user.id));
+    return data;
   };
 
   const fetchContactedUserInfo = async () => {
@@ -178,7 +228,6 @@ const Messages = (props: Props) => {
 
       if (allConvosDataJson.length === 0 || !allConvosDataJson) {
         console.log("allConvosDataJson", allConvosDataJson);
-
         setConversations([]);
         setIsCheckingConversation(false);
       } else {
@@ -201,7 +250,7 @@ const Messages = (props: Props) => {
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ id: selectedConversation }),
+        body: JSON.stringify({ id: selectedConversation, user: state.user.id }),
       });
       const messagesDataJson = await messagesData.json();
       console.log("messagesDataJson", messagesDataJson);
@@ -316,6 +365,7 @@ const Messages = (props: Props) => {
 
   const sendMessage = async () => {
     console.log("sending message", selectedConversation, newMessage);
+    await setPartnerId(selectedConversation);
     if (selectedConversation !== null && newMessage.trim() !== "") {
       setSendingMessage(true);
       // Perform the upsert with the updated messages
@@ -329,8 +379,13 @@ const Messages = (props: Props) => {
           selectedConversation: selectedConversation,
           sender_id: state.user.id,
           content: newMessage,
+          contacted_user: partner
         }),
       });
+
+      if (!sendMessageData.ok) {
+        throw new Error(`HTTP error! status: ${sendMessageData.status}`);
+      }
       const sendMessageDataJson = await sendMessageData.json();
 
       if (!sendMessageDataJson) {

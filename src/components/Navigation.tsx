@@ -13,7 +13,27 @@ import { useAtom } from 'jotai';
 
 type Props = {};
 
+
+const getUnreadMessagesCount = async (userId: string) => {
+  const response = await fetch('/api/getUnread', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ id: userId }),
+  });
+
+  if (!response.ok) {
+    throw new Error(`Error fetching unread messages count: ${response.statusText}`);
+  }
+
+  const data = await response.json();
+  console.log("the data you requested", data);
+  return data.unreadCount;
+};
+
 const Navigation = (props: Props) => {
+  const [unreadCount, setUnreadCount] = useState(0);
   const supabase = supabaseClient();
   const router = useRouter();
   const navigation = usePathname();
@@ -22,9 +42,32 @@ const Navigation = (props: Props) => {
   const { user } = state;
 
   const [isClient, setIsClient] = useState(false);
+  
+  // useEffect(() => {
+  //   const fetchUnreadCount = async () => {
+  //     try {
+  //       const count = await getUnreadMessagesCount(user.id);
+  //       setUnreadCount(count);
+  //     } catch (err) {
+  //       console.error(err);
+  //     }
+  //   };
+
+  //   fetchUnreadCount();
+  // }, [user]);
 
   useEffect(() => {
     // Component has mounted, set isClient to true
+    const fetchUnreadCount = async () => {
+      try {
+        const count = await getUnreadMessagesCount(user.id);
+        setUnreadCount(count);
+      } catch (err) {
+        console.error(err);
+      }
+    };
+
+    fetchUnreadCount();
     setIsClient(true);
   }, []);
 
@@ -92,6 +135,9 @@ const Navigation = (props: Props) => {
           <>
             <Link className="m-auto text-sm" href="/messages">
               MESSAGES
+              {unreadCount > 0 && <span className=" ml-1 flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-white text-xs">
+                {unreadCount}
+              </span>}
             </Link>
             <Link className="m-auto text-sm" href="/profile">
               PROFILE
@@ -218,6 +264,9 @@ const Navigation = (props: Props) => {
           <>
             <Link className="m-auto" href="/messages">
               MESSAGES
+              {unreadCount > 0 && <span className=" ml-1 flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-white text-xs">
+                {unreadCount}
+              </span>}
             </Link>
             <Link className="m-auto" href="/profile">
               PROFILE
