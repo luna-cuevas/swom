@@ -98,6 +98,7 @@ const Navigation = (props: Props) => {
         activeNavButtons: false,
         isSubscribed: false,
         allListings: [],
+        unreadCount: 0,
         session: null,
       });
       router.push('/home');

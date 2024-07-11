@@ -77,6 +77,7 @@ const Messages = (props: Props) => {
           if (convoExist) {
             console.log("fetching convo exist");
             fetchAllConversations();
+            console.log("convo exist here", convoExist);
             setSelectedConversation(
               convoExist[0].conversation_id as unknown as number
             );
