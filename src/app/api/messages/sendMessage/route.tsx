@@ -11,8 +11,6 @@ export async function POST(req: Request, res: Response) {
     .eq('conversation_id', body.selectedConversation);
 
   if (existingError) {
-    console.log(22222222)
-
     return NextResponse.json({ res, error: existingError });
   }
 
@@ -55,7 +53,6 @@ export async function POST(req: Request, res: Response) {
       .select('*');
 
     if (readReceiptError) {
-      console.log(11111111111111,readReceiptError )
       return NextResponse.json({ res, error: readReceiptError });
     }
 
