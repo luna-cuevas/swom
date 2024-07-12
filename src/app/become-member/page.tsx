@@ -210,21 +210,25 @@ const Page = (props: Props) => {
     const cleaned = phoneNumber.replace(/\D/g, "");
     let formattedNumber = "";
 
+    // Determine the length of the country code (1 or 2 digits)
+    const countryCodeLength = cleaned.length === 11 ? 1 : 2;
+
     for (let i = 0; i < cleaned.length; i++) {
       if (i === 0) formattedNumber += "+";
-      if (i === 1) formattedNumber += " (";
-      if (i === 4) formattedNumber += ") ";
-      if (i === 7) formattedNumber += "-";
+      // Adjust the positions for " (" and ") " based on country code length
+      if (i === countryCodeLength) formattedNumber += " (";
+      if (i === countryCodeLength + 3) formattedNumber += ") ";
+      if (i === countryCodeLength + 6) formattedNumber += "-";
 
       formattedNumber += cleaned[i];
     }
 
-    return formattedNumber.substring(0, 17);
+    return formattedNumber.substring(0, countryCodeLength === 1 ? 16 : 17);
   };
 
   const handlePhoneInputChange = (e: React.FocusEvent<HTMLInputElement>) => {
-    const formattedNumber = formatPhoneNumber(e.target.value);
-    setValue("userInfo.phone", formattedNumber);
+    // const formattedNumber = formatPhoneNumber(e.target.value);
+    setValue("userInfo.phone", e.target.value);
   };
 
   return (
@@ -317,11 +321,6 @@ const Page = (props: Props) => {
                 <input
                   {...register("userInfo.phone", {
                     required: "Please enter your phone number",
-                    pattern: {
-                      value: /^\+\d{1} \(\d{3}\) \d{3}-\d{4}$/, // Update this regex based on your formatting
-                      message:
-                        "Please enter a valid phone number with country code",
-                    },
                   })}
                   onChange={handlePhoneInputChange}
                   className="w-full bg-transparent border-b border-[#172544] focus:outline-none"
@@ -357,17 +356,7 @@ const Page = (props: Props) => {
                 id="profession"
               />
             </div>
-            <div className="m-auto flex-col w-2/3 flex">
-              <label htmlFor="about_me">Tell us more about yourself.</label>
-              <input
-                {...register("userInfo.about_me", {
-                  required: "Please tell us more about yourself.",
-                })}
-                className="w-full bg-transparent border-b border-[#172544] focus:outline-none"
-                type="input"
-                id="about_me"
-              />
-            </div>
+
             <div className="m-auto flex-col w-2/3 flex">
               <label htmlFor="children">
                 Do you travel with small children?
@@ -400,18 +389,29 @@ const Page = (props: Props) => {
               </div>
             </div>
             <div className="m-auto flex-col w-2/3 flex">
-              <label htmlFor="recommended">
-                Name of the person who invited you to SWOM?
-              </label>
-              <input
-                {...register("userInfo.recommended", {
-                  required:
-                    "Please enter the name of the person who invited you",
-                })}
-                className="w-full bg-transparent border-b border-[#172544] focus:outline-none"
-                type="text"
-                id="recommended"
-              />
+              <label htmlFor="recommended">Referred by?</label>
+              <div className="flex gap-8 my-2">
+                <div className="flex gap-2">
+                  <input
+                    {...register("userInfo.recommended")}
+                    className="w-fit bg-transparent border-b border-[#172544] focus:outline-none"
+                    type="checkbox"
+                    id="wikimujeres"
+                    value="Wikimujeres"
+                  />
+                  <label htmlFor="wikimujeres">Wikimujeres</label>
+                </div>
+
+                <div className="flex gap-2">
+                  <label>Other:</label>
+                  <input
+                    {...register("userInfo.recommended")}
+                    className="w-2/3 bg-transparent border-b border-[#172544] focus:outline-none"
+                    type="text"
+                    id="recommended"
+                  />
+                </div>
+              </div>
             </div>
 
             <div className="m-auto gap-4 flex-col w-2/3 flex ">
@@ -495,7 +495,7 @@ const Page = (props: Props) => {
               <div className="flex md:flex-row flex-col gap-4 md:gap-12 w-full mx-auto">
                 <div className="m-auto flex-col w-full flex">
                   <label htmlFor="address">
-                    What is the exact address of the property?
+                    What is the city and country where the property is located?
                   </label>
                   <GoogleMapComponent
                     hideMap={true}
@@ -637,7 +637,8 @@ const Page = (props: Props) => {
                   {...register("homeInfo.title", {
                     required: "Please give your listing a title.",
                   })}
-                  className="w-full mb-4 bg-transparent border-b border-[#172544] focus:outline-none"
+                  placeholder="Name of the house, street, or anything distinctive."
+                  className="w-full placeholder:text-gray-500 mb-4 bg-transparent border-b border-[#172544] focus:outline-none"
                   type="text"
                   id="title"
                 />
@@ -649,7 +650,9 @@ const Page = (props: Props) => {
                   })}
                   className="w-full bg-transparent border-b border-[#172544] focus:outline-none"
                 />
-                <label htmlFor="">Three cities you would visit?</label>
+                <label htmlFor="">
+                  Three cities or countries you would visit?
+                </label>
                 <div className="flex gap-8">
                   <input
                     className="w-1/3 bg-transparent border-b border-[#172544] focus:outline-none"
