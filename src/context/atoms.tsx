@@ -30,7 +30,7 @@ const getUnreadMessagesCount = async (userId: string) => {
   }
 
   const data = await response.json();
-  console.log("the data you requested", data);
+  // console.log("the data you requested", data);
   return data.unreadCount;
 };
 

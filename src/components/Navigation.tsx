@@ -26,26 +26,11 @@ const Navigation = (props: Props) => {
   const [isClient, setIsClient] = useState(false);
   
   useEffect(() => {
-    // Component has mounted, set isClient to true
-    const fetchUnreadCount = async () => {
-      try {
-        const count = await getUnreadMessageCount(user.id);
-        setState({
-          ...state,
-          unreadCount: count,
-        });      
-      } catch (err) {
-        console.error(err);
-      }
-    };
-
-    fetchUnreadCount();
     setIsClient(true);
   }, [state.user.id]);
 
   useEffect(() => {
     let subscription: RealtimeChannel;
-  
     const subscribeToChannel = async () => {
       try {
         subscription = supabase
@@ -53,30 +38,7 @@ const Navigation = (props: Props) => {
           .on(
             'postgres_changes',
             {
-              event: 'INSERT',
-              schema: 'public',
-              table: 'read_receipts',
-              filter: `user_id=eq.${user.id}`
-            },
-            (payload) => {
-              const fetchUnreadCount = async () => {
-                try {
-                  const count = await getUnreadMessageCount(user.id);
-                  setState((prevState) => ({
-                    ...prevState,
-                    unreadCount: count,
-                  }));
-                } catch (err) {
-                  console.error(err);
-                }
-              };
-              fetchUnreadCount();
-            }
-          )
-          .on(
-            'postgres_changes',
-            {
-              event: 'DELETE',
+              event: '*',
               schema: 'public',
               table: 'read_receipts',
               filter: `user_id=eq.${user.id}`
@@ -101,13 +63,13 @@ const Navigation = (props: Props) => {
         if (!subscription) {
           throw new Error("Failed to subscribe to channel");
         }
+          console.log("Subscribed to channel:", subscription);
       } catch (error) {
         console.error("Error subscribing to channel:", error);
       }
     };
   
     subscribeToChannel();
-  
     return () => {
       try {
         if (subscription) {
