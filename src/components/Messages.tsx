@@ -73,12 +73,12 @@ const Messages = (props: Props) => {
         state.loggedInUser !== null
       ) {
         const convoExist = await checkIfConversationExists();
-        console.log("Convo Exit", convoExist)
+        // console.log("Convo Exit", convoExist)
         if (convoExist !== false) {
           if (convoExist) {
-            console.log("fetching convo exist");
+            // console.log("fetching convo exist");
             fetchAllConversations();
-            console.log("convo exist here", convoExist);
+            // console.log("convo exist here", convoExist);
             setSelectedConversation(
               convoExist[0].conversation_id as unknown as number
             );
@@ -175,7 +175,7 @@ const Messages = (props: Props) => {
     });
 
     const data = await listings.json();
-    console.log("contacted user info", data);
+    // console.log("contacted user info", data);
 
     const profilePic = await sanityClient.fetch(
       `*[_type == "listing" && userInfo.email == $email]`,
@@ -220,7 +220,7 @@ const Messages = (props: Props) => {
         }
       );
 
-      console.log("profileImages", profileImages);
+      // console.log("profileImages", profileImages);
 
       // now match the profileImages to the members in the convo
       // then set the profileImage for each member in the convo to the profileImage from the sanity backend
@@ -231,7 +231,7 @@ const Messages = (props: Props) => {
             const profile = profileImages.find(
               (profile: any) => profile.userInfo.email === member.email
             );
-            console.log("profile", profile);
+            // console.log("profile", profile);
             if (profile && profile.userInfo.profileImage) {
               // Update the convo object directly with the found profile image URL
               member.profileImage = urlForImage(profile.userInfo.profileImage);
@@ -244,11 +244,11 @@ const Messages = (props: Props) => {
       // console.log('allConvosDataJson2', allConvosDataJson);
 
       if (allConvosDataJson.length === 0 || !allConvosDataJson) {
-        console.log("allConvosDataJson", allConvosDataJson);
+        // console.log("allConvosDataJson", allConvosDataJson);
         setConversations([]);
         setIsCheckingConversation(false);
       } else {
-        console.log("allConvosDataJson", allConvosDataJson);
+        // console.log("allConvosDataJson", allConvosDataJson);
         setConversations(allConvosDataJson);
         if (!contactedUserID) {
           setSelectedConversation(allConvosDataJson[0].conversation_id);
@@ -270,7 +270,7 @@ const Messages = (props: Props) => {
         body: JSON.stringify({ id: selectedConversation, user: state.user.id }),
       });
       const messagesDataJson = await messagesData.json();
-      console.log("messagesDataJson", messagesDataJson);
+      // console.log("messagesDataJson", messagesDataJson);
 
       if (!messagesDataJson) {
         console.error("Error fetching messages:", messagesDataJson);
@@ -321,7 +321,7 @@ const Messages = (props: Props) => {
         setIsCheckingConversation(false);
         return console.error("Error creating new conversation:", convoDataJson);
       } else {
-        console.log("new convo data", convoDataJson);
+        // console.log("new convo data", convoDataJson);
 
         fetchAllConversations();
         setSelectedConversation(
@@ -345,7 +345,7 @@ const Messages = (props: Props) => {
 
       const checkConvoExistData = await checkConvoData.json();
 
-      console.log("checkConvoExistData", checkConvoExistData);
+      // console.log("checkConvoExistData", checkConvoExistData);
 
       if (
         checkConvoExistData.length === 0 ||
@@ -388,7 +388,7 @@ const Messages = (props: Props) => {
   }, [selectedConversation]);
 
   const sendMessage = async () => {
-    console.log("sending message", selectedConversation, newMessage);
+    // console.log("sending message", selectedConversation, newMessage);
     await setPartnerId(selectedConversation);
     if (selectedConversation !== null && newMessage.trim() !== "") {
       setSendingMessage(true);
