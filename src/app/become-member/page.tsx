@@ -47,6 +47,7 @@ const Page = (props: Props) => {
     register,
     handleSubmit,
     setValue,
+    watch,
     formState: { errors },
   } = useForm({
     defaultValues: {
@@ -393,11 +394,16 @@ const Page = (props: Props) => {
               <div className="flex gap-8 my-2">
                 <div className="flex gap-2">
                   <input
-                    {...register("userInfo.recommended")}
                     className="w-fit bg-transparent border-b border-[#172544] focus:outline-none"
                     type="checkbox"
                     id="wikimujeres"
-                    value="Wikimujeres"
+                    onChange={(e) => {
+                      if (e.target.checked === true) {
+                        setValue("userInfo.recommended", "wikimujeres");
+                      } else {
+                        setValue("userInfo.recommended", "");
+                      }
+                    }}
                   />
                   <label htmlFor="wikimujeres">Wikimujeres</label>
                 </div>
@@ -405,6 +411,7 @@ const Page = (props: Props) => {
                 <div className="flex gap-2">
                   <label>Other:</label>
                   <input
+                    disabled={watch("userInfo.recommended") === "wikimujeres"}
                     {...register("userInfo.recommended")}
                     className="w-2/3 bg-transparent border-b border-[#172544] focus:outline-none"
                     type="text"
