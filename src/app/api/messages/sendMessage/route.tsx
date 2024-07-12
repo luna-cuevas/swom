@@ -11,6 +11,8 @@ export async function POST(req: Request, res: Response) {
     .eq('conversation_id', body.selectedConversation);
 
   if (existingError) {
+    console.log(22222222)
+
     return NextResponse.json({ res, error: existingError });
   }
 
@@ -29,7 +31,7 @@ export async function POST(req: Request, res: Response) {
       timestamp: new Date(),
     },
   ];
-
+  console.log("sending this message", body.contacted_user, body.selectedConversation)
   const { data, error } = await supabase
     .from('messages')
     .upsert([
@@ -40,7 +42,25 @@ export async function POST(req: Request, res: Response) {
     ])
     .eq('conversation_id', body.selectedConversation)
     .select('*');
+    
+    // Insert into read_receipts table
+    const { data: readReceiptData, error: readReceiptError } = await supabase
+      .from('read_receipts')
+      .insert([
+        {
+          conversation_id: body.conversation_id,
+          user_id: body.contacted_user,
+        },
+      ])
+      .select('*');
 
+    if (readReceiptError) {
+      console.log(11111111111111,readReceiptError )
+      return NextResponse.json({ res, error: readReceiptError });
+    }
+
+    console.log('server - messages data', data);
+    console.log('server - read receipts data', readReceiptData);
   if (data) {
     console.log('server - messages data', data);
     return NextResponse.json(data);

@@ -53,6 +53,7 @@
     "sanity": "^3.25.0",
     "sass": "^1.69.3",
     "sharp": "^0.33.3",
+    "stream-chat": "^8.37.0",
     "stripe": "^13.6.0",
     "styled-components": "^6.1.8",
     "swr": "^2.2.4",
