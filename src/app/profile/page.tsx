@@ -1,15 +1,15 @@
-'use client';
-import ProfilePicDropZone from '@/components/ProfilePicDropZone';
-import { supabaseClient } from '@/utils/supabaseClient';
-import Image from 'next/image';
-import React, { ChangeEvent, use, useEffect, useState } from 'react';
-import { useForm } from 'react-hook-form';
-import { ToastContainer, toast } from 'react-toastify';
-import 'react-toastify/dist/ReactToastify.css';
-import { sanityClient } from '@/utils/sanityClient';
-import ImageUrlBuilder from '@sanity/image-url';
-import { useAtom } from 'jotai';
-import { globalStateAtom } from '@/context/atoms';
+"use client";
+import ProfilePicDropZone from "@/components/ProfilePicDropZone";
+import { supabaseClient } from "@/utils/supabaseClient";
+import Image from "next/image";
+import React, { ChangeEvent, use, useEffect, useState } from "react";
+import { useForm } from "react-hook-form";
+import { ToastContainer, toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
+import { sanityClient } from "@/utils/sanityClient";
+import ImageUrlBuilder from "@sanity/image-url";
+import { useAtom } from "jotai";
+import { globalStateAtom } from "@/context/atoms";
 
 type Props = {};
 
@@ -17,8 +17,8 @@ const Page = (props: Props) => {
   const [state, setState] = useAtom(globalStateAtom);
   const [profileImage, setProfileImage] = useState<File[]>([]);
   const [isPasswordChanged, setIsPasswordChanged] = useState(false);
-  const [newPassword, setNewPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
   const [imageUpload, setImageUpload] = useState(false);
   const supabase = supabaseClient();
   const [isLoading, setIsLoading] = useState(false);
@@ -40,12 +40,12 @@ const Page = (props: Props) => {
     formState: { errors },
   } = useForm({
     defaultValues: {
-      firstName: '',
-      lastName: '',
-      emailAddress: '',
+      firstName: "",
+      lastName: "",
+      emailAddress: "",
       // userName: '',
-      newPassword: '',
-      confirmPassword: '',
+      newPassword: "",
+      confirmPassword: "",
     },
   });
 
@@ -60,10 +60,10 @@ const Page = (props: Props) => {
 
   const comparePasswords = () => {
     if (newPassword === confirmPassword) {
-      console.log('passwords match');
+      console.log("passwords match");
       return true;
     } else {
-      toast.error('Passwords do not match');
+      toast.error("Passwords do not match");
       return false;
     }
   };
@@ -72,7 +72,7 @@ const Page = (props: Props) => {
     setIsLoading(true);
 
     const passwordResults = comparePasswords();
-    if (passwordResults && newPassword !== '') {
+    if (passwordResults && newPassword !== "") {
       setIsPasswordChanged(false);
       const { data, error } = await supabase.auth.updateUser({
         password: newPassword,
@@ -82,7 +82,7 @@ const Page = (props: Props) => {
         setIsLoading(false);
         return;
       } else {
-        toast.success('Password updated');
+        toast.success("Password updated");
       }
     }
 
@@ -91,19 +91,19 @@ const Page = (props: Props) => {
       const params = { email: state.loggedInUser.email };
       const document = await sanityClient.fetch(query, params);
       const documentId = document._id;
-      console.log('documentId', documentId);
+      console.log("documentId", documentId);
 
       if (profileImage.length > 0) {
         const profileImageAsset = await sanityClient.assets.upload(
-          'image',
+          "image",
           profileImage[0]
         );
-        console.log('profileImageAsset', profileImageAsset);
+        console.log("profileImageAsset", profileImageAsset);
         data.profileImage = {
-          _type: 'image',
+          _type: "image",
           _key: profileImageAsset._id,
           asset: {
-            _type: 'reference',
+            _type: "reference",
             _ref: profileImageAsset._id,
           },
         };
@@ -111,7 +111,7 @@ const Page = (props: Props) => {
         data.profileImage = listingData.userInfo.profileImage;
       }
 
-      console.log('data.profileImage', data.profileImage);
+      console.log("data.profileImage", data.profileImage);
 
       // Prepare the updated listing data with image references
       const updatedListingData = {
@@ -124,19 +124,19 @@ const Page = (props: Props) => {
       };
 
       const { data: supabaseData, error } = await supabase
-        .from('appUsers')
+        .from("appUsers")
         .update({
           name: `${data.firstName} ${data.lastName}`,
           profileImage: data.profileImage,
         })
-        .eq('email', state.loggedInUser.email);
+        .eq("email", state.loggedInUser.email);
 
       if (error) {
-        console.error('Error updating user:', error);
-        toast.error('Failed to update user.');
+        console.error("Error updating user:", error);
+        toast.error("Failed to update user.");
       }
 
-      console.log('updatedListingData', updatedListingData);
+      console.log("updatedListingData", updatedListingData);
 
       // Update the listing in Sanity
       await sanityClient
@@ -145,11 +145,11 @@ const Page = (props: Props) => {
         .commit();
 
       // Handle success
-      toast.success('Listing updated successfully!');
+      toast.success("Listing updated successfully!");
       setIsLoading(false);
     } catch (error) {
-      console.error('Error uploading images or updating listing:', error);
-      toast.error('Failed to update listing.');
+      console.error("Error uploading images or updating listing:", error);
+      toast.error("Failed to update listing.");
       setIsLoading(false);
     }
   };
@@ -160,27 +160,29 @@ const Page = (props: Props) => {
 
     // search supabase for the user
     const { data, error } = await supabase
-      .from('appUsers')
-      .select('id, email, name, profileImage')
-      .eq('email', state.loggedInUser.email);
+      .from("appUsers")
+      .select("id, email, name, profileImage")
+      .eq("email", state.loggedInUser.email);
 
     if (error) {
-      console.error('Error fetching listing data:', error);
+      console.error("Error fetching listing data:", error);
       return;
     }
 
     const listingData = data[0];
-    listingData.profileImage = JSON.parse(listingData.profileImage);
+    if (listingData.profileImage) {
+      listingData.profileImage = JSON.parse(listingData.profileImage);
+    }
 
-    console.log('listingData', listingData);
+    console.log("listingData", listingData);
     setListingData(listingData);
   };
 
   useEffect(() => {
     if (listingData) {
-      setValue('firstName', listingData.name.split(' ')[0]);
-      setValue('lastName', listingData.name.split(' ')[1]);
-      setValue('emailAddress', listingData.email);
+      setValue("firstName", listingData.name.split(" ")[0]);
+      setValue("lastName", listingData.name.split(" ")[1]);
+      setValue("emailAddress", listingData.email);
       // setProfileImage(listingData.profileImage || []);
     }
   }, [listingData]);
@@ -220,7 +222,7 @@ const Page = (props: Props) => {
                       ? URL.createObjectURL(profileImage[0])
                       : (listingData?.profileImage &&
                           urlFor(listingData.profileImage).url()) ||
-                        '/placeholder.png'
+                        "/placeholder.png"
                   }
                   alt="hero"
                   fill
@@ -240,7 +242,7 @@ const Page = (props: Props) => {
                 setImageUpload(!imageUpload);
               }}
               className="bg-[#172544] py-2 px-4 mx-auto w-fit text-white rounded-3xl">
-              {imageUpload ? 'Close' : 'Update Profile Picture'}
+              {imageUpload ? "Close" : "Update Profile Picture"}
             </button>
           </div>
 
@@ -257,7 +259,7 @@ const Page = (props: Props) => {
                   First Name
                 </label>
                 <input
-                  {...register('firstName')}
+                  {...register("firstName")}
                   className="w-full focus-visible:outline-none bg-transparent border-b-[1px] border-[#172544]"
                   type="text"
                 />
@@ -269,7 +271,7 @@ const Page = (props: Props) => {
                   Last Name
                 </label>
                 <input
-                  {...register('lastName')}
+                  {...register("lastName")}
                   className="w-full focus-visible:outline-none bg-transparent border-b-[1px] border-[#172544]"
                   type="text"
                 />
@@ -284,7 +286,7 @@ const Page = (props: Props) => {
               </label>
               <input
                 disabled={true}
-                {...register('emailAddress')}
+                {...register("emailAddress")}
                 className=" border-b-[1px] focus-visible:outline-none bg-[#bebebe6e] border-[#172544]"
                 type="email"
               />
