@@ -8,6 +8,7 @@ import { useSearchParams } from "next/navigation";
 import React, { useEffect, useRef, useState } from "react";
 import { sanityClient } from "../../sanity/lib/client";
 import { urlForImage } from "../../sanity/lib/image";
+import getUnreadMessageCount from '../utils/getUnreadMessageCount'
 
 type Props = {};
 
@@ -118,6 +119,21 @@ const Messages = (props: Props) => {
     if(selectedConversation){
       setPartnerId(selectedConversation);
     }
+
+    const fetchUnreadCount = async () => {
+      try {
+        const count = await getUnreadMessageCount(state.user.id);
+        setState({
+          ...state,
+          unreadCount: count,
+        });      
+      } catch (err) {
+        console.error(err);
+      }
+    };
+
+    fetchUnreadCount();
+
   }, [selectedConversation, sendingMessage]);
 
   const scrollToBottom = () => {
@@ -345,8 +361,10 @@ const Messages = (props: Props) => {
   };
 
   useEffect(() => {
+  
     console.log("subscribing to messages");
-    supabase
+  
+    const subscription = supabase
       .channel(`${selectedConversation}`)
       .on(
         "postgres_changes",
@@ -354,14 +372,19 @@ const Messages = (props: Props) => {
           event: "*",
           schema: "public",
           table: "messages",
+          filter: `conversation_id=eq.${selectedConversation}`
         },
         (payload) => {
-          setMessages((payload.new as { [key: string]: any }).messagesObj);
+            setMessages((payload.new as { [key: string]: any }).messagesObj);
         }
       )
       .subscribe((status) => {
         console.log({ status });
       });
+  
+    return () => {
+      supabase.removeChannel(subscription);
+    };
   }, [selectedConversation]);
 
   const sendMessage = async () => {

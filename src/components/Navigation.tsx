@@ -10,30 +10,12 @@ import 'react-toastify/dist/ReactToastify.css';
 import { usePathname, useRouter } from 'next/navigation';
 import { globalStateAtom } from '@/context/atoms';
 import { useAtom } from 'jotai';
+import getUnreadMessageCount from '../utils/getUnreadMessageCount'
+import { RealtimeChannel } from '@supabase/supabase-js';
 
 type Props = {};
 
-
-const getUnreadMessagesCount = async (userId: string) => {
-  const response = await fetch('/api/getUnread', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({ id: userId }),
-  });
-
-  if (!response.ok) {
-    throw new Error(`Error fetching unread messages count: ${response.statusText}`);
-  }
-
-  const data = await response.json();
-  console.log("the data you requested", data);
-  return data.unreadCount;
-};
-
 const Navigation = (props: Props) => {
-  const [unreadCount, setUnreadCount] = useState(0);
   const supabase = supabaseClient();
   const router = useRouter();
   const navigation = usePathname();
@@ -43,25 +25,15 @@ const Navigation = (props: Props) => {
 
   const [isClient, setIsClient] = useState(false);
   
-  // useEffect(() => {
-  //   const fetchUnreadCount = async () => {
-  //     try {
-  //       const count = await getUnreadMessagesCount(user.id);
-  //       setUnreadCount(count);
-  //     } catch (err) {
-  //       console.error(err);
-  //     }
-  //   };
-
-  //   fetchUnreadCount();
-  // }, [user]);
-
   useEffect(() => {
     // Component has mounted, set isClient to true
     const fetchUnreadCount = async () => {
       try {
-        const count = await getUnreadMessagesCount(user.id);
-        setUnreadCount(count);
+        const count = await getUnreadMessageCount(user.id);
+        setState({
+          ...state,
+          unreadCount: count,
+        });      
       } catch (err) {
         console.error(err);
       }
@@ -69,7 +41,83 @@ const Navigation = (props: Props) => {
 
     fetchUnreadCount();
     setIsClient(true);
-  }, []);
+  }, [state.user.id]);
+
+  useEffect(() => {
+    let subscription: RealtimeChannel;
+  
+    const subscribeToChannel = async () => {
+      try {
+        subscription = supabase
+          .channel(`read-receipts-channel-${user.id}`)
+          .on(
+            'postgres_changes',
+            {
+              event: 'INSERT',
+              schema: 'public',
+              table: 'read_receipts',
+              filter: `user_id=eq.${user.id}`
+            },
+            (payload) => {
+              const fetchUnreadCount = async () => {
+                try {
+                  const count = await getUnreadMessageCount(user.id);
+                  setState((prevState) => ({
+                    ...prevState,
+                    unreadCount: count,
+                  }));
+                } catch (err) {
+                  console.error(err);
+                }
+              };
+              fetchUnreadCount();
+            }
+          )
+          .on(
+            'postgres_changes',
+            {
+              event: 'DELETE',
+              schema: 'public',
+              table: 'read_receipts',
+              filter: `user_id=eq.${user.id}`
+            },
+            (payload) => {
+              const fetchUnreadCount = async () => {
+                try {
+                  const count = await getUnreadMessageCount(user.id);
+                  setState((prevState) => ({
+                    ...prevState,
+                    unreadCount: count,
+                  }));
+                } catch (err) {
+                  console.error(err);
+                }
+              };
+              fetchUnreadCount();
+            }
+          )
+          .subscribe();
+  
+        if (!subscription) {
+          throw new Error("Failed to subscribe to channel");
+        }
+      } catch (error) {
+        console.error("Error subscribing to channel:", error);
+      }
+    };
+  
+    subscribeToChannel();
+  
+    return () => {
+      try {
+        if (subscription) {
+          supabase.removeChannel(subscription);
+        }
+      } catch (error) {
+        console.error("Error removing subscription:", error);
+      }
+    };
+  }, [user.id]);
 
   useEffect(() => {
     if (
@@ -136,8 +184,8 @@ const Navigation = (props: Props) => {
           <>
             <Link className="m-auto text-sm" href="/messages">
               MESSAGES
-              {unreadCount > 0 && <span className=" ml-1 flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-white text-xs">
-                {unreadCount}
+              {state.unreadCount > 0 && <span className=" ml-1 flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-white text-xs">
+                {state.unreadCount}
               </span>}
             </Link>
             <Link className="m-auto text-sm" href="/profile">
@@ -265,8 +313,8 @@ const Navigation = (props: Props) => {
           <>
             <Link className="m-auto" href="/messages">
               MESSAGES
-              {unreadCount > 0 && <span className=" ml-1 flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-white text-xs">
-                {unreadCount}
+              {state.unreadCount > 0 && <span className=" ml-1 flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-white text-xs">
+                {state.unreadCount}
               </span>}
             </Link>
             <Link className="m-auto" href="/profile">
