@@ -234,9 +234,6 @@ const Messages = (props: Props) => {
       } else {
         // console.log("allConvosDataJson", allConvosDataJson);
         setConversations(allConvosDataJson);
-        console.log(state.unreadConversations.includes({"conversation_id" : selectedConversation}));
-
-        console.log(state.unreadConversations, conversations);
         if (!contactedUserID) {
           setSelectedConversation(allConvosDataJson[0].conversation_id);
         }
