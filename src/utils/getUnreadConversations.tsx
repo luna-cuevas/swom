@@ -1,4 +1,4 @@
-const getUnreadMessageCount = async (userId: string) => {
+const getUnreadConversations = async (userId: string) => {
     const response = await fetch('/api/getUnread', {
       method: 'POST',
       headers: {
@@ -12,8 +12,9 @@ const getUnreadMessageCount = async (userId: string) => {
     }
   
     const data = await response.json();
+    
     // console.log("the data you requested", data);
-    return data.unreadCount;
+    return data.conversations;
   };
 
-  export default getUnreadMessageCount;
+  export default getUnreadConversations;

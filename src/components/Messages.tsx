@@ -49,10 +49,10 @@ const Messages = (props: Props) => {
   const inboxRef = useRef<HTMLDivElement>(null);
   const [sendingMessage, setSendingMessage] = useState<boolean>(false);
   const [isCheckingConversation, setIsCheckingConversation] =
-    useState<boolean>(true);
+  useState<boolean>(true);
   const supabase = supabaseClient();
   const [selectedConversation, setSelectedConversation] = useState<any>(null);
-
+  
   let selectedConvo = conversations?.find(
     (convo) => convo.conversation_id === selectedConversation
   );
@@ -181,7 +181,6 @@ const Messages = (props: Props) => {
       });
 
       const allConvosDataJson = await allConvosData.json();
-
       // i want to pull all the profileImages from the sanity backend that matches the email address for each of the members in the convo
       // then i want to set the profileImage for each member in the convo to the profileImage from the sanity backend
       const profileImages = await sanityClient.fetch(
@@ -227,6 +226,7 @@ const Messages = (props: Props) => {
 
       // console.log('allConvosDataJson2', allConvosDataJson);
 
+
       if (allConvosDataJson.length === 0 || !allConvosDataJson) {
         // console.log("allConvosDataJson", allConvosDataJson);
         setConversations([]);
@@ -234,6 +234,9 @@ const Messages = (props: Props) => {
       } else {
         // console.log("allConvosDataJson", allConvosDataJson);
         setConversations(allConvosDataJson);
+        console.log(state.unreadConversations.includes({"conversation_id" : selectedConversation}));
+
+        console.log(state.unreadConversations, conversations);
         if (!contactedUserID) {
           setSelectedConversation(allConvosDataJson[0].conversation_id);
         }
@@ -478,7 +481,8 @@ const Messages = (props: Props) => {
                   selectedConversation === convo.conversation_id
                     ? "bg-gray-300"
                     : ""
-                }`}
+                }
+                  `}
                 onClick={() => setSelectedConversation(convo.conversation_id)}>
                 <div className="relative w-[28px] mx-auto xl:mx-0  justify-center align-middle flex my-auto h-[28px]">
                   <Image
@@ -503,6 +507,11 @@ const Messages = (props: Props) => {
                       .name
                   }
                 </h1>
+                {
+                  state.unreadConversations.some((unread: { conversation_id: any; }) => unread.conversation_id === convo.conversation_id)
+                  ? <span className="flex-end h-5 w-5 items-center justify-center rounded-full bg-red-500"></span>
+                  : null
+                }
               </li>
             ))}
           </ul>

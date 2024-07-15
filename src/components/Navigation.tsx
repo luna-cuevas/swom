@@ -12,6 +12,7 @@ import { globalStateAtom } from '@/context/atoms';
 import { useAtom } from 'jotai';
 import getUnreadMessageCount from '../utils/getUnreadMessageCount'
 import { RealtimeChannel } from '@supabase/supabase-js';
+import getUnreadConversations from '@/utils/getUnreadConversations';
 
 type Props = {};
 
@@ -47,9 +48,11 @@ const Navigation = (props: Props) => {
               const fetchUnreadCount = async () => {
                 try {
                   const count = await getUnreadMessageCount(user.id);
+                  const unreadConverstaions = await getUnreadConversations(state.user.id);
                   setState((prevState) => ({
                     ...prevState,
                     unreadCount: count,
+                    unreadConversations: unreadConverstaions
                   }));
                 } catch (err) {
                   console.error(err);
