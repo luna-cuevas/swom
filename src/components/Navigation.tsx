@@ -39,7 +39,33 @@ const Navigation = (props: Props) => {
           .on(
             'postgres_changes',
             {
-              event: '*',
+              event: 'INSERT',
+              schema: 'public',
+              table: 'read_receipts',
+              filter: `user_id=eq.${user.id}`
+            },
+            (payload) => {
+              const fetchUnreadCount = async () => {
+                try {
+                  await new Promise((resolve) => setTimeout(resolve, 100)); // delaying updating ui on insertion so users dont see a notification flicker
+                  const count = await getUnreadMessageCount(user.id);
+                  const unreadConverstaions = await getUnreadConversations(state.user.id);
+                  setState((prevState) => ({
+                    ...prevState,
+                    unreadCount: count,
+                    unreadConversations: unreadConverstaions
+                  }));
+                } catch (err) {
+                  console.error(err);
+                }
+              };
+              fetchUnreadCount();
+            }
+          )
+          .on(
+            'postgres_changes',
+            {
+              event: 'DELETE',
               schema: 'public',
               table: 'read_receipts',
               filter: `user_id=eq.${user.id}`

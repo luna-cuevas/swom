@@ -60,7 +60,35 @@ const Messages = (props: Props) => {
 
   useEffect(() => {
     scrollToBottom();
+    const fetchData = async () => {
+      //fetching here to clear message from read_receipts
+      const messagesData = await fetch("/api/messages/fetchMessages", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ id: selectedConversation, user: state.user.id }),
+      });
+      };
+
+    fetchData();
   }, [messages]);
+
+
+  useEffect(() => {
+    const fetchData = async () => {
+      //fetching here to clear message from read_receipts
+      const messagesData = await fetch("/api/messages/fetchMessages", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ id: selectedConversation, user: state.user.id }),
+      });
+      };
+
+    fetchData();
+  }, [selectedConversation, messages]);
 
   useEffect(() => {
     let isMounted = true; // Flag to handle async operation
