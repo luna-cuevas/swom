@@ -8,7 +8,7 @@ export async function POST(req: Request) {
 
   const { data, error } = await supabase
     .from('read_receipts')
-    .select('user_id')
+    .select('conversation_id')
     .eq('user_id', user)
 
   if (error) {
@@ -17,6 +17,7 @@ export async function POST(req: Request) {
   }
 
   const unreadCount = data.length;
+  const conversations = data;
 
-  return NextResponse.json({ unreadCount }, { status: 200 });
+  return NextResponse.json({ conversations, unreadCount }, { status: 200 });
 }

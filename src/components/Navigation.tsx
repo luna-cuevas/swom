@@ -12,6 +12,7 @@ import { globalStateAtom } from '@/context/atoms';
 import { useAtom } from 'jotai';
 import getUnreadMessageCount from '../utils/getUnreadMessageCount'
 import { RealtimeChannel } from '@supabase/supabase-js';
+import getUnreadConversations from '@/utils/getUnreadConversations';
 
 type Props = {};
 
@@ -26,26 +27,11 @@ const Navigation = (props: Props) => {
   const [isClient, setIsClient] = useState(false);
   
   useEffect(() => {
-    // Component has mounted, set isClient to true
-    const fetchUnreadCount = async () => {
-      try {
-        const count = await getUnreadMessageCount(user.id);
-        setState({
-          ...state,
-          unreadCount: count,
-        });      
-      } catch (err) {
-        console.error(err);
-      }
-    };
-
-    fetchUnreadCount();
     setIsClient(true);
   }, [state.user.id]);
 
   useEffect(() => {
     let subscription: RealtimeChannel;
-  
     const subscribeToChannel = async () => {
       try {
         subscription = supabase
@@ -61,10 +47,13 @@ const Navigation = (props: Props) => {
             (payload) => {
               const fetchUnreadCount = async () => {
                 try {
+                  await new Promise((resolve) => setTimeout(resolve, 100)); // delaying updating ui on insertion so users dont see a notification flicker
                   const count = await getUnreadMessageCount(user.id);
+                  const unreadConverstaions = await getUnreadConversations(state.user.id);
                   setState((prevState) => ({
                     ...prevState,
                     unreadCount: count,
+                    unreadConversations: unreadConverstaions
                   }));
                 } catch (err) {
                   console.error(err);
@@ -85,9 +74,11 @@ const Navigation = (props: Props) => {
               const fetchUnreadCount = async () => {
                 try {
                   const count = await getUnreadMessageCount(user.id);
+                  const unreadConverstaions = await getUnreadConversations(state.user.id);
                   setState((prevState) => ({
                     ...prevState,
                     unreadCount: count,
+                    unreadConversations: unreadConverstaions
                   }));
                 } catch (err) {
                   console.error(err);
@@ -101,13 +92,13 @@ const Navigation = (props: Props) => {
         if (!subscription) {
           throw new Error("Failed to subscribe to channel");
         }
+          console.log("Subscribed to channel:", subscription);
       } catch (error) {
         console.error("Error subscribing to channel:", error);
       }
     };
   
     subscribeToChannel();
-  
     return () => {
       try {
         if (subscription) {

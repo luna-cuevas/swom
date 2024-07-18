@@ -10,28 +10,11 @@ type State = {
   loggedInUser: null | string;
   activeNavButtons: boolean;
   unreadCount: number;
+  unreadConversations: any[];
   allListings: {
     listings: any[];
     lastFetched: number;
   };
-};
-
-const getUnreadMessagesCount = async (userId: string) => {
-  const response = await fetch('/api/getUnread', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({ id: userId }),
-  });
-
-  if (!response.ok) {
-    throw new Error(`Error fetching unread messages count: ${response.statusText}`);
-  }
-
-  const data = await response.json();
-  console.log("the data you requested", data);
-  return data.unreadCount;
 };
 
 // A helper function to work with localStorage and JSON serialization for the entire application state
@@ -75,6 +58,7 @@ const initialState: State = {
   loggedInUser: null,
   activeNavButtons: false,
   unreadCount: 0,
+  unreadConversations: [],
   allListings: {
     listings: [],
     lastFetched: 0,

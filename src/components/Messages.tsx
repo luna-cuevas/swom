@@ -8,7 +8,6 @@ import { useSearchParams } from "next/navigation";
 import React, { useEffect, useRef, useState } from "react";
 import { sanityClient } from "../../sanity/lib/client";
 import { urlForImage } from "../../sanity/lib/image";
-import getUnreadMessageCount from '../utils/getUnreadMessageCount'
 
 type Props = {};
 
@@ -50,10 +49,10 @@ const Messages = (props: Props) => {
   const inboxRef = useRef<HTMLDivElement>(null);
   const [sendingMessage, setSendingMessage] = useState<boolean>(false);
   const [isCheckingConversation, setIsCheckingConversation] =
-    useState<boolean>(true);
+  useState<boolean>(true);
   const supabase = supabaseClient();
   const [selectedConversation, setSelectedConversation] = useState<any>(null);
-
+  
   let selectedConvo = conversations?.find(
     (convo) => convo.conversation_id === selectedConversation
   );
@@ -61,7 +60,35 @@ const Messages = (props: Props) => {
 
   useEffect(() => {
     scrollToBottom();
+    const fetchData = async () => {
+      //fetching here to clear message from read_receipts
+      const messagesData = await fetch("/api/messages/fetchMessages", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ id: selectedConversation, user: state.user.id }),
+      });
+      };
+
+    fetchData();
   }, [messages]);
+
+
+  useEffect(() => {
+    const fetchData = async () => {
+      //fetching here to clear message from read_receipts
+      const messagesData = await fetch("/api/messages/fetchMessages", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ id: selectedConversation, user: state.user.id }),
+      });
+      };
+
+    fetchData();
+  }, [selectedConversation, messages]);
 
   useEffect(() => {
     let isMounted = true; // Flag to handle async operation
@@ -119,21 +146,6 @@ const Messages = (props: Props) => {
     if(selectedConversation){
       setPartnerId(selectedConversation);
     }
-
-    const fetchUnreadCount = async () => {
-      try {
-        const count = await getUnreadMessageCount(state.user.id);
-        setState({
-          ...state,
-          unreadCount: count,
-        });      
-      } catch (err) {
-        console.error(err);
-      }
-    };
-
-    fetchUnreadCount();
-
   }, [selectedConversation, sendingMessage]);
 
   const scrollToBottom = () => {
@@ -197,7 +209,6 @@ const Messages = (props: Props) => {
       });
 
       const allConvosDataJson = await allConvosData.json();
-
       // i want to pull all the profileImages from the sanity backend that matches the email address for each of the members in the convo
       // then i want to set the profileImage for each member in the convo to the profileImage from the sanity backend
       const profileImages = await sanityClient.fetch(
@@ -242,6 +253,7 @@ const Messages = (props: Props) => {
       });
 
       // console.log('allConvosDataJson2', allConvosDataJson);
+
 
       if (allConvosDataJson.length === 0 || !allConvosDataJson) {
         // console.log("allConvosDataJson", allConvosDataJson);
@@ -494,7 +506,8 @@ const Messages = (props: Props) => {
                   selectedConversation === convo.conversation_id
                     ? "bg-gray-300"
                     : ""
-                }`}
+                }
+                  `}
                 onClick={() => setSelectedConversation(convo.conversation_id)}>
                 <div className="relative w-[28px] mx-auto xl:mx-0  justify-center align-middle flex my-auto h-[28px]">
                   <Image
@@ -519,6 +532,11 @@ const Messages = (props: Props) => {
                       .name
                   }
                 </h1>
+                {
+                  state.unreadConversations.some((unread: { conversation_id: any; }) => unread.conversation_id === convo.conversation_id)
+                  ? <span className="flex-end h-5 w-5 items-center justify-center rounded-full bg-red-500"></span>
+                  : null
+                }
               </li>
             ))}
           </ul>
