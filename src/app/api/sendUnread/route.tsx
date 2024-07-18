@@ -17,12 +17,12 @@ const transporter: Transporter = nodemailer.createTransport({
 });
 
 // Function to send email using Nodemailer
-const sendEmail = async (to: string, subject: string, text: string): Promise<void> => {
+const sendEmail = async (to: string, subject: string, html: string): Promise<void> => {
   const mailOptions = {
     from: process.env.EMAIL_USER,
     to: to,
     subject,
-    text,
+    html,
   };
 
   return new Promise((resolve, reject) => {
@@ -39,7 +39,7 @@ const sendEmail = async (to: string, subject: string, text: string): Promise<voi
 };
 
 export async function GET(req: NextRequest): Promise<NextResponse> {
-    if (req.method !== 'GET') {
+  if (req.method !== 'GET') {
     return NextResponse.json({ error: 'Method not allowed' }, { status: 405 });
   }
 
@@ -70,20 +70,25 @@ export async function GET(req: NextRequest): Promise<NextResponse> {
         continue;
       }
 
+      const htmlContent = `
+        <h1>You have unread messages on SWOM</h1>
+        <p>Please check your inbox to read them.</p>
+      `;
+
       await sendEmail(
         userData.email,
         'You have unread messages',
-        'You have unread messages. Please check your inbox.'
+        htmlContent
       );
     }
 
     return NextResponse.json({ message: 'Emails sent successfully' });
-    } catch (error: unknown) {
+  } catch (error: unknown) {
     console.error('Unhandled error in main handler:', error);
     if (error instanceof Error) {
-        return NextResponse.json({ error: error.message }, { status: 500 });
+      return NextResponse.json({ error: error.message }, { status: 500 });
     } else {
-        return NextResponse.json({ error: "An unknown error has occured." }, { status: 500 });
+      return NextResponse.json({ error: "An unknown error has occured." }, { status: 500 });
     }
   }
 }
