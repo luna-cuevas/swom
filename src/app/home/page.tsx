@@ -1,7 +1,7 @@
 import Carousel from "@/components/Carousel";
 import Image from "next/image";
 import Link from "next/link";
-import React from "react";
+import React, { Suspense } from "react";
 import { sanityClient } from "../../../sanity/lib/client";
 import { urlForImage } from "../../../sanity/lib/image";
 
@@ -48,39 +48,21 @@ const Page = async (props: Props) => {
   const highlightedListings = await fetchListings();
 
   return (
-    <main
-      style={{
-        background: "#F7F1EE",
-      }}>
+    <main>
       <div className="">
-        <div className="md:h-[calc(92vh-69px)] h-[80vh] bg-black relative w-screen">
+        <div className="md:h-[calc(92vh-69px)] h-[80vh] bg-black relative w-screen flex">
           <div className="absolute w-fit z-50 h-fit top-0 bottom-0 left-0 right-0 m-auto ">
             <h1 className="text-[#ffffff] font-bold uppercase text-4xl tracking-widest text-center">
               Make Memories <br /> All over the <br /> world
             </h1>
           </div>
           <Carousel
-            images={
-              highlightedListings?.map((listing: any) => {
-                return {
-                  src: listing.homeInfo.firstImage,
-                  highlightTag: listing.highlightTag,
-                  slug: listing.slug.current,
-                  listingNum: listing._id,
-                };
-              })
-              // [
-              //   { src: '/homepage/hero-image-1.png', listingNum: '5201' },
-              //   { src: '/homepage/hero-image-2.png', listingNum: '103' },
-              //   { src: '/homepage/hero-image-3.png', listingNum: '5702' },
-              //   { src: '/homepage/hero-image-4.png', listingNum: '102' },
-              //   { src: '/homepage/hero-image-5.png', listingNum: '3401' },
-              //   { src: '/homepage/hero-image-6.png', listingNum: '5704' },
-              //   { src: '/homepage/hero-image-7.png', listingNum: '35801' },
-              //   { src: '/homepage/hero-image-8.png', listingNum: '6101' },
-              //   { src: '/homepage/hero-image-9.png', listingNum: '5202' },
-              // ]
-            }
+            images={highlightedListings?.map((listing: any) => ({
+              src: listing.homeInfo.firstImage,
+              highlightTag: listing.highlightTag,
+              slug: listing.slug.current,
+              listingNum: listing._id,
+            }))}
             thumbnails={false}
             overlay={true}
             homePage={true}
