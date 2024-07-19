@@ -51,10 +51,22 @@ const Page = async (props: Props) => {
     <main>
       <div className="">
         <div className="md:h-[calc(92vh-69px)] h-[80vh] bg-black relative w-screen flex">
-          <div className="absolute w-fit z-50 h-fit top-0 bottom-0 left-0 right-0 m-auto ">
-            <h1 className="text-[#ffffff] font-bold uppercase text-4xl tracking-widest text-center">
-              Make Memories <br /> All over the <br /> world
+          <div className="absolute text-[#ffffff] px-8 lg:px-0 gap-4 flex flex-col text-center max-w-[600px] font-bold w-fit z-50 h-fit top-0 bottom-0 left-0 right-0 m-auto ">
+            <h1 className=" uppercase text-4xl lg:text-5xl tracking-widest text-center">
+              Make Memories All over the world
             </h1>
+            <p className="  w-[85%] mx-auto text-base lg:text-xl">
+              Join our community of travelers and swap your home for free. No
+              rent, no hidden fees, no hassle.
+            </p>
+            <div className="flex gap-2 w-fit mx-auto ">
+              <button className="bg-[#7F8119] hover:bg-[#6d7016] capitalize px-5 py-2 rounded-xl">
+                <Link href="/become-member">Sign Up</Link>
+              </button>
+              <button className="bg-[#7F8119] hover:bg-[#6d7016] px-5 py-2 rounded-xl">
+                <Link href="/how-it-works capitalize">How It Works</Link>
+              </button>
+            </div>
           </div>
           <Carousel
             images={highlightedListings?.map((listing: any) => ({

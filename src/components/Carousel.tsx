@@ -96,6 +96,12 @@ const CarouselPage = (props: Props) => {
               borderRadius: "10px",
               backgroundColor: "#ffffff77",
             },
+            navigationNext: {
+              zIndex: 10000000,
+            },
+            navigationPrev: {
+              zIndex: 10000000,
+            },
           }}
           slideshow={{
             ref: slideshowRef,
@@ -165,7 +171,8 @@ const CarouselPage = (props: Props) => {
             slideContainer: (slideProps: any) => {
               // console.log("slideProps", slideProps.slide);
               return (
-                <div className=" !h-full my-auto w-full">
+                <div className=" !h-full my-auto w-full relative">
+                  <div className="absolute w-screen h-screen bg-black opacity-60  z-10"></div>
                   <div
                     className={`${props.overlay ? "opacity-100" : ""} ${
                       !props.homePage && "cursor-pointer"
@@ -173,12 +180,12 @@ const CarouselPage = (props: Props) => {
                     {slideProps.children}
                   </div>
                   <div
-                    className={`absolute top-[10%] -right-4 text-md ${
+                    className={`absolute z-50 top-[10%] -right-4 text-md ${
                       !props.homePage && "hidden"
                     }`}>
                     <div className="absolute z-0 inset-0 transform skew-x-[10deg]  bg-[#f4ece7b3]" />
                     {state.session == null ? (
-                      <div className="relative !z-50  py-4 px-8 !text-[#172544]">
+                      <div className="relative z-50  py-4 px-8 !text-[#172544]">
                         {slideProps.slide.highlightTag
                           ? `${slideProps.slide.highlightTag}`
                           : "Let's meet your new favorite home."}{" "}
