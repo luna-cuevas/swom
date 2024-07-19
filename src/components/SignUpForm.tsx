@@ -378,7 +378,7 @@ const SignUpForm = (props: Props) => {
             id="email"
             className="border border-gray-200 w-full p-4 h-12 "
             type="text"
-            value={email || state.loggedInUser?.email}
+            value={state.loggedInUser.email || email}
           />
           <button
             onClick={() => sendOTP()}
