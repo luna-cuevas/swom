@@ -1,18 +1,18 @@
-'use client';
+"use client";
 
-import Image from 'next/image';
-import Link from 'next/link';
-import React, { useEffect, useState } from 'react';
-import SignIn from '@/components/SignIn';
-import { supabaseClient } from '@/utils/supabaseClient';
-import { ToastContainer, toast } from 'react-toastify';
-import 'react-toastify/dist/ReactToastify.css';
-import { usePathname, useRouter } from 'next/navigation';
-import { globalStateAtom } from '@/context/atoms';
-import { useAtom } from 'jotai';
-import getUnreadMessageCount from '../utils/getUnreadMessageCount'
-import { RealtimeChannel } from '@supabase/supabase-js';
-import getUnreadConversations from '@/utils/getUnreadConversations';
+import Image from "next/image";
+import Link from "next/link";
+import React, { useEffect, useState } from "react";
+import SignIn from "@/components/SignIn";
+import { supabaseClient } from "@/utils/supabaseClient";
+import { ToastContainer, toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
+import { usePathname, useRouter } from "next/navigation";
+import { globalStateAtom } from "@/context/atoms";
+import { useAtom } from "jotai";
+import getUnreadMessageCount from "../utils/getUnreadMessageCount";
+import { RealtimeChannel } from "@supabase/supabase-js";
+import getUnreadConversations from "@/utils/getUnreadConversations";
 
 type Props = {};
 
@@ -25,7 +25,7 @@ const Navigation = (props: Props) => {
   const { user } = state;
 
   const [isClient, setIsClient] = useState(false);
-  
+
   useEffect(() => {
     setIsClient(true);
   }, [state.user.id]);
@@ -37,23 +37,25 @@ const Navigation = (props: Props) => {
         subscription = supabase
           .channel(`read-receipts-channel-${user.id}`)
           .on(
-            'postgres_changes',
+            "postgres_changes",
             {
-              event: 'INSERT',
-              schema: 'public',
-              table: 'read_receipts',
-              filter: `user_id=eq.${user.id}`
+              event: "INSERT",
+              schema: "public",
+              table: "read_receipts",
+              filter: `user_id=eq.${user.id}`,
             },
             (payload) => {
               const fetchUnreadCount = async () => {
                 try {
                   await new Promise((resolve) => setTimeout(resolve, 100)); // delaying updating ui on insertion so users dont see a notification flicker
                   const count = await getUnreadMessageCount(user.id);
-                  const unreadConverstaions = await getUnreadConversations(state.user.id);
+                  const unreadConverstaions = await getUnreadConversations(
+                    state.user.id
+                  );
                   setState((prevState) => ({
                     ...prevState,
                     unreadCount: count,
-                    unreadConversations: unreadConverstaions
+                    unreadConversations: unreadConverstaions,
                   }));
                 } catch (err) {
                   console.error(err);
@@ -63,22 +65,24 @@ const Navigation = (props: Props) => {
             }
           )
           .on(
-            'postgres_changes',
+            "postgres_changes",
             {
-              event: 'DELETE',
-              schema: 'public',
-              table: 'read_receipts',
-              filter: `user_id=eq.${user.id}`
+              event: "DELETE",
+              schema: "public",
+              table: "read_receipts",
+              filter: `user_id=eq.${user.id}`,
             },
             (payload) => {
               const fetchUnreadCount = async () => {
                 try {
                   const count = await getUnreadMessageCount(user.id);
-                  const unreadConverstaions = await getUnreadConversations(state.user.id);
+                  const unreadConverstaions = await getUnreadConversations(
+                    state.user.id
+                  );
                   setState((prevState) => ({
                     ...prevState,
                     unreadCount: count,
-                    unreadConversations: unreadConverstaions
+                    unreadConversations: unreadConverstaions,
                   }));
                 } catch (err) {
                   console.error(err);
@@ -88,16 +92,16 @@ const Navigation = (props: Props) => {
             }
           )
           .subscribe();
-  
+
         if (!subscription) {
           throw new Error("Failed to subscribe to channel");
         }
-          console.log("Subscribed to channel:", subscription);
+        console.log("Subscribed to channel:", subscription);
       } catch (error) {
         console.error("Error subscribing to channel:", error);
       }
     };
-  
+
     subscribeToChannel();
     return () => {
       try {
@@ -112,14 +116,14 @@ const Navigation = (props: Props) => {
 
   useEffect(() => {
     if (
-      navigation !== '/home' &&
-      navigation !== '/become-member' &&
-      navigation !== '/about-us' &&
-      navigation !== '/how-it-works' &&
-      navigation !== '/sign-up' &&
+      navigation !== "/home" &&
+      navigation !== "/become-member" &&
+      navigation !== "/about-us" &&
+      navigation !== "/how-it-works" &&
+      navigation !== "/sign-up" &&
       state.session === null
     ) {
-      router.push('/home');
+      router.push("/home");
     }
   }, [navigation]);
 
@@ -131,7 +135,7 @@ const Navigation = (props: Props) => {
       setState({
         ...state,
         user: {
-          email: '',
+          email: "",
         },
         loggedInUser: null,
         activeNavButtons: false,
@@ -140,10 +144,10 @@ const Navigation = (props: Props) => {
         unreadCount: 0,
         session: null,
       });
-      router.push('/home');
-      toast.success('Signed out successfully');
+      router.push("/home");
+      toast.success("Signed out successfully");
     } catch (error) {
-      console.error('Error signing out:', error);
+      console.error("Error signing out:", error);
     }
   };
 
@@ -175,9 +179,11 @@ const Navigation = (props: Props) => {
           <>
             <Link className="m-auto text-sm" href="/messages">
               MESSAGES
-              {state.unreadCount > 0 && <span className=" ml-1 flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-white text-xs">
-                {state.unreadCount}
-              </span>}
+              {state.unreadCount > 0 && (
+                <span className=" ml-1 flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-white text-xs">
+                  {state.unreadCount}
+                </span>
+              )}
             </Link>
             <Link className="m-auto text-sm" href="/profile">
               PROFILE
@@ -191,9 +197,9 @@ const Navigation = (props: Props) => {
             <Link className="m-auto text-sm" href="/listings/my-listing">
               MY LISTING
             </Link>
-            {(user?.email == 'anamariagomezc@gmail.com' ||
-              user?.email == 's.cuevas14@gmail.com' ||
-              user?.email == 'ana@swom.travel') && (
+            {(user?.email == "anamariagomezc@gmail.com" ||
+              user?.email == "s.cuevas14@gmail.com" ||
+              user?.email == "ana@swom.travel") && (
               <Link className="m-auto text-sm" href="/studio">
                 STUDIO
               </Link>
@@ -224,19 +230,6 @@ const Navigation = (props: Props) => {
             SIGN IN
           </button>
         )}
-
-        <ToastContainer
-          position="bottom-right"
-          autoClose={5000}
-          hideProgressBar={false}
-          newestOnTop={false}
-          closeOnClick
-          rtl={false}
-          pauseOnFocusLoss
-          draggable
-          pauseOnHover
-          theme="light"
-        />
 
         {/* <Menu>
           <MenuHandler>
@@ -290,11 +283,11 @@ const Navigation = (props: Props) => {
 
       <div
         style={{
-          maxHeight: state.showMobileMenu ? '100vh' : '0',
-          borderTop: state.showMobileMenu ? '1px solid #a9a9a9' : 'none',
-          padding: state.showMobileMenu ? '20px 0' : '0',
-          zIndex: state.showMobileMenu ? '5000' : '-100',
-          opacity: state.showMobileMenu ? '1' : '0',
+          maxHeight: state.showMobileMenu ? "100vh" : "0",
+          borderTop: state.showMobileMenu ? "1px solid #a9a9a9" : "none",
+          padding: state.showMobileMenu ? "20px 0" : "0",
+          zIndex: state.showMobileMenu ? "5000" : "-100",
+          opacity: state.showMobileMenu ? "1" : "0",
         }}
         className={`2xl:hidden  align-middle gap-4  box-border top-full flex flex-col justify-center text-center transition-all duration-300 ease-in-out overflow-hidden max-h-[100vh] left-0 bg-white w-full absolute`}>
         <Link className="m-auto" href="/how-it-works">
@@ -304,9 +297,11 @@ const Navigation = (props: Props) => {
           <>
             <Link className="m-auto" href="/messages">
               MESSAGES
-              {state.unreadCount > 0 && <span className=" ml-1 flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-white text-xs">
-                {state.unreadCount}
-              </span>}
+              {state.unreadCount > 0 && (
+                <span className=" ml-1 flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-white text-xs">
+                  {state.unreadCount}
+                </span>
+              )}
             </Link>
             <Link className="m-auto" href="/profile">
               PROFILE
@@ -321,9 +316,9 @@ const Navigation = (props: Props) => {
               MY LISTING
             </Link>
 
-            {(state.user?.email == 'anamariagomezc@gmail.com' ||
-              state.user?.email == 's.cuevas14@gmail.com' ||
-              state.user?.email == 'ana@swom.travel') && (
+            {(state.user?.email == "anamariagomezc@gmail.com" ||
+              state.user?.email == "s.cuevas14@gmail.com" ||
+              state.user?.email == "ana@swom.travel") && (
               <Link className="m-auto" href="/studio">
                 STUDIO
               </Link>

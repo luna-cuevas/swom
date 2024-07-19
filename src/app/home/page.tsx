@@ -46,7 +46,6 @@ const fetchListings = async () => {
 
 const Page = async (props: Props) => {
   const highlightedListings = await fetchListings();
-  console.log("highlightedListings:", highlightedListings);
 
   return (
     <main
