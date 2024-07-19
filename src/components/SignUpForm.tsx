@@ -207,7 +207,7 @@ const SignUpForm = () => {
               className="border border-gray-200 rounded-lg w-full p-3"
             />
             <p className="text-one-text-secondary text-center text-sm mb-3 mt-6">
-              Didn't get the code?&nbsp;
+              Didn&lsquo;t get the code?&nbsp;
               <button
                 type="button"
                 onClick={() => sendOTP()}
