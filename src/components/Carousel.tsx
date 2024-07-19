@@ -40,7 +40,7 @@ const CarouselPage = (props: Props) => {
 
   if (!isMounted) {
     return (
-      <div className="bg-white w-full h-full fixed flex z-[10000000]">
+      <div className="bg-white w-full h-full absolute flex z-[10000000]">
         <div role="status" className="m-auto">
           <svg
             aria-hidden="true"

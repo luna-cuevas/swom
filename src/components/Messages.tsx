@@ -23,15 +23,18 @@ type Conversation = {
   created_at: string;
   conversation_id: string;
   members: {
-      [key: string]: Member;
+    [key: string]: Member;
   };
 };
 
-function getPartnerUserId(conversation: Conversation, providedUserId: string): string | null {
+function getPartnerUserId(
+  conversation: Conversation,
+  providedUserId: string
+): string | null {
   for (const memberId in conversation.members) {
-      if (conversation.members[memberId].id !== providedUserId) {
-          return conversation.members[memberId].id;
-      }
+    if (conversation.members[memberId].id !== providedUserId) {
+      return conversation.members[memberId].id;
+    }
   }
   return null;
 }
@@ -49,10 +52,10 @@ const Messages = (props: Props) => {
   const inboxRef = useRef<HTMLDivElement>(null);
   const [sendingMessage, setSendingMessage] = useState<boolean>(false);
   const [isCheckingConversation, setIsCheckingConversation] =
-  useState<boolean>(true);
+    useState<boolean>(true);
   const supabase = supabaseClient();
   const [selectedConversation, setSelectedConversation] = useState<any>(null);
-  
+
   let selectedConvo = conversations?.find(
     (convo) => convo.conversation_id === selectedConversation
   );
@@ -60,33 +63,25 @@ const Messages = (props: Props) => {
 
   useEffect(() => {
     scrollToBottom();
-    const fetchData = async () => {
-      //fetching here to clear message from read_receipts
-      const messagesData = await fetch("/api/messages/fetchMessages", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ id: selectedConversation, user: state.user.id }),
-      });
-      };
-
-    fetchData();
   }, [messages]);
-
 
   useEffect(() => {
     const fetchData = async () => {
-      //fetching here to clear message from read_receipts
-      const messagesData = await fetch("/api/messages/fetchMessages", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ id: selectedConversation, user: state.user.id }),
-      });
-      };
-
+      if (state.user.id && selectedConversation) {
+        console.log("selectedConversation", selectedConversation);
+        //fetching here to clear message from read_receipts
+        const messagesData = await fetch("/api/messages/fetchMessages", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            id: selectedConversation,
+            user: state.user.id,
+          }),
+        });
+      }
+    };
     fetchData();
   }, [selectedConversation, messages]);
 
@@ -135,7 +130,7 @@ const Messages = (props: Props) => {
     // const convoExists = fetchMessagesForSelectedConversation();
     if (!selectedConversation && conversations.length > 0) {
       setSelectedConversation(conversations[0].conversation_id);
-      if(selectedConversation){
+      if (selectedConversation) {
         setPartnerId(selectedConversation);
       }
     }
@@ -143,7 +138,7 @@ const Messages = (props: Props) => {
 
   useEffect(() => {
     fetchMessagesForSelectedConversation();
-    if(selectedConversation){
+    if (selectedConversation) {
       setPartnerId(selectedConversation);
     }
   }, [selectedConversation, sendingMessage]);
@@ -157,21 +152,23 @@ const Messages = (props: Props) => {
       inboxRef.current.scrollTop = inboxRef.current.scrollHeight;
     }
   };
-  
-  //sets the ID of the person user is communicating with. 
+
+  //sets the ID of the person user is communicating with.
   const setPartnerId = async (conversationId: string) => {
-    const response = await fetch('/api/messages/getConvo', {
-      method: 'POST',
+    const response = await fetch("/api/messages/getConvo", {
+      method: "POST",
       headers: {
-        'Content-Type': 'application/json',
+        "Content-Type": "application/json",
       },
       body: JSON.stringify({ id: conversationId }),
     });
-  
+
     if (!response.ok) {
-      throw new Error(`Error fetching conversation data: ${response.statusText}`);
+      throw new Error(
+        `Error fetching conversation data: ${response.statusText}`
+      );
     }
-  
+
     const data = await response.json();
     setPartner(getPartnerUserId(data[0], state.user.id));
     return data;
@@ -254,7 +251,6 @@ const Messages = (props: Props) => {
 
       // console.log('allConvosDataJson2', allConvosDataJson);
 
-
       if (allConvosDataJson.length === 0 || !allConvosDataJson) {
         // console.log("allConvosDataJson", allConvosDataJson);
         setConversations([]);
@@ -284,7 +280,7 @@ const Messages = (props: Props) => {
       const messagesDataJson = await messagesData.json();
       // console.log("messagesDataJson", messagesDataJson);
 
-      if (!messagesDataJson) {
+      if (!messagesDataJson[0] || !messagesDataJson[0].messagesObj) {
         console.error("Error fetching messages:", messagesDataJson);
         return false;
       } else {
@@ -373,9 +369,8 @@ const Messages = (props: Props) => {
   };
 
   useEffect(() => {
-  
     console.log("subscribing to messages");
-  
+
     const subscription = supabase
       .channel(`${selectedConversation}`)
       .on(
@@ -384,16 +379,16 @@ const Messages = (props: Props) => {
           event: "*",
           schema: "public",
           table: "messages",
-          filter: `conversation_id=eq.${selectedConversation}`
+          filter: `conversation_id=eq.${selectedConversation}`,
         },
         (payload) => {
-            setMessages((payload.new as { [key: string]: any }).messagesObj);
+          setMessages((payload.new as { [key: string]: any }).messagesObj);
         }
       )
       .subscribe((status) => {
         console.log({ status });
       });
-  
+
     return () => {
       supabase.removeChannel(subscription);
     };
@@ -415,7 +410,7 @@ const Messages = (props: Props) => {
           selectedConversation: selectedConversation,
           sender_id: state.user.id,
           content: newMessage,
-          contacted_user: partner
+          contacted_user: partner,
         }),
       });
 
@@ -532,11 +527,12 @@ const Messages = (props: Props) => {
                       .name
                   }
                 </h1>
-                {
-                  state.unreadConversations.some((unread: { conversation_id: any; }) => unread.conversation_id === convo.conversation_id)
-                  ? <span className="flex-end h-5 w-5 items-center justify-center rounded-full bg-red-500"></span>
-                  : null
-                }
+                {state.unreadConversations.some(
+                  (unread: { conversation_id: any }) =>
+                    unread.conversation_id === convo.conversation_id
+                ) ? (
+                  <span className="flex-end h-5 w-5 items-center justify-center rounded-full bg-red-500"></span>
+                ) : null}
               </li>
             ))}
           </ul>
