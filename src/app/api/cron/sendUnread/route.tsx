@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
 import nodemailer, { Transporter } from 'nodemailer';
+import { emailTemplate } from './emailTemplate';
 
 // Initialize Supabase client
 const supabaseUrl: string = process.env.NEXT_PUBLIC_SUPABASE_URL as string;
@@ -47,7 +48,8 @@ export async function GET(req: NextRequest): Promise<NextResponse> {
     // Fetch distinct user_id with unread messages from Supabase
     const { data: receipts, error: receiptsError } = await supabase
       .from('read_receipts')
-      .select('user_id');
+      .select('user_id, notified')
+      .eq('notified', false);
 
     if (receiptsError) {
       throw new Error(`Error fetching unread messages: ${receiptsError.message}`);
@@ -70,25 +72,35 @@ export async function GET(req: NextRequest): Promise<NextResponse> {
         continue;
       }
 
-      const htmlContent = `
-        <h1>You have unread messages on SWOM</h1>
-        <p>Please check your inbox to read them.</p>
-      `;
+      // const htmlContent = `
+      //   <h1>You have unread messages on SWOM</h1>
+      //   <p>Please check your inbox to read them.</p>
+      // `;
 
       await sendEmail(
         userData.email,
         'You have unread messages',
-        htmlContent
+        emailTemplate
       );
+
+      // Update notified to true
+      const { error: updateError } = await supabase
+        .from('read_receipts')
+        .update({ notified: true })
+        .eq('user_id', user_id);
+
+      if (updateError) {
+        console.error(`Error updating notified for user_id ${user_id}:`, updateError);
+      }
     }
 
-    return NextResponse.json({ message: 'Emails sent successfully' });
+    return NextResponse.json({ message: 'Emails sent and notifications updated successfully' });
   } catch (error: unknown) {
     console.error('Unhandled error in main handler:', error);
     if (error instanceof Error) {
       return NextResponse.json({ error: error.message }, { status: 500 });
     } else {
-      return NextResponse.json({ error: "An unknown error has occured." }, { status: 500 });
+      return NextResponse.json({ error: "An unknown error has occurred." }, { status: 500 });
     }
   }
 }
