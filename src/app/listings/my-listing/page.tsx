@@ -256,6 +256,8 @@ const Page = (props: Props) => {
   const handleInputChange = (e: any) => {
     const value = e.target.value;
     setSearchTerm(value);
+    setValue("homeInfo.city", value);
+    setFormDirty(true);
     if (value.length > 0) {
       setCitySearchOpen(true);
     }
@@ -304,6 +306,12 @@ const Page = (props: Props) => {
       }
     }
   }, [watch("homeInfo.description")]);
+
+  useEffect(() => {
+    if (imageFiles && imageFiles.length > 0) {
+      setFormDirty(true);
+    }
+  }, [imageFiles]);
 
   useEffect(() => {
     if (listings.length > 0) {
@@ -812,6 +820,7 @@ const Page = (props: Props) => {
                 aboutYourHomeRef.current = e;
               }}
               onChange={(e) => {
+                setFormDirty(true);
                 setValue("homeInfo.description", e.target.value);
               }}
               value={watch("homeInfo.description")}
