@@ -148,21 +148,29 @@ export function approveDocumentAction(props: any) {
             const userCount = await getCurrentUserCount();
             console.log('userCount:', userCount);
 
-            // if (userCount != null && userCount > 100) {
-            //   const { data: inviteEmail, error } = await supabase.auth.resetPasswordForEmail(
-            //     userData.user.email,
-            //     {
-            //       redirectTo: isDev ? 'http://localhost:3000/sign-up' : 'https://swom.travel/sign-up',
-            //     }
-            //   );
-            // } else {
-            //   const { data, error } = await supabase.auth.admin.inviteUserByEmail(userData.user.email, {
-            //     redirectTo: isDev ? 'http://localhost:3000/sign-up' : 'https://swom.travel/sign-up',
-            //   });
-            // }
+            const { data: inviteEmail, error } = await supabase.auth.resetPasswordForEmail(
+              userData.user.email,
+              {
+                redirectTo: isDev ? 'http://localhost:3000/sign-up' : 'https://swom.travel/sign-up',
+              }
+            );
+
+            if (error) {
+              console.error('Error in sending invite email:', error);
+            }
+
+            if (inviteEmail) {
+              console.log('Invite email sent:', inviteEmail);
+            }
+
+            if (!userError && !appUserDataError) {
+              console.log('User created:', user);
+              await sanityClient.delete(documentToApprove._id);
+              console.log('Document deleted:', documentToApprove._id);
+            }
+
           }
 
-          await sanityClient.delete(documentToApprove._id);
 
           console.log('Listing approved and moved to listings:', createdListing);
         } catch (error) {
