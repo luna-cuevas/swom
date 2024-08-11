@@ -1,14 +1,14 @@
-'use client';
-import React, { useEffect, useState } from 'react';
-import { useDropzone } from 'react-dropzone';
-import { ToastContainer, toast } from 'react-toastify';
-import SortableList, { SortableItem } from 'react-easy-sort';
-import { arrayMoveImmutable } from 'array-move';
-import 'react-toastify/dist/ReactToastify.css';
-import Image from 'next/image';
-import { useAtom } from 'jotai';
-import { globalStateAtom } from '@/context/atoms';
-import heic2any from 'heic2any';
+"use client";
+import React, { useEffect, useState } from "react";
+import { useDropzone } from "react-dropzone";
+import { ToastContainer, toast } from "react-toastify";
+import SortableList, { SortableItem } from "react-easy-sort";
+import { arrayMoveImmutable } from "array-move";
+import "react-toastify/dist/ReactToastify.css";
+import Image from "next/image";
+import { useAtom } from "jotai";
+import { globalStateAtom } from "@/context/atoms";
+import heic2any from "heic2any";
 
 type Props = {
   setImageFiles: React.Dispatch<React.SetStateAction<File[]>>;
@@ -34,7 +34,7 @@ const BecomeMemberDropzone: React.FC<Props> = (props) => {
       const totalFilesAfterAdding =
         orderedImageFiles.length + acceptedFiles.length;
       if (totalFilesAfterAdding > 15) {
-        toast.error('You can only upload up to 15 images.');
+        toast.error("You can only upload up to 15 images.");
         return;
       }
       const existingFileNames = orderedImageFiles.map((file) => file.name);
@@ -44,22 +44,22 @@ const BecomeMemberDropzone: React.FC<Props> = (props) => {
 
       if (newImageFiles.length < acceptedFiles.length) {
         // Display a toast alert for duplicates
-        toast.warn('Some images were not added as they are duplicates.');
+        toast.warn("Some images were not added as they are duplicates.");
       }
 
       // Convert HEIC files to JPG
       const convertedFiles = await Promise.all(
         newImageFiles.map(async (file) => {
-          if (file.type === 'image/heic') {
+          if (file.type === "image/heic") {
             const arrayBuffer = await file.arrayBuffer();
             const jpegBlob = await heic2any({
               blob: new Blob([arrayBuffer]),
-              toType: 'image/jpeg',
+              toType: "image/jpeg",
             });
             return new File(
               [jpegBlob as Blob],
-              `${file.name.replace(/\.heic$/, '.jpg')}`,
-              { type: 'image/jpeg' }
+              `${file.name.replace(/\.heic$/, ".jpg")}`,
+              { type: "image/jpeg" }
             );
           }
           return file;
@@ -82,7 +82,7 @@ const BecomeMemberDropzone: React.FC<Props> = (props) => {
   });
 
   const handleRemoveImage = (index: number) => {
-    console.log('index', index);
+    console.log("index", index);
     const updatedImageFiles = [...orderedImageFiles];
     updatedImageFiles.splice(index, 1);
     props.setImageFiles(updatedImageFiles);
@@ -111,7 +111,7 @@ const BecomeMemberDropzone: React.FC<Props> = (props) => {
           props.downloadURLs.map(async (url) => {
             const response = await fetch(url);
             const blob = await response.blob();
-            return new File([blob], url.split('/').pop() || 'downloaded', {
+            return new File([blob], url.split("/").pop() || "downloaded", {
               type: blob.type,
             });
           })
@@ -144,7 +144,7 @@ const BecomeMemberDropzone: React.FC<Props> = (props) => {
     <div className="flex bg-[#d2d2d244] z-0 rounded-lg flex-col h-fit w-full top-0 bottom-0 left-0 right-0 m-auto">
       <button
         type="button"
-        className=" ml-auto z-[100000] w-fit mr-2 text-sm bg-red-300 text-white px-1 h-fit rounded-full cursor-pointer"
+        className=" ml-auto z-10 w-fit mr-2 text-sm bg-red-300 text-white px-1 h-fit rounded-full cursor-pointer"
         onClick={() => {
           setState({
             ...state,
@@ -156,7 +156,7 @@ const BecomeMemberDropzone: React.FC<Props> = (props) => {
       <div
         {...getRootProps({
           className:
-            'w-full flex h-full m-auto cursor-pointer p-4 text-center ',
+            "w-full flex h-full m-auto cursor-pointer p-4 text-center ",
         })}>
         <input {...getInputProps()} />
         <p className="text-[#000000] m-auto text-base border-2 border-[#939393] p-4">
@@ -174,12 +174,12 @@ const BecomeMemberDropzone: React.FC<Props> = (props) => {
         <SortableList
           onSortEnd={onSortEnd}
           draggedItemClassName="dragged"
-          className="grid grid-cols-1 md:grid-cols-3 select-none gap-4 ">
+          className="grid grid-cols-1 md:grid-cols-3 select-none gap-4 z-0">
           {items.map(({ image, name, index }) => (
             <div
               key={name}
               className={` flex ${
-                index == items[0].index && 'border-4 border-blue-500'
+                index == items[0].index && "border-4 border-blue-500"
               }   justify-center  m-auto`}>
               <SortableItem>
                 <div className="drag-item relative w-[200px] h-[200px] pointer-events-none">

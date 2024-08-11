@@ -1,11 +1,11 @@
-import React, { useState } from 'react';
-import { useDropzone } from 'react-dropzone';
-import { DragDropContext, Draggable, Droppable } from 'react-beautiful-dnd';
-import { ToastContainer, toast } from 'react-toastify';
+import React, { useState } from "react";
+import { useDropzone } from "react-dropzone";
+import { DragDropContext, Draggable, Droppable } from "react-beautiful-dnd";
+import { ToastContainer, toast } from "react-toastify";
 
-import 'react-toastify/dist/ReactToastify.css';
-import { useAtom } from 'jotai';
-import { globalStateAtom } from '@/context/atoms';
+import "react-toastify/dist/ReactToastify.css";
+import { useAtom } from "jotai";
+import { globalStateAtom } from "@/context/atoms";
 
 type Props = {
   setImageFiles: React.Dispatch<React.SetStateAction<File[]>>;
@@ -34,7 +34,7 @@ const DropZone: React.FC<Props> = (props) => {
 
       if (newImageFiles.length < acceptedFiles.length) {
         // Display a toast alert for duplicates
-        toast.warn('Some images were not added as they are duplicates.');
+        toast.warn("Some images were not added as they are duplicates.");
       }
 
       // Combine the new files with the existing files
@@ -45,7 +45,7 @@ const DropZone: React.FC<Props> = (props) => {
     },
   });
 
-  console.log('orderedImageFiles', orderedImageFiles);
+  console.log("orderedImageFiles", orderedImageFiles);
 
   // Function to handle reordering
   const handleOnDragEnd = (result: any) => {
@@ -62,7 +62,7 @@ const DropZone: React.FC<Props> = (props) => {
   };
 
   return (
-    <div className="fixed bg-[#d2d2d2e9] z-[2000] rounded-lg flex flex-col h-fit w-2/3 top-0 bottom-0 left-0 right-0 m-auto">
+    <div className="fixed bg-[#d2d2d2e9] z-10 rounded-lg flex flex-col h-fit w-2/3 top-0 bottom-0 left-0 right-0 m-auto">
       <button
         onClick={() => {
           setState({ ...state, imgUploadPopUp: false });
@@ -73,7 +73,7 @@ const DropZone: React.FC<Props> = (props) => {
       <div
         {...getRootProps({
           className:
-            'w-full flex h-full m-auto cursor-pointer p-4 text-center ',
+            "w-full flex h-full m-auto cursor-pointer p-4 text-center ",
         })}>
         <input {...getInputProps()} />
         <p className="text-[#000000] m-auto text-xl border-2 border-[#939393] p-4">
