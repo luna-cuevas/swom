@@ -5,12 +5,12 @@ export default defineType({
   title: 'Add Listings',
   type: 'document',
   fields: [
-    {
-      name: 'subscribed',
-      title: 'Subscription',
-      type: 'boolean',
-      description: 'Whether the listing is a subscription or not',
-    },
+    // {
+    //   name: 'subscribed',
+    //   title: 'Subscription',
+    //   type: 'boolean',
+    //   description: 'Whether the listing is a subscription or not',
+    // },
     {
       name: 'slug',
       title: 'Slug',

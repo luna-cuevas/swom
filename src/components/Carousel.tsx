@@ -106,7 +106,7 @@ const CarouselPage = (props: Props) => {
           slideshow={{
             ref: slideshowRef,
             autoplay: true,
-            delay: 5000,
+            delay: 8000,
           }}
           plugins={[
             Inline,
@@ -172,7 +172,7 @@ const CarouselPage = (props: Props) => {
               // console.log("slideProps", slideProps.slide);
               return (
                 <div className=" !h-full my-auto w-full relative">
-                  <div className="absolute w-screen h-screen bg-black opacity-60  z-10"></div>
+                  <div className="absolute w-screen h-screen bg-black opacity-20  z-10"></div>
                   <div
                     className={`${props.overlay ? "opacity-100" : ""} ${
                       !props.homePage && "cursor-pointer"

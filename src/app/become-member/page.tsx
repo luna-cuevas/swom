@@ -394,7 +394,7 @@ const Page = (props: Props) => {
               <div className="flex gap-8 my-2">
                 <div className="flex gap-2">
                   <input
-                    className="w-fit bg-transparent border-b border-[#172544] focus:outline-none"
+                    className="bg-transparent checked:bg-[#7F8119] appearance-none border border-[#172544] rounded-xl p-[6px] my-auto"
                     type="checkbox"
                     id="wikimujeres"
                     onChange={(e) => {
@@ -405,7 +405,14 @@ const Page = (props: Props) => {
                       }
                     }}
                   />
-                  <label htmlFor="wikimujeres">Wikimujeres</label>
+                  <label htmlFor="wikimujeres" className="font-bold">
+                    <Image
+                      src="https://wikimujeres.com/wp-content/uploads/2020/10/logo-wikimujeres-MORADO.png"
+                      alt="wikimujeres"
+                      width={100}
+                      height={100}
+                    />
+                  </label>
                 </div>
 
                 <div className="flex gap-2">

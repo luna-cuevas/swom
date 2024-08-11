@@ -51,7 +51,7 @@ const Page = async (props: Props) => {
     <main>
       <div className="">
         <div className="md:h-[calc(92vh-69px)] h-[80vh] bg-black relative w-screen flex">
-          <div className="absolute text-[#ffffff] px-8 lg:px-0 gap-4 flex flex-col text-center max-w-[600px] font-bold w-fit z-50 h-fit top-0 bottom-0 left-0 right-0 m-auto ">
+          <div className="absolute text-[#ffffff] backdrop-blur-[2px] rounded-3xl px-8 lg:px-0 gap-4 flex flex-col text-center max-w-[600px] font-bold w-fit z-50 h-fit top-0 bottom-0 left-0 right-0 m-auto ">
             <h1 className=" uppercase text-4xl lg:text-5xl tracking-widest text-center">
               Make Memories All over the world
             </h1>
@@ -63,8 +63,8 @@ const Page = async (props: Props) => {
               <button className="bg-[#7F8119] hover:bg-[#6d7016] capitalize px-5 py-2 rounded-xl">
                 <Link href="/become-member">Sign Up</Link>
               </button>
-              <button className="bg-[#7F8119] hover:bg-[#6d7016] px-5 py-2 rounded-xl">
-                <Link href="/how-it-works capitalize">How It Works</Link>
+              <button className="bg-[#7F8119] capitalize hover:bg-[#6d7016] px-5 py-2 rounded-xl">
+                <Link href="/how-it-works">How It Works</Link>
               </button>
             </div>
           </div>

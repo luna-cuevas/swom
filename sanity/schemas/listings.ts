@@ -5,12 +5,12 @@ export default defineType({
   title: 'Live Listings',
   type: 'document',
   fields: [
-    {
-      name: 'subscribed',
-      title: 'Subscription',
-      type: 'boolean',
-      description: 'Whether the listing is a subscription or not',
-    },
+    // {
+    //   name: 'subscribed',
+    //   title: 'Subscription',
+    //   type: 'boolean',
+    //   description: 'Whether the listing is a subscription or not',
+    // },
     {
       name: 'orderRank',
       title: 'Order Rank',

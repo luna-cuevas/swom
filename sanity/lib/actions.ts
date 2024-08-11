@@ -53,42 +53,47 @@ export function approveDocumentAction(props: any) {
 
           const toSubscribe = documentToApprove.subscribed;
 
-          if (toSubscribe) {  // Check if the Stripe customer exists or create a new one
-            let customers = await stripe.customers.list({
-              email: customerEmail,
-              limit: 1,
-            });
+          // if (toSubscribe) {  // Check if the Stripe customer exists or create a new one
+          //   let customers = await stripe.customers.list({
+          //     email: customerEmail,
+          //     limit: 1,
+          //   });
 
-            let customerId;
+          //   console.log('Customers:', customers);
 
-            if (customers.data.length === 0) {
-              // Create a new customer
-              const customer = await stripe.customers.create({
-                email: customerEmail,
-                // payment_method: paymentMethod.id, // Attach the payment method  
-                source: 'tok_visa'
-              });
-              customerId = customer.id;
-            } else {
-              customerId = customers.data[0].id;
-              await stripe.customers.createSource(customerId, {
-                source: 'tok_visa',
-              });
-            }
+          //   let customerId;
 
-            const priceId = 'price_1ORU7BDhCJq1hRSteuSGgKDk';
+          //   if (customers.data.length === 0) {
+          //     // Create a new customer
+          //     const customer = await stripe.customers.create({
+          //       email: customerEmail,
+          //       name: documentToApprove.userInfo.name,
+          //       // source: ['tok_visa'],
 
-            // Create the subscription
-            const subscription = await stripe.subscriptions.create({
-              customer: customerId,
-              items: [{ price: priceId }],
-              // Add any other subscription details here
-            });
+          //     });
 
-            console.log('Subscription created:', subscription);
+          //     console.log('Customer created:', customer);
+          //     customerId = customer.id;
+          //   } else {
+          //     customerId = customers.data[0].id;
 
-            newDocument.subscribed = true;
-          }
+          //   }
+
+          //   console.log('Customer ID:', customerId);
+
+          //   const priceId = 'price_1PMZn5DhCJq1hRSt1v2StcWD';
+
+          //   // Create the subscription
+          //   const subscription = await stripe.subscriptions.create({
+          //     customer: customerId,
+          //     items: [{ price: priceId }],
+          //     // Add any other subscription details here
+          //   });
+
+          //   console.log('Subscription created:', subscription);
+
+          //   newDocument.subscribed = true;
+          // }
 
           const createdListing = await sanityClient.create(newDocument);
 
