@@ -18,7 +18,7 @@ const STEP = {
 const SignUpForm = () => {
   const [state, setState] = useAtom(globalStateAtom);
   const [currentStep, setCurrentStep] = useState(STEP.ENTER_EMAIL);
-  const [email, setEmail] = useState(state.loggedInUser?.email || "");
+  const [email, setEmail] = useState("");
   const router = useRouter();
   const supabase = supabaseClient();
   const searchParams = useSearchParams();
@@ -147,16 +147,22 @@ const SignUpForm = () => {
   useEffect(() => {
     const { data: userData } = supabase.auth.onAuthStateChange(
       async (event, session) => {
+        console.log("event", event);
+        console.log("session", session);
         if (
           [
             "PASSWORD_RECOVERY",
+            "SIGNED_IN",
             "INITIAL_SESSION",
             "TOKEN_REFRESHED",
             "USER_UPDATED",
           ].includes(event) &&
           session
         ) {
+          console;
           const loggedInUser = await fetchLoggedInUser(session.user);
+          console.log("loggedInUser", loggedInUser);
+          setEmail(loggedInUser.email);
           setState({
             ...state,
             session,

@@ -124,69 +124,53 @@ const Page = (props: Props) => {
       return;
     }
 
-    const { data: userData, error } = await supabase.auth.admin.createUser({
-      email: data.userInfo.email,
-      email_confirm: true,
-      password: temporaryPassword,
-      user_metadata: {
-        name: data.userInfo.name,
-        dob: data.userInfo.dob,
-        phone: data.userInfo.phone,
-        role: "member",
-      },
-    });
+    try {
+      // Upload Images
+      const uploadPromises = imageFiles.map((file) => {
+        return sanityClient.assets.upload("image", file);
+      });
+      const imageAssets = await Promise.all(uploadPromises);
+      const imageReferences = imageAssets.map((asset) => ({
+        _type: "image",
+        _key: asset._id,
+        asset: {
+          _type: "reference",
+          _ref: asset._id,
+        },
+      }));
 
-    if (error) {
-      console.log(error);
-      toast.error(error.message);
-    } else {
-      try {
-        // Upload Images
-        const uploadPromises = imageFiles.map((file) => {
-          return sanityClient.assets.upload("image", file);
-        });
-        const imageAssets = await Promise.all(uploadPromises);
-        const imageReferences = imageAssets.map((asset) => ({
-          _type: "image",
-          _key: asset._id,
-          asset: {
-            _type: "reference",
-            _ref: asset._id,
-          },
-        }));
+      // Prepare New Listing Data
+      const newListingData = {
+        _type: "needsApproval",
+        ...data,
+        userInfo: {
+          ...data.userInfo,
+          openToOtherDestinations:
+            data.userInfo.openToOtherDestinations === "true",
+        },
+        homeInfo: {
+          ...data.homeInfo,
+          address: whereIsIt,
+          city: whereIsIt.query,
+          howManySleep: parseInt(data.homeInfo.howManySleep),
+          bathrooms: parseInt(data.homeInfo.bathrooms),
+          listingImages: imageReferences,
+        },
+        // ... any other fields you need to include
+      };
 
-        // Prepare New Listing Data
-        const newListingData = {
-          _type: "needsApproval",
-          ...data,
-          userInfo: {
-            ...data.userInfo,
-            openToOtherDestinations:
-              data.userInfo.openToOtherDestinations === "true",
-          },
-          homeInfo: {
-            ...data.homeInfo,
-            address: whereIsIt,
-            howManySleep: parseInt(data.homeInfo.howManySleep),
-            bathrooms: parseInt(data.homeInfo.bathrooms),
-            listingImages: imageReferences,
-          },
-          // ... any other fields you need to include
-        };
+      // Create the New Listing Document
+      const createdListing = await sanityClient.create(newListingData);
+      console.log("New listing created:", createdListing);
 
-        // Create the New Listing Document
-        const createdListing = await sanityClient.create(newListingData);
-        console.log("New listing created:", createdListing);
-
-        // Handle success
-        toast.success("New listing created successfully!");
-        setSignUpActive(false);
-        setSubmitted(true);
-        // ... update local state and UI as needed
-      } catch (error) {
-        console.error("Error creating new listing:", error);
-        toast.error("Failed to create new listing.");
-      }
+      // Handle success
+      toast.success("New listing created successfully!");
+      setSignUpActive(false);
+      setSubmitted(true);
+      // ... update local state and UI as needed
+    } catch (error) {
+      console.error("Error creating new listing:", error);
+      toast.error("Failed to create new listing.");
     }
   };
 
@@ -290,8 +274,8 @@ const Page = (props: Props) => {
         <div className="">
           <form
             onSubmit={handleSubmit(onSubmit, onError)}
-            className=" max-w-[1000px] gap-4 bg-[#F3EBE7] py-4 flex flex-col  m-auto">
-            <div className="flex md:flex-row flex-col gap-4 md:gap-12 w-2/3 mx-auto">
+            className=" max-w-[1000px] gap-4 bg-[#F3EBE7] px-4 py-4 flex flex-col  m-auto">
+            <div className="flex md:flex-row flex-col gap-4 md:gap-12 w-full md:w-2/3 mx-auto">
               <div className="m-auto flex-col w-full flex">
                 <label htmlFor="name">Name</label>
                 <input
@@ -316,8 +300,8 @@ const Page = (props: Props) => {
               </div>
             </div>
 
-            <div className="flex md:flex-row flex-col gap-4 md:gap-12 w-2/3 mx-auto">
-              <div className="m-auto flex-col w-2/3 flex">
+            <div className="flex md:flex-row flex-col gap-4 md:gap-12 w-full md:w-2/3 mx-auto">
+              <div className="m-auto flex-col md:w-2/3 w-full flex">
                 <label htmlFor="phone">Phone</label>
                 <input
                   {...register("userInfo.phone", {
@@ -333,7 +317,7 @@ const Page = (props: Props) => {
                   <p>{errors.userInfo.phone.message}</p>
                 )}
               </div>
-              <div className="m-auto flex-col w-2/3 flex">
+              <div className="m-auto flex-col w-full md:w-2/3 flex">
                 <label htmlFor="dob">What is your date of birth?</label>
                 <input
                   {...register("userInfo.dob", {
@@ -346,7 +330,7 @@ const Page = (props: Props) => {
               </div>
             </div>
 
-            <div className="m-auto flex-col w-2/3 flex">
+            <div className="m-auto flex-col w-full md:w-2/3 flex">
               <label htmlFor="profession">What do you do for a living?</label>
               <input
                 {...register("userInfo.profession", {
@@ -358,7 +342,7 @@ const Page = (props: Props) => {
               />
             </div>
 
-            <div className="m-auto flex-col w-2/3 flex">
+            <div className="m-auto flex-col w-full md:w-2/3 flex">
               <label htmlFor="children">
                 Do you travel with small children?
               </label>
@@ -389,7 +373,7 @@ const Page = (props: Props) => {
                 <label htmlFor="never">Never</label>
               </div>
             </div>
-            <div className="m-auto flex-col w-2/3 flex">
+            <div className="m-auto flex-col md:w-2/3 flex">
               <label htmlFor="recommended">Referred by?</label>
               <div className="flex gap-8 my-2">
                 <div className="flex gap-2">
@@ -420,7 +404,7 @@ const Page = (props: Props) => {
                   <input
                     disabled={watch("userInfo.recommended") === "wikimujeres"}
                     {...register("userInfo.recommended")}
-                    className="w-2/3 bg-transparent border-b border-[#172544] focus:outline-none"
+                    className="md:w-2/3 bg-transparent border-b border-[#172544] focus:outline-none"
                     type="text"
                     id="recommended"
                   />
@@ -428,7 +412,7 @@ const Page = (props: Props) => {
               </div>
             </div>
 
-            <div className="m-auto gap-4 flex-col w-2/3 flex ">
+            <div className="m-auto gap-4 flex-col md:w-2/3 flex ">
               <label htmlFor="children">
                 What kind of property do you have for exchange?
               </label>
@@ -571,7 +555,7 @@ const Page = (props: Props) => {
                   </div>
                 </div>
               </div>
-              <div className="flex gap-4">
+              <div className="flex gap-4 md:flex-row flex-col">
                 <label htmlFor="">How many people does it sleep?</label>
                 <select
                   className="bg-transparent focus:outline-none  rounded-xl border w-fit px-2 border-[#172544]"
@@ -588,7 +572,7 @@ const Page = (props: Props) => {
                   <option value="7+">7+</option>
                 </select>
               </div>
-              <div className="gap-4 flex">
+              <div className="gap-4 flex md:flex-row flex-col">
                 <label htmlFor="">How many bathrooms?</label>
                 <select
                   className="bg-transparent focus:outline-none  rounded-xl border w-fit px-2 border-[#172544]"
@@ -602,7 +586,7 @@ const Page = (props: Props) => {
                   <option value="4+">4+</option>
                 </select>
               </div>
-              <div className="gap-4 flex">
+              <div className="gap-4 flex md:flex-row flex-col">
                 <label htmlFor="">
                   Is this your main property or your second home?
                 </label>
@@ -617,7 +601,7 @@ const Page = (props: Props) => {
                   <option value="second">Second</option>
                 </select>
               </div>
-              <div className="gap-4 flex">
+              <div className="gap-4 flex md:flex-row flex-col">
                 <label htmlFor="">Size in square meters.</label>
                 <select
                   className="bg-transparent focus:outline-none  rounded-xl border w-fit px-2 border-[#172544]"
@@ -710,10 +694,10 @@ const Page = (props: Props) => {
                 </div>
               </div>
             </div>
-            <div className="m-auto flex-col w-2/3 flex">
+            <div className="m-auto flex-col md:w-2/3 flex">
               <label htmlFor="">What amenities does your property have?</label>
             </div>
-            <div className="flex w-2/3 m-auto flex-wrap pb-8">
+            <div className="flex md:w-2/3 m-auto flex-wrap pb-8">
               <div className="w-1/3 gap-2 flex flex-col">
                 <div className="flex gap-2">
                   <input
