@@ -250,7 +250,7 @@ const CarouselPage = (props: Props) => {
       </div>
 
       <Lightbox
-        className="z-[20000000] "
+        className="!z-[20000000] "
         open={openLightbox}
         close={() => setOpenLightbox(false)}
         index={selectedImage} // Use the selectedImage state
