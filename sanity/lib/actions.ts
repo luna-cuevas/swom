@@ -30,13 +30,7 @@ export function approveDocumentAction(props: any) {
             return;
           }
 
-          const newDocument = {
-            ...documentToApprove,
-            _id: undefined,
-            _type: 'listing',
-          };
 
-          const createdListing = await sanityClient.create(newDocument);
 
           if (documentToApprove && documentToApprove._id) {
             const { data: signUpData, error } = await supabase.auth.admin.createUser(
@@ -85,6 +79,15 @@ export function approveDocumentAction(props: any) {
               console.log('resetPasswordEmail', resetPasswordEmail, 'resetPasswordEmailError', resetPasswordEmailError);
 
               if (!userError && !appUserDataError && !resetPasswordEmailError) {
+
+                const newDocument = {
+                  ...documentToApprove,
+                  _id: signUpData.user.id,
+                  _type: 'listing',
+                };
+
+                const createdListing = await sanityClient.create(newDocument);
+
                 await sanityClient.delete(documentToApprove._id);
                 console.log('User created:', user);
                 console.log('Document deleted:', documentToApprove._id);
@@ -100,6 +103,43 @@ export function approveDocumentAction(props: any) {
         }
       }
 
+    }
+  }
+}
+
+export function improvedDelete(props: any) {
+  return {
+    label: 'Delete Listing',
+    onHandle: async () => {
+
+      if (typeof window !== 'undefined' && window) {
+        // delete from supabase tables appUsers and listings
+        const { id } = props
+        const query = `*[_type == "listing" && _id == $id][0]`;
+        const documentToDelete = await sanityClient.fetch(query, { id });
+
+        if (documentToDelete) {
+          const supabase = supabaseClient();
+
+          const { data: userData, error: userDataError } = await supabase.from('appUsers').select('id').eq('email', documentToDelete.userInfo.email);
+
+          if (!userData || userData.length === 0) {
+            await sanityClient.delete(documentToDelete._id);
+
+          } else {
+            console.log('userData', userData);
+            const { data, error } = await supabase.auth.admin.deleteUser(
+              userData[0].id
+            )
+            if (error) {
+              console.error('Error deleting user:', error);
+            } else {
+              await sanityClient.delete(documentToDelete._id);
+              console.log('User deleted:', data);
+            }
+          }
+        }
+      }
     }
   }
 }

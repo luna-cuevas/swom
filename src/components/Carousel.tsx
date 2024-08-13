@@ -133,7 +133,9 @@ const CarouselPage = (props: Props) => {
             },
           }}
           on={{
-            view: () => selectedImage,
+            view: (e) => {
+              return selectedImage;
+            },
             click: (clickProps) => {
               if (props.homePage) return null;
               setSelectedImage(clickProps.index);
@@ -169,9 +171,17 @@ const CarouselPage = (props: Props) => {
           }}
           render={{
             slideContainer: (slideProps: any) => {
-              // console.log("slideProps", slideProps.slide);
               return (
-                <div className=" !h-full my-auto w-full relative">
+                <div
+                  onClick={(e) => {
+                    if (props.homePage) return null;
+                    const index = props.images.findIndex(
+                      (img) => img.src === slideProps.slide.src
+                    );
+                    setSelectedImage(index);
+                    setOpenLightbox(true);
+                  }}
+                  className=" !h-full my-auto w-full relative">
                   <div className="absolute w-screen h-screen bg-black opacity-20  z-10"></div>
                   <div
                     className={`${props.overlay ? "opacity-100" : ""} ${
@@ -216,7 +226,7 @@ const CarouselPage = (props: Props) => {
               return (
                 <div
                   className="relative h-full w-full"
-                  onClick={() => {
+                  onClick={(e) => {
                     if (props.homePage) return null;
                     const index = props.images.findIndex(
                       (img) => img.src === slide.src
@@ -240,7 +250,7 @@ const CarouselPage = (props: Props) => {
       </div>
 
       <Lightbox
-        className="!z-[20000000] "
+        className="z-[20000000] "
         open={openLightbox}
         close={() => setOpenLightbox(false)}
         index={selectedImage} // Use the selectedImage state

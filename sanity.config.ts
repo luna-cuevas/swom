@@ -5,7 +5,7 @@
 import { visionTool } from '@sanity/vision'
 import { defineConfig } from 'sanity'
 import { structureTool } from 'sanity/structure'
-import { approveDocumentAction } from './sanity/lib/actions'
+import { approveDocumentAction, improvedDelete } from './sanity/lib/actions'
 import { googleMapsInput } from '@sanity/google-maps-input'
 import { orderableDocumentListDeskItem } from '@sanity/orderable-document-list'
 
@@ -22,7 +22,20 @@ export default defineConfig({
   useCdn: false,
   document: {
     actions: (prev, context) => {
-      return context.schemaType === 'needsApproval' ? [...prev, approveDocumentAction] : prev;
+      console.log('context', context);
+      if (context.schemaType === 'listing') {
+        const array = prev.map((originalAction) => {
+          return originalAction.action === 'delete' ? improvedDelete : originalAction;
+        })
+
+        return [...array];
+
+      }
+
+      if (context.schemaType === 'needsApproval') {
+        return [...prev, approveDocumentAction];
+      }
+      return prev
     },
 
   },
