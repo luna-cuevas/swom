@@ -1,15 +1,15 @@
-'use client';
-import React, { useEffect } from 'react';
-import { Auth } from '@supabase/auth-ui-react';
-import { supabaseClient } from '@/utils/supabaseClient';
-import { ToastContainer, toast } from 'react-toastify';
-import 'react-toastify/dist/ReactToastify.css';
-import Link from 'next/link';
-import { useRouter } from 'next/navigation';
-import Stripe from 'stripe';
-import { useAtom } from 'jotai';
-import { globalStateAtom } from '@/context/atoms';
-import { sanityClient } from '@/utils/sanityClient';
+"use client";
+import React, { useEffect } from "react";
+import { Auth } from "@supabase/auth-ui-react";
+import { supabaseClient } from "@/utils/supabaseClient";
+import { ToastContainer, toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import Stripe from "stripe";
+import { useAtom } from "jotai";
+import { globalStateAtom } from "@/context/atoms";
+import { sanityClient } from "@/utils/sanityClient";
 
 type Props = {
   setSignInActive: React.Dispatch<React.SetStateAction<boolean>>;
@@ -20,7 +20,7 @@ const SignIn = (props: Props) => {
   const stripeActivation = new Stripe(
     process.env.NEXT_PUBLIC_STRIPE_SECRET_KEY!,
     {
-      apiVersion: '2023-08-16',
+      apiVersion: "2023-08-16",
     }
   );
 
@@ -30,10 +30,10 @@ const SignIn = (props: Props) => {
     email: string,
     stripe: any
   ): Promise<boolean> {
-    console.log('checking subscription status');
+    console.log("checking subscription status");
     try {
       if (!stripe) {
-        console.log('Stripe.js has not loaded yet.');
+        console.log("Stripe.js has not loaded yet.");
         return false;
       }
       // Retrieve the customer by email
@@ -50,11 +50,11 @@ const SignIn = (props: Props) => {
         return subscriptions.data.length > 0; // User is subscribed if there's at least one subscription
       } else {
         // Customer not found
-        console.log('Customer not found');
+        console.log("Customer not found");
         return false;
       }
     } catch (error) {
-      console.error('Error checking subscription status:', error);
+      console.error("Error checking subscription status:", error);
       throw error;
     }
   }
@@ -70,21 +70,21 @@ const SignIn = (props: Props) => {
   }, []);
 
   const fetchLoggedInUser = async (user: any) => {
-    console.log('fetching logged in user', user);
+    console.log("fetching logged in user", user);
 
     try {
       // Make a GET request to the API route with the user ID as a query parameter
       const response = await fetch(`/api/getUser`, {
         headers: {
-          'Content-Type': 'application/json',
-          Accept: 'application/json',
+          "Content-Type": "application/json",
+          Accept: "application/json",
         },
-        method: 'POST',
+        method: "POST",
         body: JSON.stringify({ id: user.id }),
       });
 
       if (!response.ok) {
-        throw new Error('Failed to fetch user data');
+        throw new Error("Failed to fetch user data");
       }
 
       const data = await response.json();
@@ -92,20 +92,20 @@ const SignIn = (props: Props) => {
       if (data) {
         return data;
       } else {
-        console.log('No data found for the user');
+        console.log("No data found for the user");
         return null;
       }
     } catch (error: any) {
-      console.error('Error fetching user data:', error.message);
+      console.error("Error fetching user data:", error.message);
       return null;
     }
   };
 
   const handleAuthChange = async (event: any, session: any) => {
-    console.log('session', session);
-    if (event === 'SIGNED_IN' && session !== null) {
-      console.log('session', session);
-      toast.success('Signed in successfully');
+    console.log("session", session);
+    if (event === "SIGNED_IN" && session !== null) {
+      console.log("session", session);
+      toast.success("Signed in successfully");
       const loggedInUser = await fetchLoggedInUser(session.user);
       const subbed = await isUserSubscribed(
         session.user.email,
@@ -121,11 +121,11 @@ const SignIn = (props: Props) => {
       });
 
       props.setSignInActive(false);
-    } else if (event === 'SIGNED_OUT') {
-      console.log('session', event);
-      console.log('SignIn Failed');
+    } else if (event === "SIGNED_OUT") {
+      console.log("session", event);
+      console.log("SignIn Failed");
 
-      toast.error('Sign in failed');
+      toast.error("Sign in failed");
     }
   };
   return (
@@ -160,45 +160,50 @@ const SignIn = (props: Props) => {
             />
             <div className="m-auto w-full">
               <Auth
+                redirectTo={
+                  process.env.NODE_ENV === "development"
+                    ? "http://localhost:3000/forgot-password"
+                    : "https://swom.travel/forgot-password"
+                }
                 supabaseClient={supabase}
                 appearance={{
                   style: {
                     button: {
-                      width: 'fit-content',
-                      maxWidth: '100%',
-                      textTransform: 'uppercase',
-                      background: '#EB8828',
-                      color: 'white',
-                      padding: '0.5rem 2rem',
-                      borderRadius: '0.375rem',
-                      fontFamily: 'sans-serif',
+                      width: "fit-content",
+                      maxWidth: "100%",
+                      textTransform: "uppercase",
+                      background: "#EB8828",
+                      color: "white",
+                      padding: "0.5rem 2rem",
+                      borderRadius: "0.375rem",
+                      fontFamily: "sans-serif",
                     },
                     input: {
-                      letterSpacing: '0.25rem',
+                      letterSpacing: "0.25rem",
                       // textTransform: 'uppercase',
-                      color: '#F7F1EE',
-                      background: '#7F8019',
-                      borderRadius: '0.375rem',
-                      padding: '1rem 0.75rem',
+                      color: "#F7F1EE",
+                      background: "#7F8019",
+                      borderRadius: "0.375rem",
+                      padding: "1rem 0.75rem",
                     },
                     message: {
-                      fontSize: '18px',
-                      color: '#ff0f0f',
-                      margin: '0 0 20px 0',
+                      fontSize: "18px",
+                      color: "#ff0f0f",
+                      margin: "0 0 20px 0",
                     },
                   },
                 }}
                 localization={{
                   variables: {
                     sign_in: {
-                      email_label: '',
-                      password_label: '',
-                      email_input_placeholder: 'Email address',
-                      password_input_placeholder: 'Password',
-                      button_label: 'Sign in',
+                      email_label: "",
+                      password_label: "",
+                      email_input_placeholder: "Email address",
+                      password_input_placeholder: "Password",
+                      button_label: "Sign in",
                     },
                     sign_up: {
-                      link_text: '',
+                      link_text: "",
                     },
                   },
                 }}

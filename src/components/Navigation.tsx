@@ -121,6 +121,7 @@ const Navigation = (props: Props) => {
       navigation !== "/about-us" &&
       navigation !== "/how-it-works" &&
       navigation !== "/sign-up" &&
+      navigation !== "/forgot-password" &&
       state.session === null
     ) {
       router.push("/home");
