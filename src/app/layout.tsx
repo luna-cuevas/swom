@@ -82,10 +82,16 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
+      <head>
+        <link
+          rel="stylesheet"
+          href="https://cdn.jsdelivr.net/gh/orestbida/cookieconsent@3.0.1/dist/cookieconsent.css"
+        />
+      </head>
       <GoogleAnalytics gaId="G-Z15K7DHQM2" />
       <Providers>
         <body className="relative">
-          <CookieConsentComponent />
+          {/* <CookieConsentComponent /> */}
           <HotjarInit />
           <Navigation />
           {children}
@@ -106,6 +112,7 @@ export default function RootLayout({
           />
         </body>
       </Providers>
+      <Script type="module" src="cookie-consent-config.js"></Script>
       <Script src="https://player.vimeo.com/api/player.js"></Script>
     </html>
   );
