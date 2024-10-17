@@ -67,6 +67,6 @@ const initialState: State = {
 
 // Create an atom with local storage persistence for the entire application state
 export const globalStateAtom = atomWithLocalStorage(
-  "SWOMGlobalState-v2",
+  "SWOMGlobalState-v3",
   initialState
 );

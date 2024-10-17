@@ -45,6 +45,16 @@ export default defineConfig({
         S.list()
           .title('Content')
           .items([
+            S.listItem()
+              .title('Wiki Mujeres Listings')
+              .child(
+                S.documentList()
+                  .title('Wiki Mujeres Listings')
+                  .filter(
+                    '_type == "listing" && userInfo.recommended == $recommended && !(_id in path("drafts.**"))'
+                  )
+                  .params({ recommended: 'wikimujeres' })
+              ),
             orderableDocumentListDeskItem({
               type: 'listing', // Replace with your document type
               title: 'Reorder Listings',
