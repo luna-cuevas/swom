@@ -225,93 +225,97 @@ const Navigation = (props: Props) => {
           </>
         )}
 
-        <Link className="text-sm" href="/messages">
-          MESSAGES
-          {state.unreadCount > 0 && (
-            <span className=" ml-1 flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-white text-xs">
-              {state.unreadCount}
-            </span>
-          )}
-        </Link>
-        <Link className="text-sm" href="/listings">
-          LISTINGS
-        </Link>
-        <Link className="text-sm" href="/listings/my-listing">
-          MY LISTING
-        </Link>
-
         {state.activeNavButtons && isClient ? (
-          <Menu
-            open={isMenuOpen}
-            handler={setIsMenuOpen}
-            placement="bottom-end">
-            <MenuHandler>
-              <Button
-                variant="text"
-                className="flex items-center gap-1 rounded-full py-0.5 pr-2 pl-0.5 lg:ml-auto">
-                {state.loggedInUser?.profile_image ? (
-                  <Avatar
-                    variant="circular"
-                    size="sm"
-                    alt="profile"
-                    className="border border-gray-900 p-0.5"
-                    src={state.loggedInUser?.profile_image}
-                  />
-                ) : (
-                  <UserCircleIcon className="h-6 w-6" />
-                )}
-
-                <ChevronDownIcon
-                  strokeWidth={2.5}
-                  className={`h-3 w-3 transition-transform ${
-                    isMenuOpen ? "rotate-180" : ""
-                  }`}
-                />
-              </Button>
-            </MenuHandler>
-            <MenuList className="p-1 z-[100000]">
-              {(user?.email == "anamariagomezc@gmail.com" ||
-                user?.email == "s.cuevas14@gmail.com" ||
-                user?.email == "ana@swom.travel") && (
-                <MenuItem
-                  onClick={closeMenu}
-                  className={`flex items-center gap-2 rounded `}>
-                  <Link href="/studio" className="w-full">
-                    <Typography
-                      color="black"
-                      as="span"
-                      variant="small"
-                      className="font-normal">
-                      STUDIO
-                    </Typography>
-                  </Link>
-                </MenuItem>
+          <>
+            <Link className="text-sm" href="/messages">
+              MESSAGES
+              {state.unreadCount > 0 && (
+                <span className=" ml-1 flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-white text-xs">
+                  {state.unreadCount}
+                </span>
               )}
-              {profileMenuItems.map(({ label, url }, key) => {
-                const isLastItem = key === profileMenuItems.length - 1;
-                return (
+            </Link>
+            <Link className="text-sm" href="/listings">
+              LISTINGS
+            </Link>
+            <Link className="text-sm" href="/listings/my-listing">
+              MY LISTING
+            </Link>
+
+            <Menu
+              open={isMenuOpen}
+              handler={setIsMenuOpen}
+              placement="bottom-end">
+              <MenuHandler>
+                <Button
+                  variant="text"
+                  className="flex items-center gap-1 rounded-full py-0.5 pr-2 pl-0.5 lg:ml-auto">
+                  {state.loggedInUser?.profile_image ? (
+                    <Avatar
+                      variant="circular"
+                      size="sm"
+                      alt="profile"
+                      className="border border-gray-900 p-0.5"
+                      src={state.loggedInUser?.profile_image}
+                    />
+                  ) : (
+                    <UserCircleIcon className="h-6 w-6" />
+                  )}
+
+                  <ChevronDownIcon
+                    strokeWidth={2.5}
+                    className={`h-3 w-3 transition-transform ${
+                      isMenuOpen ? "rotate-180" : ""
+                    }`}
+                  />
+                </Button>
+              </MenuHandler>
+              <MenuList className="p-1 z-[100000]">
+                {(user?.email == "anamariagomezc@gmail.com" ||
+                  user?.email == "s.cuevas14@gmail.com" ||
+                  user?.email == "ana@swom.travel") && (
                   <MenuItem
-                    key={label}
-                    onClick={() => (!isLastItem ? closeMenu : handleSignOut())}
-                    className={`flex items-center gap-2 rounded ${
-                      isLastItem
-                        ? "hover:bg-red-500/10 focus:bg-red-500/10 active:bg-red-500/10"
-                        : ""
-                    }`}>
-                    <Link className="w-full" href={isLastItem ? "" : url}>
+                    onClick={closeMenu}
+                    className={`flex items-center gap-2 rounded `}>
+                    <Link href="/studio" className="w-full">
                       <Typography
+                        color="black"
                         as="span"
                         variant="small"
-                        className="font-normal"
-                        color={isLastItem ? "red" : "black"}>
-                        {label}
+                        className="font-normal">
+                        STUDIO
                       </Typography>
                     </Link>
                   </MenuItem>
-                );
-              })}
-            </MenuList>
-          </Menu>
+                )}
+                {profileMenuItems.map(({ label, url }, key) => {
+                  const isLastItem = key === profileMenuItems.length - 1;
+                  return (
+                    <MenuItem
+                      key={label}
+                      onClick={() =>
+                        !isLastItem ? closeMenu : handleSignOut()
+                      }
+                      className={`flex items-center gap-2 rounded ${
+                        isLastItem
+                          ? "hover:bg-red-500/10 focus:bg-red-500/10 active:bg-red-500/10"
+                          : ""
+                      }`}>
+                      <Link className="w-full" href={isLastItem ? "" : url}>
+                        <Typography
+                          as="span"
+                          variant="small"
+                          className="font-normal"
+                          color={isLastItem ? "red" : "black"}>
+                          {label}
+                        </Typography>
+                      </Link>
+                    </MenuItem>
+                  );
+                })}
+              </MenuList>
+            </Menu>
+          </>
         ) : (
           <button
             className="m-auto text-sm"
