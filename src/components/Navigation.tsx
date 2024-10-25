@@ -14,6 +14,24 @@ import getUnreadMessageCount from "../utils/getUnreadMessageCount";
 import { RealtimeChannel } from "@supabase/supabase-js";
 import getUnreadConversations from "@/utils/getUnreadConversations";
 
+import {
+  Typography,
+  Button,
+  Menu,
+  MenuHandler,
+  MenuList,
+  MenuItem,
+  Avatar,
+} from "@material-tailwind/react";
+import {
+  UserCircleIcon,
+  ChevronDownIcon,
+  Cog6ToothIcon,
+  InboxArrowDownIcon,
+  LifebuoyIcon,
+  PowerIcon,
+} from "@heroicons/react/24/solid";
+
 type Props = {};
 
 const Navigation = (props: Props) => {
@@ -23,8 +41,27 @@ const Navigation = (props: Props) => {
   const [signInActive, setSignInActive] = React.useState(false);
   const [state, setState] = useAtom(globalStateAtom);
   const { user } = state;
+  const [isMenuOpen, setIsMenuOpen] = React.useState(false);
+
+  const closeMenu = () => setIsMenuOpen(false);
 
   const [isClient, setIsClient] = useState(false);
+
+  // profile menu component
+  const profileMenuItems = [
+    {
+      label: "PROFILE",
+      url: "/profile",
+    },
+    {
+      label: "MEMBERSHIP",
+      url: "/membership",
+    },
+    {
+      label: "SIGN OUT",
+      url: "",
+    },
+  ];
 
   useEffect(() => {
     setIsClient(true);
@@ -173,55 +210,108 @@ const Navigation = (props: Props) => {
         </Link>
       </div>
       <div className="hidden 2xl:flex gap-4 align-middle">
-        <Link className="m-auto text-sm" href="/how-it-works">
-          HOW IT WORKS
-        </Link>
-        {state && state.activeNavButtons && state.isSubscribed && isClient && (
+        {!state.activeNavButtons && isClient && (
           <>
-            <Link className="m-auto text-sm" href="/messages">
-              MESSAGES
-              {state.unreadCount > 0 && (
-                <span className=" ml-1 flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-white text-xs">
-                  {state.unreadCount}
-                </span>
-              )}
+            <Link className="m-auto text-sm" href="/how-it-works">
+              HOW IT WORKS
             </Link>
-            <Link className="m-auto text-sm" href="/profile">
-              PROFILE
+
+            <Link className="text-sm" href="/become-member">
+              BECOME A MEMEBER
             </Link>
-            <Link className="m-auto text-sm" href="/membership">
-              MEMBERSHIP
+            <Link className="text-sm" href="/about-us">
+              US
             </Link>
-            <Link className="m-auto text-sm" href="/listings">
-              LISTINGS
-            </Link>
-            <Link className="m-auto text-sm" href="/listings/my-listing">
-              MY LISTING
-            </Link>
-            {(user?.email == "anamariagomezc@gmail.com" ||
-              user?.email == "s.cuevas14@gmail.com" ||
-              user?.email == "ana@swom.travel") && (
-              <Link className="m-auto text-sm" href="/studio">
-                STUDIO
-              </Link>
-            )}
           </>
         )}
-        <Link className="text-sm" href="/about-us">
-          US
+
+        <Link className="text-sm" href="/messages">
+          MESSAGES
+          {state.unreadCount > 0 && (
+            <span className=" ml-1 flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-white text-xs">
+              {state.unreadCount}
+            </span>
+          )}
         </Link>
-        <Link className="text-sm" href="/become-member">
-          BECOME A MEMEBER
+        <Link className="text-sm" href="/listings">
+          LISTINGS
+        </Link>
+        <Link className="text-sm" href="/listings/my-listing">
+          MY LISTING
         </Link>
 
         {state.activeNavButtons && isClient ? (
-          <button
-            className="m-auto text-sm"
-            onClick={() => {
-              handleSignOut();
-            }}>
-            SIGN OUT
-          </button>
+          <Menu
+            open={isMenuOpen}
+            handler={setIsMenuOpen}
+            placement="bottom-end">
+            <MenuHandler>
+              <Button
+                variant="text"
+                className="flex items-center gap-1 rounded-full py-0.5 pr-2 pl-0.5 lg:ml-auto">
+                {state.loggedInUser?.profile_image ? (
+                  <Avatar
+                    variant="circular"
+                    size="sm"
+                    alt="profile"
+                    className="border border-gray-900 p-0.5"
+                    src={state.loggedInUser?.profile_image}
+                  />
+                ) : (
+                  <UserCircleIcon className="h-6 w-6" />
+                )}
+
+                <ChevronDownIcon
+                  strokeWidth={2.5}
+                  className={`h-3 w-3 transition-transform ${
+                    isMenuOpen ? "rotate-180" : ""
+                  }`}
+                />
+              </Button>
+            </MenuHandler>
+            <MenuList className="p-1 z-[100000]">
+              {(user?.email == "anamariagomezc@gmail.com" ||
+                user?.email == "s.cuevas14@gmail.com" ||
+                user?.email == "ana@swom.travel") && (
+                <MenuItem
+                  onClick={closeMenu}
+                  className={`flex items-center gap-2 rounded `}>
+                  <Link href="/studio" className="w-full">
+                    <Typography
+                      color="black"
+                      as="span"
+                      variant="small"
+                      className="font-normal">
+                      STUDIO
+                    </Typography>
+                  </Link>
+                </MenuItem>
+              )}
+              {profileMenuItems.map(({ label, url }, key) => {
+                const isLastItem = key === profileMenuItems.length - 1;
+                return (
+                  <MenuItem
+                    key={label}
+                    onClick={() => (!isLastItem ? closeMenu : handleSignOut())}
+                    className={`flex items-center gap-2 rounded ${
+                      isLastItem
+                        ? "hover:bg-red-500/10 focus:bg-red-500/10 active:bg-red-500/10"
+                        : ""
+                    }`}>
+                    <Link className="w-full" href={isLastItem ? "" : url}>
+                      <Typography
+                        as="span"
+                        variant="small"
+                        className="font-normal"
+                        color={isLastItem ? "red" : "black"}>
+                        {label}
+                      </Typography>
+                    </Link>
+                  </MenuItem>
+                );
+              })}
+            </MenuList>
+          </Menu>
         ) : (
           <button
             className="m-auto text-sm"
@@ -231,31 +321,6 @@ const Navigation = (props: Props) => {
             SIGN IN
           </button>
         )}
-
-        {/* <Menu>
-          <MenuHandler>
-            <Button className="bg-[#fff] shadow-none m-0 p-0">
-              <Image
-                alt="search"
-                width={20}
-                height={20}
-                src="/search-icon.svg"></Image>
-            </Button>
-          </MenuHandler>
-          <MenuList>
-            <Input
-              crossOrigin=""
-              type="text"
-              label="Search"
-              containerProps={{
-                className: 'mb-4',
-              }}
-            />
-            <MenuItem>Menu Item 1</MenuItem>
-            <MenuItem>Menu Item 2</MenuItem>
-            <MenuItem>Menu Item 3</MenuItem>
-          </MenuList>
-        </Menu> */}
       </div>
 
       {signInActive && <SignIn setSignInActive={setSignInActive} />}
@@ -291,11 +356,29 @@ const Navigation = (props: Props) => {
           opacity: state.showMobileMenu ? "1" : "0",
         }}
         className={`2xl:hidden  align-middle gap-4  box-border top-full flex flex-col justify-center text-center transition-all duration-300 ease-in-out overflow-hidden max-h-[100vh] left-0 bg-white w-full absolute`}>
-        <Link className="m-auto" href="/how-it-works">
-          HOW IT WORKS
-        </Link>
+        {!state.activeNavButtons && isClient && (
+          <>
+            <Link className="m-auto" href="/how-it-works">
+              HOW IT WORKS
+            </Link>
+
+            <Link className="m-auto" href="/become-member">
+              BECOME A MEMEBER
+            </Link>
+            <Link className="m-auto" href="/about-us">
+              US
+            </Link>
+          </>
+        )}
         {state && state.activeNavButtons && state.isSubscribed && isClient && (
           <>
+            {(state.user?.email == "anamariagomezc@gmail.com" ||
+              state.user?.email == "s.cuevas14@gmail.com" ||
+              state.user?.email == "ana@swom.travel") && (
+              <Link className="m-auto" href="/studio">
+                STUDIO
+              </Link>
+            )}
             <Link className="m-auto" href="/messages">
               MESSAGES
               {state.unreadCount > 0 && (
@@ -316,22 +399,9 @@ const Navigation = (props: Props) => {
             <Link className="m-auto" href="/listings/my-listing">
               MY LISTING
             </Link>
-
-            {(state.user?.email == "anamariagomezc@gmail.com" ||
-              state.user?.email == "s.cuevas14@gmail.com" ||
-              state.user?.email == "ana@swom.travel") && (
-              <Link className="m-auto" href="/studio">
-                STUDIO
-              </Link>
-            )}
           </>
         )}
-        <Link className="m-auto" href="/about-us">
-          US
-        </Link>
-        <Link className="m-auto" href="/become-member">
-          BECOME A MEMEBER
-        </Link>
+
         {state.activeNavButtons && isClient ? (
           <button
             className="m-auto"

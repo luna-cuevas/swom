@@ -10,6 +10,7 @@
   },
   "dependencies": {
     "@googlemaps/google-maps-services-js": "^3.3.42",
+    "@heroicons/react": "^2.1.5",
     "@hotjar/browser": "^1.0.9",
     "@material-tailwind/react": "^2.1.0",
     "@next/third-parties": "^14.1.2",
