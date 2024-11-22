@@ -47,6 +47,11 @@ export default defineType({
       title: 'Amenities',
       type: 'amenities', // Referencing the amenities schema
     },
+    {
+      name: 'privacyPolicy',
+      type: 'privacyPolicy', // Use the nested object
+      title: 'Privacy Policy',
+    },
   ],
   preview: {
     select: {
