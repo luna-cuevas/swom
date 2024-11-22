@@ -1,4 +1,5 @@
 import { defineType } from 'sanity';
+
 export default defineType({
   name: 'userInfo',
   title: 'User Information',
@@ -37,6 +38,6 @@ export default defineType({
         { name: 'cityVisit3', type: 'string', title: 'City Visit 3' }
       ]
     },
-    { name: 'openToOtherDestinations', type: 'boolean', title: 'Open to Other Destinations' }
+    { name: 'openToOtherDestinations', type: 'boolean', title: 'Open to Other Destinations' },
   ]
 });

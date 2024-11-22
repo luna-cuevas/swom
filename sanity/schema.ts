@@ -6,7 +6,11 @@ import homeInfo from './schemas/homeInfo'
 import amenities from './schemas/amenities'
 import needsApproval from './schemas/needsApproval'
 import highlightedListings from './schemas/highlightedListings'
+import privacyPolicy from './schemas/privacyPolicy'
+console.log(privacyPolicy); // Should log the schema definition
 
 export const schema: { types: SchemaTypeDefinition[] } = {
-  types: [cityDescriptions, listings, userInfo, homeInfo, amenities, needsApproval, highlightedListings],
+  types: [cityDescriptions, listings, userInfo, homeInfo, amenities, needsApproval, highlightedListings, privacyPolicy],
 }
+
+console.log(schema)

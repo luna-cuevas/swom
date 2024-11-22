@@ -1,5 +1,6 @@
 import { sanityClient } from './client'
 import { supabaseClient } from '../../src/utils/supabaseClient'
+import privacyPolicy from '../schemas/privacyPolicy';
 // @ts-ignore
 
 
@@ -70,6 +71,8 @@ export function approveDocumentAction(props: any) {
                   age: documentToApprove.userInfo.age,
                   profileImage: documentToApprove.userInfo.profileImage,
                   role: 'member',
+                  privacyPolicy: documentToApprove.privacyPolicy.privacyPolicy,
+                  privacyPolicyDate: documentToApprove.privacyPolicy.privacyPolicyDate
                 })
 
               const { data: resetPasswordEmail, error: resetPasswordEmailError } = await supabase.auth.resetPasswordForEmail(documentToApprove.userInfo.email, {
