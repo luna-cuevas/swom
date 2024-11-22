@@ -16,7 +16,7 @@ export default defineType({
       name: 'privacyPolicyDate',
       type: 'datetime', // Use datetime to store date and time
       title: 'Privacy Policy Date',
-      description: 'The date when the privacy policy was last updated.',
+      description: 'The date when the privacy policy was accepted.',
       validation: (Rule) =>
         Rule.required().error('The privacy policy date is required.'),
     },
