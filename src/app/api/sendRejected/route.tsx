@@ -20,17 +20,25 @@ export async function POST(req: Request) {
       },
     });
 
-    // Email options
     const mailOptions = {
-      from: email, // Sender's email
-      to: 'mgehring9@gmail.com', //'ana@swom.travel', // Recipient's email
-      subject: `New help request from ${email}`,
-      text: language,
-      html: `
-        <h2>New help request from ${email}</h2>
-        <p>Language: ${language}</p>
-      `,
-    };
+        from: email, // Sender's email (the applicant's email, for example)
+        to: 'mgehring9@gmail.com', // Recipient's email
+        subject: 'Re: Your Application to Join SWOM Exchange Community',
+        text: `Dear ${email},
+      
+      Thank you for your interest in the SWOM Exchange Community. Regrettably, we cannot accommodate your application at this time. However, please know that we will keep your information on file, and should opportunities change in the future, we will be in touch.
+      
+      Best regards,
+      SWOM Exchange Community Team`,
+        html: `
+          <h2>Re: Your Application to Join SWOM Exchange Community</h2>
+          <p>Dear ${email},</p>
+          <p>Thank you for your interest in the SWOM Exchange Community. Regrettably, we cannot accommodate your application at this time. However, please know that we will keep your information on file, and should opportunities change in the future, we will be in touch.</p>
+          <br />
+          <p>Best regards,</p>
+          <p>SWOM Exchange Community Team</p>
+        `,
+      };
 
     // Send the email
     const response = await transporter.sendMail(mailOptions);
