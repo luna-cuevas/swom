@@ -2,7 +2,7 @@
 import { supabaseClient } from "@/utils/supabaseClient";
 import Image from "next/image";
 import Link from "next/link";
-import React, { useState } from "react";
+import React, { useState, useRef } from "react";
 import { useForm } from "react-hook-form";
 import generatePassword from "@/utils/generatePassword";
 import { ToastContainer, toast } from "react-toastify";
@@ -27,6 +27,7 @@ const BecomeMemberDropzone = dynamic(
 
 const Page = (props: Props) => {
   const [signUpActive, setSignUpActive] = useState(false);
+  const formRef = useRef<HTMLDivElement>(null);
   const [submitted, setSubmitted] = useState(false);
   const supabase = supabaseClient();
   const temporaryPassword = generatePassword();
@@ -114,6 +115,14 @@ const Page = (props: Props) => {
       privacyPolicy: false,
     },
   });
+
+  const scrollToForm = () => {
+    setSignUpActive(true);
+    // Delay scrolling to allow the form to render
+    setTimeout(() => {
+      formRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+    }, 100); // Adjust delay if needed
+  };
 
   const onSubmit = async (data: any) => {
 
@@ -257,9 +266,7 @@ const Page = (props: Props) => {
               you.
             </p>
             <button
-              onClick={() => {
-                setSignUpActive(true);
-              }}
+              onClick={scrollToForm}
               className="bg-[#E78426] hover:bg-[#e78326d8] text-[#fff] font-bold px-4 py-2 rounded-3xl">
               Apply now
             </button>
@@ -284,7 +291,7 @@ const Page = (props: Props) => {
         />
       </div>
       {signUpActive && (
-        <div className="">
+        <div ref={formRef} className="">
           <form
             onSubmit={handleSubmit(onSubmit, onError)}
             className=" max-w-[1000px] gap-4 bg-[#F3EBE7] px-4 py-4 flex flex-col  m-auto">
