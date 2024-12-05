@@ -1,5 +1,4 @@
 export const emailTemplate = `
-<!-- emailTemplate.html -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -59,33 +58,24 @@ export const emailTemplate = `
 </head>
 <body>
     <div class="container">
-        <img src="https://libg.s3.us-east-2.amazonaws.com/download/San-Francisco.jpg" alt="Banner" class="banner">
+    <img src="./emailhead.jpg" alt="Header Image" class="banner">
         <div class="headline">
-            <h1>You have unread messages on SWOM</h1>
+            <h1>A new message awaits in your SWOM Inbox</h1>
         </div>
         <div class="separator"></div>
         <div class="message">
-            <!-- Insert your message data here -->
-            <p>Hello, you have an unread message from our service. Please check your inbox for more details.</p>
+            <p>Hi there!</p>
+            <p>Just a friendly reminder that a <b>potential home swap</b> might be hiding in your SWOM inbox!</p>
+            <p>Open it up and discover who could be your <b>host for an unforgettable adventure!</b></p>
         </div>
         <div class="button-container">
-            <a href="swom.travel" class="button">Go to SWOM</a>
+            <a href="https://www.swom.travel" class="button">Head over to SWOM now!</a>
         </div>
         <div class="separator"></div>
         <div class="footer">
-            <p>Thank you for using SWOM. If you have any questions or need assistance, please contact our support team.</p>
-            <p>
-                <strong>SWOM Support</strong><br>
-                Email: support@swom.com<br>
-                Phone: +1 (800) 123-4567
-            </p>
-            <p>Follow us on social media:</p>
-            <p>
-                <a href="https://www.facebook.com/swomtravel" target="_blank">Facebook</a> |
-                <a href="https://www.twitter.com/swomtravel" target="_blank">Twitter</a> |
-                <a href="https://www.instagram.com/swomtravel" target="_blank">Instagram</a>
-            </p>
-            <p>&copy; 2024 SWOM. All rights reserved.</p>
+            <p>P.S. Still have questions about SWOM? Our friendly support team is here to help!</p>
+            <p>Email: <a href="mailto:info@swom.travel">info@swom.travel</a></p>
+            <p>Happy swoming!</p>
         </div>
     </div>
 </body>

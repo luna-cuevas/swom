@@ -1,13 +1,16 @@
 import { NextResponse } from 'next/server';
 import nodemailer from 'nodemailer';
+import { emailTemplate } from './emailTemplate';
+
 
 export async function POST(req: Request) {
+
   try {
     // Parse the request body
-    const { email, language } = await req.json();
+    const { email, name } = await req.json();
 
     // Validate required fields
-    if (!email || !language) {
+    if (!email || !name) {
       return NextResponse.json({ message: 'Email and language are required' }, { status: 400 });
     }
 
@@ -21,23 +24,16 @@ export async function POST(req: Request) {
     });
 
     const mailOptions = {
-        from: email, // Sender's email (the applicant's email, for example)
-        to: 'mgehring9@gmail.com', // Recipient's email
+        from: 's.cuevas14@gmail.com', // Sender's email (the applicant's email, for example)
+        to: email, // Recipient's email
         subject: 'Re: Your Application to Join SWOM Exchange Community',
-        text: `Dear ${email},
+        text: `Dear ${name},
       
       Thank you for your interest in the SWOM Exchange Community. Regrettably, we cannot accommodate your application at this time. However, please know that we will keep your information on file, and should opportunities change in the future, we will be in touch.
       
       Best regards,
       SWOM Exchange Community Team`,
-        html: `
-          <h2>Re: Your Application to Join SWOM Exchange Community</h2>
-          <p>Dear ${email},</p>
-          <p>Thank you for your interest in the SWOM Exchange Community. Regrettably, we cannot accommodate your application at this time. However, please know that we will keep your information on file, and should opportunities change in the future, we will be in touch.</p>
-          <br />
-          <p>Best regards,</p>
-          <p>SWOM Exchange Community Team</p>
-        `,
+        html: emailTemplate(name),
       };
 
     // Send the email

@@ -1,6 +1,6 @@
-import { sanityClient } from './client';
-import { supabaseClient } from '../../src/utils/supabaseClient';
-
+import { sanityClient } from './client'
+import { supabaseClient } from '../../src/utils/supabaseClient'
+import privacyPolicy from '../schemas/privacyPolicy';
 // @ts-ignore
 
 export function approveDocumentAction(props: any) {
@@ -20,7 +20,7 @@ export function approveDocumentAction(props: any) {
         }
       } else {
         try {
-          const query = `*[_type == "needsApproval" && _id == $id][0]`;
+          let query = `*[_type == "needsApproval" && _id == $id][0]`;
           const documentToApprove = await sanityClient.fetch(query, { id });
 
           if (!documentToApprove) {
@@ -28,10 +28,76 @@ export function approveDocumentAction(props: any) {
             return;
           }
 
-          // Proceed with approval steps
-          // (The logic to create users and move documents to "listing" as you've already done)
 
-          console.log('Document approved:', documentToApprove);
+
+          if (documentToApprove && documentToApprove._id) {
+            const { data: signUpData, error } = await supabase.auth.admin.createUser(
+              {
+                email: documentToApprove.userInfo.email,
+                password: 'password',
+                user_metadata: {
+                  name: documentToApprove.userInfo.name,
+                  dob: documentToApprove.userInfo.dob || '',
+                  phone: documentToApprove.userInfo.phone,
+                  role: 'member',
+                },
+                email_confirm: true,
+              }
+            )
+
+            if (signUpData.user) {
+              const { data: user, error: userError } = await supabase
+                .from('listings')
+                .insert(
+                  {
+                    user_id: signUpData.user.id,
+                    userInfo: documentToApprove.userInfo,
+                    homeInfo: documentToApprove.homeInfo,
+                    amenities: documentToApprove.amenities,
+                  }
+                )
+                .select('*');
+
+              const { data: appUserData, error: appUserDataError } = await supabase
+                .from('appUsers')
+                .insert({
+                  id: signUpData.user.id,
+                  name: documentToApprove.userInfo.name,
+                  email: documentToApprove.userInfo.email,
+                  profession: documentToApprove.userInfo.profession,
+                  age: documentToApprove.userInfo.age,
+                  profileImage: documentToApprove.userInfo.profileImage,
+                  role: 'member',
+                  privacyPolicy: documentToApprove.privacyPolicy.privacyPolicy,
+                  privacyPolicyDate: documentToApprove.privacyPolicy.privacyPolicyDate
+                })
+
+              const { data: resetPasswordEmail, error: resetPasswordEmailError } = await supabase.auth.resetPasswordForEmail(documentToApprove.userInfo.email, {
+                redirectTo: isDev ? 'http://localhost:3000/sign-up' : 'https://swom.travel/sign-up',
+              })
+
+              console.log('resetPasswordEmail', resetPasswordEmail, 'resetPasswordEmailError', resetPasswordEmailError);
+
+              if (!userError && !appUserDataError && !resetPasswordEmailError) {
+
+                const newDocument = {
+                  ...documentToApprove,
+                  _id: signUpData.user.id,
+                  _type: 'listing',
+                };
+
+                const createdListing = await sanityClient.create(newDocument);
+
+                await sanityClient.delete(documentToApprove._id);
+                console.log('User created:', user);
+                console.log('Document deleted:', documentToApprove._id);
+                console.log('Listing approved and moved to listings:', createdListing);
+              } else {
+                console.error('Error in creating user:', "userError", userError, "appUserDataError", appUserDataError, "appUserData", appUserData, "user", user, "signUpData", signUpData);
+
+              }
+            }
+          }
         } catch (error) {
           console.error('Error in approving listing:', error);
         }
@@ -45,19 +111,27 @@ export function rejectDocumentAction(props: any) {
     label: 'Reject listing',
     onHandle: async () => {
       try {
-        const { id, email } = props; // Assuming the props include the listing ID and applicant's email
+        const { id } = props; // Only passing the listing ID in the props
 
-        const rejectionMessage = `Dear ${email},\n\nThank you for your interest in the SWOM Exchange Community. Regrettably, we cannot accommodate your application at this time. However, please know that we will keep your information on file, and should opportunities change in the future, we will be in touch.\n\nBest regards,\nSWOM Exchange Community Team`;
+        // Fetch the document to reject using the id
+        let query = `*[_type == "needsApproval" && _id == $id][0]`;
+        const documentToReject = await sanityClient.fetch(query, { id });
+
+        // Ensure the document exists and get the email
+        if (!documentToReject || !documentToReject.userInfo || !documentToReject.userInfo.email) {
+          console.error('Document or email not found');
+          return;
+        }
 
         // Trigger the reject email by calling the 'sendReject' endpoint
-        const response = await fetch('/api/sendReject', {
+        const response = await fetch('/api/sendRejected', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
           },
           body: JSON.stringify({
-            email: email, // Email of the applicant
-            message: rejectionMessage, // The rejection message
+            email: documentToReject.userInfo.email, // Email of the applicant
+            name: documentToReject.userInfo.name
           }),
         });
 
@@ -68,12 +142,10 @@ export function rejectDocumentAction(props: any) {
         console.log('Rejection email sent successfully');
 
         // Now delete the rejected listing from Sanity
-        const query = `*[_type == "listing" && _id == $id][0]`;
-        const documentToReject = await sanityClient.fetch(query, { id });
 
         if (documentToReject) {
-          await sanityClient.delete(documentToReject._id);
-          console.log('Document rejected and deleted:', documentToReject._id);
+          await sanityClient.delete(id);
+          console.log('Document rejected and deleted:', id);
         } else {
           console.error('Document not found to reject.');
         }

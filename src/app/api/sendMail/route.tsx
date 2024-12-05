@@ -23,7 +23,7 @@ export async function POST(req: Request) {
     // Email options
     const mailOptions = {
       from: email, // Sender's email
-      to: 'mgehring9@gmail.com', //'ana@swom.travel', // Recipient's email
+      to: 'ana@swom.travel', // Recipient's email
       subject: `New help request from ${email}`,
       text: language,
       html: `

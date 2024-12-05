@@ -111,10 +111,17 @@ const Page = (props: Props) => {
         tennisCourt: false, // Default value for the "tennisCourt" radio button
         gym: false,
       },
+      privacyPolicy: false,
     },
   });
 
   const onSubmit = async (data: any) => {
+
+    if (!data.privacyPolicy) {
+      toast.error("You must agree to the privacy policy.");
+      return;
+    }
+
     if (imageFiles.length === 0) {
       toast.error("Please upload at least one image");
       return;
@@ -143,6 +150,11 @@ const Page = (props: Props) => {
       const newListingData = {
         _type: "needsApproval",
         ...data,
+        privacyPolicy: {
+          _type: "privacyPolicy", 
+          privacyPolicy: "https://www.termsfeed.com/live/7ec87636-1ee5-4bb2-8fd1-4df66afa5b2d",
+          privacyPolicyDate: new Date().toISOString(),
+        },
         userInfo: {
           ...data.userInfo,
           openToOtherDestinations:
@@ -156,7 +168,8 @@ const Page = (props: Props) => {
           bathrooms: parseInt(data.homeInfo.bathrooms),
           listingImages: imageReferences,
         },
-        // ... any other fields you need to include
+        // update user table privacyPolicy 
+        
       };
 
       // Create the New Listing Document
@@ -1051,7 +1064,32 @@ const Page = (props: Props) => {
                 </div>
               </div>
             </div>
-            <div className="flex w-fit m-auto">
+            <div className="flex flex-col w-fit m-auto space-y-4">
+              {/* Privacy Policy Agreement */}
+              <div className="flex items-center space-x-2">
+                <input
+                  type="checkbox"
+                  {...register("privacyPolicy", {
+                    required: "You must agree to the privacy policy",
+                  })}
+                  id="privacyPolicy"
+                  className="h-5 w-5 rounded border-gray-300 focus:ring-blue-500 focus:border-blue-500"
+                />
+                <label htmlFor="privacyPolicy" className="text-sm text-gray-700">
+                  I agree to the{" "}
+                  <a
+                    href="https://www.termsfeed.com/live/7ec87636-1ee5-4bb2-8fd1-4df66afa5b2d"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-blue-600 underline"
+                  >
+                    privacy policy
+                  </a>
+                </label>
+              </div>
+              {errors.privacyPolicy && (
+                <p className="text-red-500 text-sm mt-1">{errors.privacyPolicy.message}</p>
+              )}
               <ReCAPTCHA
                 sitekey={
                   process.env.NEXT_PUBLIC_GOOGLE_RECAPTCHA_SITE_KEY || ""
