@@ -4,7 +4,7 @@ export const emailTemplate = (name: string) => `
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Re: Your Application to Join SWOM Exchange Community</title>
+    <title>Welcome to SWOM Exchange Community!</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -36,9 +36,9 @@ export const emailTemplate = (name: string) => `
         .message {
             padding: 20px;
         }
-        .button-container {
-            text-align: center;
-            margin: 20px 0;
+        .list {
+            padding-left: 20px;
+            margin: 10px 0;
         }
         .footer {
             padding: 20px;
@@ -49,22 +49,31 @@ export const emailTemplate = (name: string) => `
 </head>
 <body>
     <div class="container">
-        <img src="https://i.imgur.com/dtMoLw1.jpeg" alt="Header Image" class="banner">
+        <img src="https://i.imgur.com/CAQjsjK.jpeg" alt="Header Image" class="banner">
         <div class="headline">
-            <h1>Re: Your Application to Join SWOM Exchange Community</h1>
+            <h1>Welcome to SWOM Exchange Community!</h1>
         </div>
         <div class="separator"></div>
         <div class="message">
             <p>Dear ${name},</p>
-            <p>Thank you for your interest in the SWOM Exchange Community. Regrettably, we cannot accommodate your application at this time. However, please know that we will keep your information on file, and should opportunities change in the future, we will be in touch.</p>
+            <p>Congratulations! We are thrilled to inform you that your application to join the SWOM Exchange Community has been accepted.</p>
+            <p>To get started, please follow these steps:</p>
+            <ol class="list">
+                <li>Check your email for a password reset link and follow the steps to set your password.</li>
+                <li>After you set a password a verification code will be sent to the same email. Enter that code.
+                </li>
+                <li>Once verified, you will be redirected to make your payment securely through Stripe.</li>
+                <li>After your payment is confirmed, log in, revise your listing, edit your profile, and update your login information within your member dashboard.</li>
+            </ol>
+            <p>Welcome to our community! We look forward to your active participation and sharing wonderful experiences with fellow SWOM Exchange members.</p>
+            <p>If you have any questions or need assistance during the onboarding process, please don't hesitate to reach out.</p>
             <p>Best regards,</p>
-            <p><strong>SWOM Exchange Community Team</strong></p>
+            <p><strong>Ana Gomez</strong><br>SWOM Exchange Community Team</p>
         </div>
         <div class="separator"></div>
         <div class="footer">
-            <p>If you have any questions or need assistance, feel free to contact us:</p>
+            <p>If you need help, feel free to contact us:</p>
             <p>Email: <a href="mailto:info@swom.travel">info@swom.travel</a></p>
-            <p>Happy swoming!</p>
         </div>
     </div>
 </body>

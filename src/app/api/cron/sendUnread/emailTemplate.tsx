@@ -58,7 +58,7 @@ export const emailTemplate = `
 </head>
 <body>
     <div class="container">
-    <img src="./emailhead.jpg" alt="Header Image" class="banner">
+    <img src="https://i.imgur.com/dtMoLw1.jpeg" alt="Header Image" class="banner">
         <div class="headline">
             <h1>A new message awaits in your SWOM Inbox</h1>
         </div>

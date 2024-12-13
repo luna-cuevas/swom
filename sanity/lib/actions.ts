@@ -87,7 +87,22 @@ export function approveDocumentAction(props: any) {
                 };
 
                 const createdListing = await sanityClient.create(newDocument);
+                const response = await fetch('/api/sendAccepted', {
+                  method: 'POST',
+                  headers: {
+                    'Content-Type': 'application/json',
+                  },
+                  body: JSON.stringify({
+                    email: documentToApprove.userInfo.email,
+                    name: documentToApprove.userInfo.name,
+                  }),
+                });
 
+                if (!response.ok) {
+                  console.error('Failed to send approval email:', await response.text());
+                } else {
+                  console.log('Approval email sent successfully');
+                }
                 await sanityClient.delete(documentToApprove._id);
                 console.log('User created:', user);
                 console.log('Document deleted:', documentToApprove._id);

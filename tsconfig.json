@@ -32,6 +32,6 @@
     "src/utils/supabaseClient.js",
     "src/utils/sanityClient.js",
     "sanity/**/*.ts"
-  ],
+, "src/app/api/cron/sendUnread/sendEmailTest.js", "src/app/api/cron/sendUnread/sendEmailTest.js"  ],
   "exclude": ["node_modules"]
 }
