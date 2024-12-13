@@ -5,7 +5,7 @@
 import { visionTool } from '@sanity/vision'
 import { defineConfig } from 'sanity'
 import { structureTool } from 'sanity/structure'
-import { approveDocumentAction, improvedDelete } from './sanity/lib/actions'
+import { approveDocumentAction, improvedDelete, rejectDocumentAction } from './sanity/lib/actions'
 import { googleMapsInput } from '@sanity/google-maps-input'
 import { orderableDocumentListDeskItem } from '@sanity/orderable-document-list'
 
@@ -33,7 +33,7 @@ export default defineConfig({
       }
 
       if (context.schemaType === 'needsApproval') {
-        return [...prev, approveDocumentAction];
+        return [...prev, approveDocumentAction, rejectDocumentAction];
       }
       return prev
     },

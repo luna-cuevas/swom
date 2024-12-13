@@ -1,10 +1,10 @@
-export const emailTemplate = `
+export const emailTemplate = (name: string) => `
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Unread Message Notification</title>
+    <title>Re: Your Application to Join SWOM Exchange Community</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -40,15 +40,6 @@ export const emailTemplate = `
             text-align: center;
             margin: 20px 0;
         }
-        .button {
-            display: inline-block;
-            padding: 10px 20px;
-            font-size: 16px;
-            color: #ffffff;
-            background-color: #007BFF;
-            text-decoration: none;
-            border-radius: 5px;
-        }
         .footer {
             padding: 20px;
             text-align: center;
@@ -58,22 +49,20 @@ export const emailTemplate = `
 </head>
 <body>
     <div class="container">
-    <img src="https://i.imgur.com/dtMoLw1.jpeg" alt="Header Image" class="banner">
+        <img src="https://i.imgur.com/dtMoLw1.jpeg" alt="Header Image" class="banner">
         <div class="headline">
-            <h1>A new message awaits in your SWOM Inbox</h1>
+            <h1>Re: Your Application to Join SWOM Exchange Community</h1>
         </div>
         <div class="separator"></div>
         <div class="message">
-            <p>Hi there!</p>
-            <p>Just a friendly reminder that a <b>potential home swap</b> might be hiding in your SWOM inbox!</p>
-            <p>Open it up and discover who could be your <b>host for an unforgettable adventure!</b></p>
-        </div>
-        <div class="button-container">
-            <a href="https://www.swom.travel" class="button">Head over to SWOM now!</a>
+            <p>Dear ${name},</p>
+            <p>Thank you for your interest in the SWOM Exchange Community. Regrettably, we cannot accommodate your application at this time. However, please know that we will keep your information on file, and should opportunities change in the future, we will be in touch.</p>
+            <p>Best regards,</p>
+            <p><strong>SWOM Exchange Community Team</strong></p>
         </div>
         <div class="separator"></div>
         <div class="footer">
-            <p>P.S. Still have questions about SWOM? Our friendly support team is here to help!</p>
+            <p>If you have any questions or need assistance, feel free to contact us:</p>
             <p>Email: <a href="mailto:info@swom.travel">info@swom.travel</a></p>
             <p>Happy swoming!</p>
         </div>
