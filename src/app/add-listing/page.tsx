@@ -30,17 +30,16 @@ const BecomeMemberDropzone = dynamic(
 const GoogleMapComponent = dynamic(
   () => import('@/components/GoogleMapComponent'),
   { 
-    loading: () => <div>Loading map...</div>,
+    loading: () => <div className="w-full h-[40vh] flex items-center justify-center bg-gray-100 rounded-xl">Loading map...</div>,
     ssr: false 
   }
 );
 
-const Page = (props: Props) => {
+export default function Page() {
   const [state, setState] = useAtom(globalStateAtom);
   const [userData, setUserData] = useState<any>([]);
   const [submitted, setSubmitted] = useState(false);
   const [imageFiles, setImageFiles] = useState<File[]>([]);
-  //const [captchaToken, setCaptchaToken] = useState(false);
   const [whereIsIt, setWhereIsIt] = useState<{
     lat: number;
     lng: number;
@@ -51,7 +50,12 @@ const Page = (props: Props) => {
     lng: 0,
   });
   const [hasMaxListings, setHasMaxListings] = useState(false);
+  const [isMounted, setIsMounted] = useState(false);
 
+  useEffect(() => {
+    setIsMounted(true);
+    return () => setIsMounted(false);
+  }, []);
 
   //get user information
     useEffect(() => {
@@ -311,6 +315,10 @@ const Page = (props: Props) => {
     };
     checkListingsCount();
   }, [state.user]);
+
+  if (!isMounted) {
+    return <div className="min-h-screen bg-[#F3EBE7] flex items-center justify-center">Loading...</div>;
+  }
 
   return (
     <main className="md:min-h-screen relative flex flex-col">
@@ -959,6 +967,4 @@ const Page = (props: Props) => {
       />
     </main>
   );
-};
-
-export default Page;
+}
