@@ -10,7 +10,7 @@ import "react-toastify/dist/ReactToastify.css";
 // import ReCAPTCHA from "react-google-recaptcha";
 import { sanityClient } from "@/utils/sanityClient";
 import dynamic from "next/dynamic";
-import GoogleMapComponent from "@/components/GoogleMapComponent";
+import { useRouter } from "next/navigation";
 import { useAtom } from "jotai";
 import { globalStateAtom } from "@/context/atoms";
 
@@ -24,6 +24,14 @@ const BecomeMemberDropzone = dynamic(
   () => import("@/components/BecomeMemberDropzone"),
   {
     loading: () => <p>Loading...</p>,
+  }
+);
+
+const GoogleMapComponent = dynamic(
+  () => import('@/components/GoogleMapComponent'),
+  { 
+    loading: () => <div>Loading map...</div>,
+    ssr: false 
   }
 );
 

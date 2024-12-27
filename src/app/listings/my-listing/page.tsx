@@ -1,6 +1,5 @@
 "use client";
 import CarouselPage from "@/components/Carousel";
-import GoogleMapComponent from "@/components/GoogleMapComponent";
 import Image from "next/image";
 import React, { useEffect, useRef, useState } from "react";
 import { set, useForm, Controller } from "react-hook-form";
@@ -26,6 +25,14 @@ const BecomeMemberDropzone = dynamic(
   () => import("@/components/BecomeMemberDropzone"),
   {
     loading: () => <p>Loading...</p>,
+  }
+);
+
+const GoogleMapComponent = dynamic(
+  () => import('@/components/GoogleMapComponent'),
+  { 
+    loading: () => <div>Loading map...</div>,
+    ssr: false 
   }
 );
 

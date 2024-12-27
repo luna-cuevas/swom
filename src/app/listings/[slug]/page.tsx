@@ -3,7 +3,6 @@ import CarouselPage from '@/components/Carousel';
 import Image from 'next/image';
 import { usePathname, useRouter } from 'next/navigation';
 import React, { useEffect, useState } from 'react';
-import GoogleMapComponent from '@/components/GoogleMapComponent';
 import Link from 'next/link';
 import { sanityClient } from '@/utils/sanityClient';
 import ImageUrlBuilder from '@sanity/image-url';
@@ -12,6 +11,16 @@ import 'react-toastify/dist/ReactToastify.css';
 import { useAtom } from 'jotai';
 import { globalStateAtom } from '@/context/atoms';
 import { supabaseClient } from '@/utils/supabaseClient';
+import dynamic from 'next/dynamic';
+
+const GoogleMapComponent = dynamic(
+  () => import('@/components/GoogleMapComponent'),
+  { 
+    loading: () => <div>Loading map...</div>,
+    ssr: false 
+  }
+);
+
 type Props = {};
 
 const Page = (props: Props) => {
