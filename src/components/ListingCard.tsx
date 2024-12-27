@@ -153,7 +153,9 @@ const ListingCard = (props: Props) => {
           <Link
             href={
               props.listingInfo?.userInfo.email == state?.loggedInUser?.email
-                ? `listings/my-listing`
+                ? !props.myListingPage
+                  ? `/listings/my-listing`
+                  : `/listings/my-listing?listing=${props.listingInfo?._id}`
                 : `/listings/${props.listingInfo?._id}`
             }
             className="cursor-pointer flex-col flex">

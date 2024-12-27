@@ -42,6 +42,7 @@ const Page = (props: Props) => {
     lat: 0,
     lng: 0,
   });
+  const [hasMaxListings, setHasMaxListings] = useState(false);
 
 
   //get user information
@@ -71,8 +72,10 @@ const Page = (props: Props) => {
     }, []);
 
     useEffect(() => {
-        console.log("Updated userData:", userData[0].userInfo.name); // TODO: use this area to send new listing
-      }, [userData]);
+        if (userData && userData[0] && userData[0].userInfo) {
+            console.log("Updated userData:", userData[0].userInfo.name);
+        }
+    }, [userData]);
 
   const {
     register,
@@ -147,14 +150,19 @@ const Page = (props: Props) => {
   });
 
   const onSubmit = async (data: any) => {
-
     if (imageFiles.length === 0) {
       toast.error("Please upload at least one image");
       return;
     }
 
+    // Check if we have user data
+    if (!userData || !userData[0] || !userData[0].userInfo) {
+      toast.error("User information not available");
+      return;
+    }
+
     try {
-      // Upload Images
+      // Upload Images to Sanity
       const uploadPromises = imageFiles.map((file) => {
         return sanityClient.assets.upload("image", file);
       });
@@ -168,19 +176,16 @@ const Page = (props: Props) => {
         },
       }));
 
-      // Prepare New Listing Data, TODO: Check with ana to see if she wants these listings to be approved. 
+      // Prepare New Listing Data for Sanity
       const newListingData = {
-        _type: "needsApproval",
+        _type: "listing",
         ...data,
         privacyPolicy: {
-          _type: "privacyPolicy", 
-        //   privacyPolicy: "https://www.termsfeed.com/live/7ec87636-1ee5-4bb2-8fd1-4df66afa5b2d",
-        //   privacyPolicyDate: new Date().toISOString(),
+          _type: "privacyPolicy",
         },
         userInfo: {
-          ...data.userInfo,
-          openToOtherDestinations:
-            data.userInfo.openToOtherDestinations === "true",
+          ...userData[0].userInfo, // Use the existing user info
+          openToOtherDestinations: data.userInfo.openToOtherDestinations === "true",
         },
         homeInfo: {
           ...data.homeInfo,
@@ -190,19 +195,42 @@ const Page = (props: Props) => {
           bathrooms: parseInt(data.homeInfo.bathrooms),
           listingImages: imageReferences,
         },
-        // update user table privacyPolicy 
-        
       };
 
-      // Create the New Listing Document
+      // Create the New Listing Document in Sanity
       const createdListing = await sanityClient.create(newListingData);
-      console.log("New listing created:", createdListing);
+      
+      /* Comment out Supabase code
+      // Prepare data for Supabase
+      const supabaseData = {
+        user_email: state.user.email,
+        sanity_listing_id: createdListing._id,
+        title: data.homeInfo.title,
+        property_type: data.homeInfo.property,
+        city: whereIsIt.query,
+        country: whereIsIt.query.split(',').slice(-1)[0].trim(),
+        location: {
+          lat: whereIsIt.lat,
+          lng: whereIsIt.lng
+        },
+        status: 'pending',
+        created_at: new Date().toISOString(),
+      };
+
+      // Insert into Supabase
+      const { data: supabaseResponse, error: supabaseError } = await supabaseClient
+        .from('listings')
+        .insert([supabaseData]);
+
+      if (supabaseError) {
+        throw new Error(`Supabase error: ${supabaseError.message}`);
+      }
+      */
 
       // Handle success
       toast.success("New listing created successfully!");
-      setSignUpActive(false);
       setSubmitted(true);
-      // ... update local state and UI as needed
+
     } catch (error) {
       console.error("Error creating new listing:", error);
       toast.error("Failed to create new listing.");
@@ -238,6 +266,7 @@ const Page = (props: Props) => {
 //       // Adjust the positions for " (" and ") " based on country code length
 //       if (i === countryCodeLength) formattedNumber += " (";
 //       if (i === countryCodeLength + 3) formattedNumber += ") ";
+
 //       if (i === countryCodeLength + 6) formattedNumber += "-";
 
 //       formattedNumber += cleaned[i];
@@ -250,6 +279,30 @@ const Page = (props: Props) => {
 //     // const formattedNumber = formatPhoneNumber(e.target.value);
 //     setValue("userInfo.phone", e.target.value);
 //   };
+
+  useEffect(() => {
+    const checkListingsCount = async () => {
+      if (state.user && state.user.email) {
+        try {
+          const loggedInUserEmail = state.user.email;
+          const data = await fetch("/api/getListings", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({ email: loggedInUserEmail }),
+          }).then((response) => response.json());
+
+          if (data.length >= 2) {
+            setHasMaxListings(true);
+          }
+        } catch (error: any) {
+          console.error("Error fetching data:", error.message);
+        }
+      }
+    };
+    checkListingsCount();
+  }, [state.user]);
 
   return (
     <main className="md:min-h-screen relative flex flex-col">
@@ -855,11 +908,25 @@ const Page = (props: Props) => {
                 </div>
               </div>
             </div>
-            <button
-              type="submit"
-              className="bg-[#E78426] w-fit m-auto hover:bg-[#e78326d8] text-[#fff] font-bold px-4 py-2 rounded-3xl">
-              Submit
-            </button>
+            <div className="flex justify-center">
+              <div className="relative group">
+                <button
+                  type="submit"
+                  disabled={hasMaxListings}
+                  className={`${
+                    hasMaxListings 
+                      ? "bg-gray-400 cursor-not-allowed" 
+                      : "bg-[#E78426] hover:bg-[#e78326d8]"
+                  } text-[#fff] font-bold px-4 py-2 rounded-3xl`}>
+                  Submit
+                </button>
+                {hasMaxListings && (
+                  <div className="absolute hidden group-hover:block bg-black text-white text-sm rounded-md p-2 top-full mt-2 left-1/2 transform -translate-x-1/2 w-48 text-center z-[100000]">
+                    Maximum of 2 listings allowed
+                  </div>
+                )}
+              </div>
+            </div>
           </form>
         </div>
       {" "}
@@ -867,7 +934,7 @@ const Page = (props: Props) => {
         // thank you for your submission, someone will be in touch with you shortly
         <div className="flex flex-col my-8 justify-center items-center">
           <h1 className="text-4xl">Thank you for your submission!</h1>
-          <p className="text-lg">Someone will be in touch with you shortly.</p>
+          {/* <p className="text-lg">Someone will be in touch with you shortly.</p> */}
         </div>
       )}
       <ToastContainer

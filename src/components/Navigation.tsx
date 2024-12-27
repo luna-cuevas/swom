@@ -239,7 +239,7 @@ const Navigation = (props: Props) => {
               LISTINGS
             </Link>
             <Link className="text-sm" href="/listings/my-listing">
-              MY LISTING
+              MY LISTINGS
             </Link>
 
             <Menu
@@ -401,7 +401,7 @@ const Navigation = (props: Props) => {
               LISTINGS
             </Link>
             <Link className="m-auto" href="/listings/my-listing">
-              MY LISTING
+              MY LISTINGS
             </Link>
           </>
         )}

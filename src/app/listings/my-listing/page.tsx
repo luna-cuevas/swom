@@ -20,6 +20,7 @@ import { useAtom } from "jotai";
 import { globalStateAtom } from "@/context/atoms";
 import ListingCard from "@/components/ListingCard";
 import dynamic from "next/dynamic";
+import Link from "next/link";
 
 const BecomeMemberDropzone = dynamic(
   () => import("@/components/BecomeMemberDropzone"),
@@ -418,15 +419,30 @@ const Page = (props: Props) => {
 
   if (listings.length > 1) {
     return (
-      <div className="bg-[#F7F1EE]  pt-8 h-[calc(100vh-69px)]">
-        <div className="h-fit flex mx-auto justify-center max-w-[1000px]">
-          {listings.map((listing: any) => (
-            <ListingCard
-              myListingPage={true}
-              listingInfo={listing}
-              key={listing._id}
-            />
-          ))}
+      <div className="bg-[#F7F1EE] pt-8 h-[calc(100vh-69px)]">
+        <div className="flex flex-col mx-auto max-w-[1000px]">
+          <div className="flex justify-end mb-4 px-4">
+            <div className="relative group">
+              <button 
+                disabled
+                className="bg-gray-400 cursor-not-allowed text-white py-2 px-4 rounded-xl"
+              >
+                Add Listing
+              </button>
+              <div className="absolute hidden group-hover:block bg-black text-white text-sm rounded-md p-2 top-full mt-2 left-1/2 transform -translate-x-1/2 w-48 text-center z-[100000]">
+                Maximum of 2 listings allowed
+              </div>
+            </div>
+          </div>
+          <div className="h-fit flex mx-auto justify-center flex-wrap w-full">
+            {listings.map((listing: any) => (
+              <ListingCard
+                myListingPage={true}
+                listingInfo={listing}
+                key={listing._id}
+              />
+            ))}
+          </div>
         </div>
       </div>
     );
@@ -548,6 +564,12 @@ const Page = (props: Props) => {
                   <h1 className="font-sans my-1 break-all font-bold uppercase tracking-[0.1rem]">
                     {getValues("userInfo.profession")}
                   </h1>
+                  <Link 
+                    href="/add-listing"
+                    className="bg-[#F87C1B] text-white py-2 px-4 rounded-xl hover:bg-[#e67116] mt-4 mx-auto"
+                  >
+                    Add Listing
+                  </Link>
                 </>
               )}
             </div>
