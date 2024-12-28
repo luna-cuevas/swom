@@ -40,22 +40,31 @@ type Props = {
   }>;
 };
 
-export default function GoogleMapComponent(props: Props) {
+const libraries: ("places" | "geometry")[] = ["places", "geometry"];
+
+function GoogleMapComponent(props: Props) {
   const [center, setCenter] = useState<{ lat: number; lng: number }>({
     lat: 0,
     lng: 0,
   });
   const [autocomplete, setAutocomplete] = useState<any>(null);
-  const { isLoaded } = useLoadScript({
-    googleMapsApiKey: process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY ?? "",
-    libraries: ["places", "geometry"],
-  });
-
   const [addressString, setAddressString] = useState<string>("");
   const [listingsLocations, setListingsLocations] = useState<any>([]);
   const [activeMarker, setActiveMarker] = useState<any>(null);
   const [zoomLevel, setZoomLevel] = useState<number>(0);
   const [map, setMap] = useState<any>(null);
+  const [isMounted, setIsMounted] = useState(false);
+
+  const { isLoaded, loadError } = useLoadScript({
+    googleMapsApiKey: process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY ?? "",
+    libraries,
+  });
+
+  useEffect(() => {
+    setIsMounted(true);
+    return () => setIsMounted(false);
+  }, []);
+
   const mapContainerStyle: React.CSSProperties = {
     width: "100%",
     height: "100%",
@@ -64,110 +73,85 @@ export default function GoogleMapComponent(props: Props) {
   const zoomThreshold = 15;
 
   const onPlaceChanged = () => {
-    if (autocomplete !== null && typeof window !== "undefined") {
-      const place = autocomplete.getPlace();
-      console.log("place", place);
+    if (!autocomplete || !isMounted) return;
 
-      if (place.geometry && isLoaded && place !== undefined) {
-        setCenter({
-          lat: place.geometry.location.lat(),
-          lng: place.geometry.location.lng(),
-        });
-        props.setWhereIsIt &&
-          props.setWhereIsIt({
-            query: place.formatted_address,
-            lat: place.geometry.location.lat(),
-            lng: place.geometry.location.lng(),
-          });
-        if (props.latLng) {
-          props.latLng = {
-            lat: place.geometry.location.lat(),
-            lng: place.geometry.location.lng(),
-          };
-        }
+    const place = autocomplete.getPlace();
+    if (!place || !place.geometry) return;
 
-        setAddressString(place.formatted_address);
-      }
+    setCenter({
+      lat: place.geometry.location.lat(),
+      lng: place.geometry.location.lng(),
+    });
+
+    if (props.setWhereIsIt) {
+      props.setWhereIsIt({
+        query: place.formatted_address,
+        lat: place.geometry.location.lat(),
+        lng: place.geometry.location.lng(),
+      });
     }
+
+    setAddressString(place.formatted_address);
   };
 
-  // Directly set center from exactAddress or geocode city
   useEffect(() => {
-    if (props.exactAddress && isLoaded && typeof window !== "undefined") {
+    if (!isLoaded || !isMounted) return;
+
+    if (props.exactAddress) {
       setCenter(props.exactAddress);
-      // convert lat and lng to string for the input value using google maps geocoding
-      const geocoder = new window.google.maps.Geocoder();
+      
+      const geocoder = new google.maps.Geocoder();
       geocoder.geocode(
         {
-          location: {
-            lat: props.exactAddress.lat,
-            lng: props.exactAddress.lng,
-          },
+          location: props.exactAddress,
         },
         (results, status) => {
-          if (status === "OK" && results != null) {
+          if (status === "OK" && results?.[0]) {
             setAddressString(results[0].formatted_address);
           }
         }
       );
     }
 
-    if (props.listings && props.listings.length > 0) {
-      props.listings.forEach((listing) => {
-        // If address already contains lat and lng, use them directly
-        const lat = listing.homeInfo.address?.lat;
-        const lng = listing.homeInfo.address?.lng;
-        if (typeof lat !== "undefined" && typeof lng !== "undefined") {
-          setListingsLocations((listingsLocations: any) => [
-            ...listingsLocations,
-            {
-              lat,
-              lng,
-              _id: listing._id,
-              homeInfo: {
-                address: listing.homeInfo.address,
-                description: listing.homeInfo.description,
-                title: listing.homeInfo.title,
-                listingImages: listing.homeInfo.listingImages,
-                locatedIn: listing.homeInfo.locatedIn,
-              },
-              userInfo: {
-                email: listing.userInfo.email,
-              },
-            },
-          ]);
-        } else {
-          console.log("No listings found");
-        }
-      });
+    if (props.listings?.length) {
+      const newLocations = props.listings
+        .filter(listing => {
+          const lat = listing.homeInfo.address?.lat;
+          const lng = listing.homeInfo.address?.lng;
+          return typeof lat !== "undefined" && typeof lng !== "undefined";
+        })
+        .map(listing => ({
+          lat: listing.homeInfo.address.lat,
+          lng: listing.homeInfo.address.lng,
+          _id: listing._id,
+          homeInfo: {
+            address: listing.homeInfo.address,
+            description: listing.homeInfo.description,
+            title: listing.homeInfo.title,
+            listingImages: listing.homeInfo.listingImages,
+            locatedIn: listing.homeInfo.locatedIn,
+          },
+          userInfo: {
+            email: listing.userInfo.email,
+          },
+        }));
+      
+      setListingsLocations(newLocations);
     }
-  }, [props.exactAddress, isLoaded, props.listings]);
+  }, [props.exactAddress, isLoaded, props.listings, isMounted]);
 
   useEffect(() => {
-    if (props.whereIsIt && isLoaded && typeof window !== "undefined") {
+    if (!isLoaded || !isMounted) return;
+
+    if (props.whereIsIt) {
       setCenter(props.whereIsIt);
       setAddressString(props.whereIsIt.query);
-
-      // const geocoder = new window.google.maps.Geocoder();
-      // geocoder.geocode(
-      //   {
-      //     location: {
-      //       lat: props.whereIsIt.lat,
-      //       lng: props.whereIsIt.lng,
-      //     },
-      //   },
-      //   (results, status) => {
-      //     if (status === "OK" && results != null) {
-      //       console.log("results", results);
-      //     }
-      //   }
-      // );
     }
-  }, [props.whereIsIt, isLoaded]);
+  }, [props.whereIsIt, isLoaded, isMounted]);
 
-  if (!isLoaded) {
-    return <div>Loading...</div>;
-  }
+  if (!isMounted) return null;
+  if (loadError) return <div>Error loading maps</div>;
+  if (!isLoaded) return <div>Loading map...</div>;
 
   return (
     <>
@@ -180,8 +164,7 @@ export default function GoogleMapComponent(props: Props) {
             onChange={(e) => setAddressString(e.target.value)}
             onBlur={() => {
               if (addressString === "") {
-                props.setWhereIsIt &&
-                  props.setWhereIsIt({ lat: 0, lng: 0, query: "" });
+                props.setWhereIsIt?.({ lat: 0, lng: 0, query: "" });
               }
             }}
           />
@@ -196,9 +179,9 @@ export default function GoogleMapComponent(props: Props) {
           zoom={14}
           center={center}
           onLoad={(map) => {
-            setCenter(
-              ((map?.getCenter() ?? {}) as google.maps.LatLng).toJSON()
-            );
+            if (!map) return;
+            const newCenter = map.getCenter()?.toJSON();
+            if (newCenter) setCenter(newCenter);
             setMap(map);
           }}
           onZoomChanged={() => {
@@ -206,7 +189,6 @@ export default function GoogleMapComponent(props: Props) {
               setZoomLevel(map.getZoom());
             }
           }}>
-          {/* Marker for exact location */}
           {props.radius ? (
             <Circle
               center={center}
@@ -229,7 +211,8 @@ export default function GoogleMapComponent(props: Props) {
                 <MarkerF
                   position={{ lat: location.lat, lng: location.lng }}
                   onClick={() => setActiveMarker(location)}
-                  zIndex={50000}></MarkerF>
+                  zIndex={50000}
+                />
               )}
               <Circle
                 center={{ lat: location.lat, lng: location.lng }}
@@ -249,7 +232,7 @@ export default function GoogleMapComponent(props: Props) {
             <InfoWindow
               position={{ lat: activeMarker.lat, lng: activeMarker.lng }}
               onCloseClick={() => setActiveMarker(null)}>
-              <div className="flex  w-[200px] h-full  flex-col">
+              <div className="flex w-[200px] h-full flex-col">
                 <Link href={`/listings/${activeMarker._id}`}>
                   <div className="w-full h-[100px] relative">
                     <Image
@@ -279,10 +262,10 @@ export default function GoogleMapComponent(props: Props) {
               </div>
             </InfoWindow>
           )}
-
-          {/* Other functionalities like showing listings could also be added here */}
         </GoogleMap>
       </div>
     </>
   );
 }
+
+export default GoogleMapComponent;

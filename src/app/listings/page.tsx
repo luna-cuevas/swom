@@ -1,10 +1,18 @@
 "use client";
-import GoogleMapComponent from "@/components/GoogleMapComponent";
 import ListingCard from "@/components/ListingCard";
-import React, { use, useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { useAtom } from "jotai";
 import { globalStateAtom } from "@/context/atoms";
 import { useSearchParams } from "next/navigation";
+import dynamic from 'next/dynamic';
+
+const GoogleMapComponent = dynamic(
+  () => import('@/components/GoogleMapComponent'),
+  { 
+    loading: () => <div>Loading map...</div>,
+    ssr: false 
+  }
+);
 
 type Props = {};
 
