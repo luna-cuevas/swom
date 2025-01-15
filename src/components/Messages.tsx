@@ -8,6 +8,8 @@ import { useSearchParams } from "next/navigation";
 import React, { useEffect, useRef, useState } from "react";
 import { sanityClient } from "../../sanity/lib/client";
 import { urlForImage } from "../../sanity/lib/image";
+import SwomAgreementModal from './SwomAgreementModal';
+import SwomAgreementMessage from './SwomAgreementMessage';
 
 type Props = {};
 
@@ -55,6 +57,8 @@ const Messages = (props: Props) => {
     useState<boolean>(true);
   const supabase = supabaseClient();
   const [selectedConversation, setSelectedConversation] = useState<any>(null);
+  const [isSwomModalOpen, setIsSwomModalOpen] = useState(false);
+  const [agreementMessages, setAgreementMessages] = useState<{[key: string]: any}>({});
 
   let selectedConvo = conversations?.find(
     (convo) => convo.conversation_id === selectedConversation
@@ -142,6 +146,53 @@ const Messages = (props: Props) => {
       setPartnerId(selectedConversation);
     }
   }, [selectedConversation, sendingMessage]);
+
+  useEffect(() => {
+    const fetchAgreements = async () => {
+      const newAgreements: {[key: string]: any} = {};
+      
+      for (const message of messages || []) {
+        let messageContent;
+        try {
+          messageContent = JSON.parse(message.content);
+        } catch {
+          continue;
+        }
+
+        if (messageContent?.type === 'swom_agreement' && !agreementMessages[messageContent.agreementId]) {
+          const agreement = await sanityClient.fetch(`
+            *[_type == "swomAgreement" && _id == $agreementId][0]{
+              _id,
+              exchangeType,
+              startDate,
+              endDate,
+              status,
+              "initiatorListing": initiatorListing->{
+                homeInfo {
+                  title
+                }
+              },
+              "partnerListing": partnerListing->{
+                homeInfo {
+                  title
+                }
+              }
+            }
+          `, { agreementId: messageContent.agreementId });
+          
+          if (agreement) {
+            newAgreements[messageContent.agreementId] = agreement;
+          }
+        }
+      }
+
+      if (Object.keys(newAgreements).length > 0) {
+        setAgreementMessages(prev => ({...prev, ...newAgreements}));
+      }
+    };
+
+    fetchAgreements();
+  }, [messages]);
 
   const scrollToBottom = () => {
     if (messagesContainerRef.current) {
@@ -285,6 +336,17 @@ const Messages = (props: Props) => {
         return false;
       } else {
         setMessages(messagesDataJson[0].messagesObj || []);
+        // Update both unreadCount and unreadConversations in the global state
+        setState(prevState => {
+          const filteredConversations = prevState.unreadConversations.filter(
+            (unread: { conversation_id: any }) => unread.conversation_id !== selectedConversation
+          );
+          return {
+            ...prevState,
+            unreadConversations: filteredConversations,
+            unreadCount: filteredConversations.length
+          };
+        });
         scrollToBottom();
         return true;
       }
@@ -425,6 +487,64 @@ const Messages = (props: Props) => {
         setNewMessage(""); // Clear the input field after sending the message
         setSendingMessage(false);
       }
+    }
+  };
+
+  const handleAcceptAgreement = async (agreementId: string) => {
+    try {
+      // Update agreement status in Sanity
+      await sanityClient
+        .patch(agreementId)
+        .set({ status: 'accepted' })
+        .commit();
+
+      // Send a message to notify about acceptance
+      await fetch('/api/messages/sendMessage', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          conversation_id: selectedConversation,
+          sender_id: state.user.id,
+          content: 'Swom agreement accepted! 🎉',
+        }),
+      });
+
+      // Refresh messages
+      fetchMessagesForSelectedConversation();
+    } catch (error) {
+      console.error('Error accepting agreement:', error);
+      alert('Failed to accept agreement. Please try again.');
+    }
+  };
+
+  const handleRejectAgreement = async (agreementId: string) => {
+    try {
+      // Update agreement status in Sanity
+      await sanityClient
+        .patch(agreementId)
+        .set({ status: 'rejected' })
+        .commit();
+
+      // Send a message to notify about rejection
+      await fetch('/api/messages/sendMessage', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          conversation_id: selectedConversation,
+          sender_id: state.user.id,
+          content: 'Swom agreement rejected.',
+        }),
+      });
+
+      // Refresh messages
+      fetchMessagesForSelectedConversation();
+    } catch (error) {
+      console.error('Error rejecting agreement:', error);
+      alert('Failed to reject agreement. Please try again.');
     }
   };
 
@@ -571,7 +691,7 @@ const Messages = (props: Props) => {
                                 state.user.id
                                   ? 1
                                   : 2
-                              ]?.profileImage // Assuming convoPic is a property of the second member
+                              ]?.profileImage
                             : "/profile/profile-pic-placeholder.png"
                         }
                         alt="hero"
@@ -584,21 +704,42 @@ const Messages = (props: Props) => {
                       {selectedConvo?.members[memberIndex]?.name}
                     </h1>
                   </div>
-                  <Link
-                    type="button"
-                    className={`bg-[#E88527] hover:bg-[#e88427ca] ${
-                      mobileNavMenu && "mx-auto"
-                    } text-base tracking-normal capitalize h-fit w-fit my-auto px-2 py-1 text-white rounded-xl `}
-                    href={
-                      selectedConvo?.members[memberIndex].email !=
-                      state.loggedInUser?.email
-                        ? "/listings/" +
-                          selectedConvo?.members[memberIndex].listingId
-                        : ""
-                    }>
-                    View Listing
-                  </Link>
+                  <div className="flex gap-2">
+                    <Link
+                      type="button"
+                      className={`bg-[#E88527] hover:bg-[#e88427ca] ${
+                        mobileNavMenu && "mx-auto"
+                      } text-base tracking-normal capitalize h-fit w-fit my-auto px-2 py-1 text-white rounded-xl `}
+                      href={
+                        selectedConvo?.members[memberIndex].email !=
+                        state.loggedInUser?.email
+                          ? "/listings/" +
+                            selectedConvo?.members[memberIndex].listingId
+                          : ""
+                      }>
+                      View Listing
+                    </Link>
+                    <button
+                      type="button"
+                      onClick={() => setIsSwomModalOpen(true)}
+                      className={`bg-[#7F8119] hover:bg-[#7f8119d8] ${
+                        mobileNavMenu && "mx-auto"
+                      } text-base tracking-normal capitalize h-fit w-fit my-auto px-2 py-1 text-white rounded-xl`}
+                    >
+                      Ready to Swom
+                    </button>
+                  </div>
                 </div>
+
+                <SwomAgreementModal
+                  isOpen={isSwomModalOpen}
+                  onClose={() => setIsSwomModalOpen(false)}
+                  partnerListingId={selectedConvo?.members[memberIndex].listingId}
+                  myListingId={selectedConvo?.members[memberIndex === 1 ? 2 : 1].listingId}
+                  partnerName={selectedConvo?.members[memberIndex]?.name}
+                  conversationId={selectedConversation}
+                  partnerId={selectedConvo?.members[memberIndex].id}
+                />
 
                 <div
                   ref={messagesContainerRef}
@@ -606,49 +747,71 @@ const Messages = (props: Props) => {
                   <div className="">
                     <ul className="flex flex-col gap-6 ">
                       {messages &&
-                        messages?.map((message, index) => (
-                          <li
-                            key={index}
-                            className={` flex opacity-0 transition-all justify-end duration-75 ease-in-out  gap-4 ${
-                              message.sender_id == state.user?.id
-                                ? "ml-auto  opacity-100" // Align to the right if it's my message
-                                : "mr-auto  opacity-100"
-                            }`}>
-                            <Link
-                              href={
+                        messages?.map((message, index) => {
+                          let messageContent;
+                          try {
+                            messageContent = JSON.parse(message.content);
+                          } catch {
+                            messageContent = null;
+                          }
+
+                          if (messageContent?.type === 'swom_agreement') {
+                            const agreement = agreementMessages[messageContent.agreementId];
+                            if (!agreement) return null;
+
+                            return (
+                              <li
+                                key={index}
+                                className={`flex opacity-0 transition-all justify-end duration-75 ease-in-out gap-4 ${
+                                  message.sender_id == state.user?.id
+                                    ? "ml-auto opacity-100"
+                                    : "mr-auto opacity-100"
+                                }`}
+                              >
+                                <SwomAgreementMessage
+                                  agreement={agreement}
+                                  messageContent={messageContent}
+                                  isInitiator={message.sender_id === state.user?.id}
+                                  onAccept={handleAcceptAgreement}
+                                  onReject={handleRejectAgreement}
+                                />
+                              </li>
+                            );
+                          }
+
+                          // Regular message rendering
+                          return (
+                            <li
+                              key={index}
+                              className={`flex opacity-0 transition-all justify-end duration-75 ease-in-out gap-4 ${
                                 message.sender_id == state.user?.id
-                                  ? ""
-                                  : "/listings/" +
-                                    selectedConvo.members[memberIndex].id
-                              }>
-                              <div className="relative w-[30px] h-[30px] my-auto flex">
-                                {/* <Image
-                                  src={
-                                    !selectedConvo.members[memberIndex]
-                                      .profileImage
-                                      ? '/profile/profile-pic-placeholder.png'
-                                      : message.sender_id == state.user.id
-                                      ? state.user.profileImage
-                                      : selectedConvo?.members[memberIndex]
-                                          .profileImage
-                                  }
-                                  alt="hero"
-                                  fill
-                                  objectFit="cover"
-                                  className="rounded-full my-auto"
-                                /> */}
-                              </div>
-                            </Link>
-                            <p
-                              className={`my-auto py-2 font-sans md:text-lg px-10 rounded-3xl ${
-                                message?.sender_id === state.user?.id
-                                  ? "bg-[#dbd7d6]"
-                                  : "bg-[#E5DEDB]"
-                              }`}>
-                              {message?.content}
-                            </p>
-                          </li>
-                        ))}
+                                  ? "ml-auto opacity-100"
+                                  : "mr-auto opacity-100"
+                              }`}
+                            >
+                              <Link
+                                href={
+                                  message.sender_id == state.user?.id
+                                    ? ""
+                                    : "/listings/" + selectedConvo.members[memberIndex].id
+                                }
+                              >
+                                <div className="relative w-[30px] h-[30px] my-auto flex">
+                                  {/* Profile image rendering */}
+                                </div>
+                              </Link>
+                              <p
+                                className={`my-auto py-2 font-sans md:text-lg px-10 rounded-3xl ${
+                                  message?.sender_id === state.user?.id
+                                    ? "bg-[#dbd7d6]"
+                                    : "bg-[#E5DEDB]"
+                                }`}
+                              >
+                                {message?.content}
+                              </p>
+                            </li>
+                          );
+                        })}
                     </ul>
                   </div>
                 </div>
