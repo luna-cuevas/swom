@@ -9,20 +9,78 @@ export default {
       type: 'string',
       options: {
         list: [
-          { title: 'Reciprocal', value: 'reciprocal' },
-          { title: 'Non-reciprocal', value: 'non_reciprocal' }
+          { title: 'Simultaneous', value: 'simultaneous' },
+          { title: 'Non-simultaneous', value: 'non_simultaneous' }
         ]
       }
     },
     {
-      name: 'startDate',
-      title: 'Start Date',
-      type: 'date'
+      name: 'initiatorDetails',
+      title: 'Initiator Details',
+      type: 'object',
+      fields: [
+        {
+          name: 'numberOfPeople',
+          title: 'Number of People',
+          type: 'number'
+        },
+        {
+          name: 'carExchange',
+          title: 'Car Exchange',
+          type: 'boolean'
+        }
+      ]
     },
     {
-      name: 'endDate',
-      title: 'End Date',
-      type: 'date'
+      name: 'partnerDetails',
+      title: 'Partner Details',
+      type: 'object',
+      fields: [
+        {
+          name: 'numberOfPeople',
+          title: 'Number of People',
+          type: 'number'
+        },
+        {
+          name: 'carExchange',
+          title: 'Car Exchange',
+          type: 'boolean'
+        }
+      ]
+    },
+    {
+      name: 'initiatorDates',
+      title: 'Initiator Dates',
+      type: 'object',
+      fields: [
+        {
+          name: 'startDate',
+          title: 'Start Date',
+          type: 'date'
+        },
+        {
+          name: 'endDate',
+          title: 'End Date',
+          type: 'date'
+        }
+      ]
+    },
+    {
+      name: 'partnerDates',
+      title: 'Partner Dates',
+      type: 'object',
+      fields: [
+        {
+          name: 'startDate',
+          title: 'Start Date',
+          type: 'date'
+        },
+        {
+          name: 'endDate',
+          title: 'End Date',
+          type: 'date'
+        }
+      ]
     },
     {
       name: 'status',

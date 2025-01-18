@@ -7,9 +7,25 @@ import { globalStateAtom } from '@/context/atoms';
 interface SwomAgreementMessageProps {
   agreement: {
     _id: string;
-    exchangeType: 'reciprocal' | 'non-reciprocal';
-    startDate: string;
-    endDate: string;
+    exchangeType: 'simultaneous' | 'non_simultaneous';
+    initiatorDates?: {
+      startDate: string;
+      endDate: string;
+    };
+    partnerDates?: {
+      startDate: string;
+      endDate: string;
+    };
+    initiatorDetails?: {
+      numberOfPeople: number;
+      carExchange: boolean;
+    };
+    partnerDetails?: {
+      numberOfPeople: number;
+      carExchange: boolean;
+    };
+    startDate?: string; // For backwards compatibility
+    endDate?: string; // For backwards compatibility
     status: 'pending' | 'accepted' | 'rejected';
     initiatorListing: {
       homeInfo: {
@@ -78,23 +94,67 @@ const SwomAgreementMessage: React.FC<SwomAgreementMessageProps> = ({
     }
   };
 
+  // Handle both old and new date formats
+  const getDates = () => {
+    if (agreement.initiatorDates?.startDate && agreement.initiatorDates?.endDate) {
+      return {
+        initiatorStart: agreement.initiatorDates.startDate,
+        initiatorEnd: agreement.initiatorDates.endDate,
+        partnerStart: agreement.partnerDates?.startDate,
+        partnerEnd: agreement.partnerDates?.endDate
+      };
+    }
+    // Fallback to old format
+    return {
+      initiatorStart: agreement.startDate,
+      initiatorEnd: agreement.endDate
+    };
+  };
+
+  const dates = getDates();
+
   return (
     <div className="bg-white rounded-lg p-4 shadow-sm border border-gray-200 max-w-md">
       <div className="mb-4">
         <h3 className="text-lg font-semibold mb-2">
-          {isInitiator ? 'Swom Request Sent' : 'New Swom Request'}
+          {isInitiator ? 'SWOM Request Sent' : 'New SWOM Request'}
         </h3>
         <p className="text-sm text-gray-600 mb-1">
-          <span className="font-medium">Type:</span> {agreement.exchangeType === 'reciprocal' ? 'Reciprocal Swap' : 'One-way Stay'}
+          <span className="font-medium">Type:</span> {agreement.exchangeType === 'simultaneous' ? 'Simultaneous swap' : 'Non-simultaneous swap'}
         </p>
-        <p className="text-sm text-gray-600 mb-1">
-          <span className="font-medium">Dates:</span> {formatDate(agreement.startDate)} - {formatDate(agreement.endDate)}
-        </p>
+        {dates.initiatorStart && dates.initiatorEnd && (
+          <p className="text-sm text-gray-600 mb-1">
+            <span className="font-medium">Your Dates:</span> {formatDate(dates.initiatorStart)} - {formatDate(dates.initiatorEnd)}
+          </p>
+        )}
+        {agreement.exchangeType === 'non_simultaneous' && dates.partnerStart && dates.partnerEnd && (
+          <p className="text-sm text-gray-600 mb-1">
+            <span className="font-medium">Partner's Dates:</span> {formatDate(dates.partnerStart)} - {formatDate(dates.partnerEnd)}
+          </p>
+        )}
         <p className="text-sm text-gray-600 mb-1">
           <span className="font-medium">Properties:</span>
           <br />
           {agreement.initiatorListing.homeInfo.title} ↔️ {agreement.partnerListing.homeInfo.title}
         </p>
+
+        {/* Display number of people and car exchange info */}
+        {agreement.initiatorDetails && (
+          <div className="mt-2">
+            <p className="text-sm text-gray-600">
+              <span className="font-medium">Your Group:</span> {agreement.initiatorDetails.numberOfPeople} {agreement.initiatorDetails.numberOfPeople === 1 ? 'person' : 'people'}
+              {agreement.initiatorDetails.carExchange && ' • Car exchange available'}
+            </p>
+          </div>
+        )}
+        {agreement.partnerDetails && (
+          <div className="mt-1">
+            <p className="text-sm text-gray-600">
+              <span className="font-medium">Partner's Group:</span> {agreement.partnerDetails.numberOfPeople} {agreement.partnerDetails.numberOfPeople === 1 ? 'person' : 'people'}
+              {agreement.partnerDetails.carExchange && ' • Car exchange available'}
+            </p>
+          </div>
+        )}
 
         {messageContent?.fileUrl && (
           <div className="mt-3">

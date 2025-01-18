@@ -34,10 +34,22 @@ const SwomAgreementModal: React.FC<SwomAgreementModalProps> = ({
   conversationId,
   partnerId
 }) => {
-  const [exchangeType, setExchangeType] = useState<'reciprocal' | 'non-reciprocal'>('reciprocal');
-  const [dateValue, setDateValue] = useState({
+  const [exchangeType, setExchangeType] = useState<'simultaneous' | 'non_simultaneous'>('simultaneous');
+  const [initiatorDates, setInitiatorDates] = useState({
     startDate: null,
     endDate: null
+  });
+  const [partnerDates, setPartnerDates] = useState({
+    startDate: null,
+    endDate: null
+  });
+  const [initiatorDetails, setInitiatorDetails] = useState({
+    numberOfPeople: 1,
+    carExchange: false
+  });
+  const [partnerDetails, setPartnerDetails] = useState({
+    numberOfPeople: 1,
+    carExchange: false
   });
   const [files, setFiles] = useState<File[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -95,14 +107,6 @@ const SwomAgreementModal: React.FC<SwomAgreementModalProps> = ({
     }
   }, [isOpen, state.user.id, partnerId]);
 
-  // Add logs for state updates
-  useEffect(() => {
-    console.log('Current myListings state:', myListings);
-    console.log('Current partnerListings state:', partnerListings);
-    console.log('Selected my listing:', selectedMyListing);
-    console.log('Selected partner listing:', selectedPartnerListing);
-  }, [myListings, partnerListings, selectedMyListing, selectedPartnerListing]);
-
   const onDrop = useCallback((acceptedFiles: File[]) => {
     setFiles(acceptedFiles);
   }, []);
@@ -118,14 +122,11 @@ const SwomAgreementModal: React.FC<SwomAgreementModalProps> = ({
     multiple: false
   });
 
-  const handleDateChange = (newValue: any) => {
-    setDateValue(newValue);
-  };
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!dateValue.startDate || !dateValue.endDate) {
-      alert('Please select both start and end dates');
+    if ((!initiatorDates.startDate || !initiatorDates.endDate) || 
+        (exchangeType === 'non_simultaneous' && (!partnerDates.startDate || !partnerDates.endDate))) {
+      alert('Please select all required dates');
       return;
     }
 
@@ -160,8 +161,24 @@ const SwomAgreementModal: React.FC<SwomAgreementModalProps> = ({
       const agreement = await sanityClient.create({
         _type: 'swomAgreement',
         exchangeType,
-        startDate: dateValue.startDate,
-        endDate: dateValue.endDate,
+        initiatorDates: {
+          startDate: initiatorDates.startDate,
+          endDate: initiatorDates.endDate
+        },
+        initiatorDetails: {
+          numberOfPeople: initiatorDetails.numberOfPeople,
+          carExchange: initiatorDetails.carExchange
+        },
+        partnerDetails: {
+          numberOfPeople: partnerDetails.numberOfPeople,
+          carExchange: partnerDetails.carExchange
+        },
+        ...(exchangeType === 'non_simultaneous' && {
+          partnerDates: {
+            startDate: partnerDates.startDate,
+            endDate: partnerDates.endDate
+          }
+        }),
         status: 'pending',
         initiatorListing: {
           _type: 'reference',
@@ -235,7 +252,7 @@ const SwomAgreementModal: React.FC<SwomAgreementModalProps> = ({
     <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center">
       <div className="bg-white rounded-lg p-8 max-w-md w-full mx-4">
         <h2 className="text-2xl font-bold mb-6 text-center">
-          Ready to Swom with {partnerName}?
+          Ready to SWOM with {partnerName}?
         </h2>
         <form onSubmit={handleSubmit} className="space-y-6">
           <div>
@@ -246,23 +263,101 @@ const SwomAgreementModal: React.FC<SwomAgreementModalProps> = ({
               <label className="flex items-center">
                 <input
                   type="radio"
-                  value="reciprocal"
-                  checked={exchangeType === 'reciprocal'}
-                  onChange={(e) => setExchangeType(e.target.value as 'reciprocal' | 'non-reciprocal')}
+                  value="simultaneous"
+                  checked={exchangeType === 'simultaneous'}
+                  onChange={(e) => setExchangeType(e.target.value as 'simultaneous' | 'non_simultaneous')}
                   className="mr-2"
                 />
-                Reciprocal (We swap homes)
+                Simultaneous (We swap homes at the same time)
               </label>
               <label className="flex items-center">
                 <input
                   type="radio"
-                  value="non-reciprocal"
-                  checked={exchangeType === 'non-reciprocal'}
-                  onChange={(e) => setExchangeType(e.target.value as 'reciprocal' | 'non-reciprocal')}
+                  value="non_simultaneous"
+                  checked={exchangeType === 'non_simultaneous'}
+                  onChange={(e) => setExchangeType(e.target.value as 'simultaneous' | 'non_simultaneous')}
                   className="mr-2"
                 />
-                Non-reciprocal (One-way stay)
+                Non-simultaneous (We swap homes at different times)
               </label>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-500 mb-2">
+                Your Details
+              </label>
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Number of People
+                  </label>
+                  <input
+                    type="number"
+                    min="1"
+                    value={initiatorDetails.numberOfPeople}
+                    onChange={(e) => setInitiatorDetails(prev => ({
+                      ...prev,
+                      numberOfPeople: parseInt(e.target.value)
+                    }))}
+                    className="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#E88527]"
+                  />
+                </div>
+                <div className="flex items-center">
+                  <input
+                    type="checkbox"
+                    id="initiatorCarExchange"
+                    checked={initiatorDetails.carExchange}
+                    onChange={(e) => setInitiatorDetails(prev => ({
+                      ...prev,
+                      carExchange: e.target.checked
+                    }))}
+                    className="mr-2"
+                  />
+                  <label htmlFor="initiatorCarExchange" className="text-sm font-medium text-gray-700">
+                    Car Exchange Available
+                  </label>
+                </div>
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-500 mb-2">
+                Partner Details
+              </label>
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Number of People
+                  </label>
+                  <input
+                    type="number"
+                    min="1"
+                    value={partnerDetails.numberOfPeople}
+                    onChange={(e) => setPartnerDetails(prev => ({
+                      ...prev,
+                      numberOfPeople: parseInt(e.target.value)
+                    }))}
+                    className="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#E88527]"
+                  />
+                </div>
+                <div className="flex items-center">
+                  <input
+                    type="checkbox"
+                    id="partnerCarExchange"
+                    checked={partnerDetails.carExchange}
+                    onChange={(e) => setPartnerDetails(prev => ({
+                      ...prev,
+                      carExchange: e.target.checked
+                    }))}
+                    className="mr-2"
+                  />
+                  <label htmlFor="partnerCarExchange" className="text-sm font-medium text-gray-700">
+                    Car Exchange Available
+                  </label>
+                </div>
+              </div>
             </div>
           </div>
 
@@ -302,19 +397,33 @@ const SwomAgreementModal: React.FC<SwomAgreementModalProps> = ({
           
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              Select Dates
+              Select Your Dates
             </label>
             <Datepicker
-              value={dateValue}
-              onChange={handleDateChange}
+              value={initiatorDates}
+              onChange={(newValue: any) => setInitiatorDates(newValue)}
               showShortcuts={true}
               primaryColor="orange"
             />
           </div>
 
+          {exchangeType === 'non_simultaneous' && (
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Select Partner's Dates
+              </label>
+              <Datepicker
+                value={partnerDates}
+                onChange={(newValue: any) => setPartnerDates(newValue)}
+                showShortcuts={true}
+                primaryColor="orange"
+              />
+            </div>
+          )}
+
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              Upload Swap Agreement (Optional)
+              Upload SWOM Agreement (Optional)
             </label>
             <div 
               {...getRootProps()} 
@@ -351,7 +460,7 @@ const SwomAgreementModal: React.FC<SwomAgreementModalProps> = ({
               disabled={isSubmitting}
               className="px-4 py-2 text-sm font-medium text-white bg-[#E88527] rounded-md hover:bg-[#e88427ca] disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {isSubmitting ? 'Sending...' : 'Send Swom Request'}
+              {isSubmitting ? 'Sending...' : 'Send SWOM Request'}
             </button>
           </div>
         </form>
