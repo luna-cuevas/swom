@@ -6,7 +6,6 @@ import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import Stripe from "stripe";
 import { useAtom } from "jotai";
 import { globalStateAtom } from "@/context/atoms";
 import { sanityClient } from "@/utils/sanityClient";
@@ -17,42 +16,28 @@ type Props = {
 
 const SignIn = (props: Props) => {
   const supabase = getSupabaseClient();
-  const stripeActivation = new Stripe(process.env.STRIPE_SECRET_KEY!, {
-    apiVersion: "2023-08-16",
-  });
-
   const [state, setState] = useAtom(globalStateAtom);
 
-  async function isUserSubscribed(
-    email: string,
-    stripe: any
-  ): Promise<boolean> {
+  async function isUserSubscribed(email: string): Promise<boolean> {
     console.log("checking subscription status");
     try {
-      if (!stripe) {
-        console.log("Stripe.js has not loaded yet.");
-        return false;
-      }
-      // Retrieve the customer by email
-      const customers = await stripe.customers.list({ email: email });
-      const customer = customers.data[0]; // Assuming the first customer is the desired one
+      const response = await fetch("/api/subscription/checkSubscription", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ email }),
+      });
 
-      if (customer) {
-        // Retrieve the customer's subscriptions
-        const subscriptions = await stripe.subscriptions.list({
-          customer: customer.id,
-          limit: 1, // Assuming only checking the latest subscription
-        });
-
-        return subscriptions.data.length > 0; // User is subscribed if there's at least one subscription
-      } else {
-        // Customer not found
-        console.log("Customer not found");
-        return false;
+      if (!response.ok) {
+        throw new Error("Failed to check subscription status");
       }
+
+      const data = await response.json();
+      return data.isSubscribed;
     } catch (error) {
       console.error("Error checking subscription status:", error);
-      throw error;
+      return false;
     }
   }
 
@@ -104,10 +89,7 @@ const SignIn = (props: Props) => {
       console.log("session", session);
       toast.success("Signed in successfully");
       const loggedInUser = await fetchLoggedInUser(session.user);
-      const subbed = await isUserSubscribed(
-        session.user.email,
-        stripeActivation
-      );
+      const subbed = await isUserSubscribed(session.user.email);
       setState({
         ...state,
         session,
@@ -121,7 +103,6 @@ const SignIn = (props: Props) => {
     } else if (event === "SIGNED_OUT") {
       console.log("session", event);
       console.log("SignIn Failed");
-
       toast.error("Sign in failed");
     }
   };
