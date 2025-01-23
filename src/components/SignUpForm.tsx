@@ -1,6 +1,6 @@
 "use client";
 import { globalStateAtom } from "@/context/atoms";
-import { supabaseClient } from "@/utils/supabaseClient";
+import { useSupabase } from "@/utils/supabaseClient";
 import { useAtom } from "jotai";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -19,21 +19,38 @@ const SignUpForm = () => {
   const [state, setState] = useAtom(globalStateAtom);
   const [currentStep, setCurrentStep] = useState(STEP.ENTER_EMAIL);
   const [email, setEmail] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
-  const supabase = supabaseClient();
+  const supabase = useSupabase();
   const searchParams = useSearchParams();
   const sessionId = searchParams.get("session_id");
+  const emailParam = searchParams.get("email");
+
+  useEffect(() => {
+    if (emailParam) {
+      const decodedEmail = decodeURIComponent(emailParam).replace(" ", "+");
+      setEmail(decodedEmail);
+    }
+  }, [emailParam]);
 
   const handleSendOTP = async (email: string) => {
-    const { error } = await supabase.auth.signInWithOtp({
-      email,
-      options: { shouldCreateUser: false },
-    });
-    if (error) {
-      toast.error(error.message);
-    } else {
-      toast.success("Check your email for the verification code");
-      setCurrentStep(STEP.VERIFY_OTP);
+    setIsLoading(true);
+    try {
+      const response = await fetch("/api/signup/send-otp", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email }),
+      });
+
+      const data = await response.json();
+      if (!response.ok) {
+        toast.error(data.error);
+      } else {
+        toast.success("Check your email for the verification code");
+        setCurrentStep(STEP.VERIFY_OTP);
+      }
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -50,42 +67,87 @@ const SignUpForm = () => {
 
   const verifyOTP = async (e: any) => {
     e.preventDefault();
-    const token = e.currentTarget.otp.value as string;
+    setIsLoading(true);
+    try {
+      const token = e.currentTarget.otp.value as string;
 
-    const { error, data } = await supabase.auth.verifyOtp({
-      email,
-      token: token,
-      type: "email",
-    });
+      const response = await fetch("/api/signup/verify-otp", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, token }),
+      });
 
-    if (error) {
-      console.error(error);
-      toast.error(error.message);
-    } else if (data.session && data.session.user) {
-      setCurrentStep(STEP.CREATE_PASSWORD);
+      const data = await response.json();
+      if (!response.ok) {
+        console.error(data.error);
+        toast.error(data.error);
+      } else {
+        if (data.session) {
+          const { error } = await supabase.auth.setSession(data.session);
+          if (error) {
+            toast.error("Failed to establish session");
+            return;
+          }
+          setCurrentStep(STEP.CREATE_PASSWORD);
+        } else {
+          toast.error("No session received from server");
+        }
+      }
+    } finally {
+      setIsLoading(false);
     }
   };
 
   const resetPassword = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    const email = e.currentTarget.email.value;
-    const password = e.currentTarget.password.value;
-    const { error } = await supabase.auth.updateUser({
-      password: password,
-    });
-    if (error) {
-      toast.error(error.message);
-    } else {
-      const { error: signInError } = await supabase.auth.signInWithPassword({
-        email: email,
-        password: password,
-      });
-      if (signInError) {
-        toast.error(signInError.message);
-      } else {
-        toast.success("Signed in successfully");
-        handleSubscription();
+    setIsLoading(true);
+    try {
+      // Check if we have a valid session first
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+      if (!session) {
+        toast.error("No active session. Please verify your email again.");
+        setCurrentStep(STEP.VERIFY_OTP);
+        return;
       }
+
+      // Get password from form using type assertion
+      const form = e.target as HTMLFormElement;
+      const passwordInput = form.elements.namedItem(
+        "password"
+      ) as HTMLInputElement;
+      const password = passwordInput.value;
+
+      if (!password) {
+        toast.error("Please enter a password");
+        return;
+      }
+
+      const response = await fetch("/api/signup/update-password", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, password }),
+      });
+
+      const data = await response.json();
+      if (!response.ok) {
+        toast.error(data.error);
+      } else {
+        if (data.session) {
+          const { error } = await supabase.auth.setSession(data.session);
+          if (error) {
+            toast.error("Failed to establish session");
+            return;
+          }
+          toast.success("Signed in successfully");
+          handleSubscription();
+        } else {
+          toast.error("Failed to establish session");
+        }
+      }
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -195,11 +257,16 @@ const SignUpForm = () => {
               placeholder="Email address"
               className="border border-gray-200 w-full p-4 h-12"
               value={email}
+              readOnly={!!emailParam}
             />
             <button
               type="submit"
-              className="bg-blue-600 hover:bg-blue-300 w-full text-white my-4 rounded-lg flex h-12 items-center justify-center">
-              Continue
+              disabled={isLoading}
+              className="bg-blue-600 hover:bg-blue-300 w-full text-white my-4 rounded-lg flex h-12 items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed">
+              {isLoading ? (
+                <span className="inline-block animate-spin mr-2">⟳</span>
+              ) : null}
+              {isLoading ? "Processing..." : "Continue"}
             </button>
           </form>
         );
@@ -217,20 +284,26 @@ const SignUpForm = () => {
               <button
                 type="button"
                 onClick={() => sendOTP()}
-                className="text-blue-600 hover:text-blue-300">
+                disabled={isLoading}
+                className="text-blue-600 hover:text-blue-300 disabled:opacity-50 disabled:cursor-not-allowed">
                 Resend code
               </button>
             </p>
             <button
               type="submit"
-              className="bg-blue-600 hover:bg-blue-300 w-full text-white rounded-lg flex h-12 items-center justify-center">
-              Continue
+              disabled={isLoading}
+              className="bg-blue-600 hover:bg-blue-300 w-full text-white rounded-lg flex h-12 items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed">
+              {isLoading ? (
+                <span className="inline-block animate-spin mr-2">⟳</span>
+              ) : null}
+              {isLoading ? "Verifying..." : "Continue"}
             </button>
             <p className="mt-3 text-center">
               <button
                 type="button"
                 onClick={() => setCurrentStep(STEP.ENTER_EMAIL)}
-                className="text-blue-600 hover:text-blue-300 hover:cursor-pointer">
+                disabled={isLoading}
+                className="text-blue-600 hover:text-blue-300 hover:cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed">
                 Change email
               </button>
             </p>
@@ -253,8 +326,12 @@ const SignUpForm = () => {
             />
             <button
               type="submit"
-              className="bg-blue-600 w-full text-white rounded-lg flex h-12 items-center justify-center">
-              <span>Create account</span>
+              disabled={isLoading}
+              className="bg-blue-600 w-full text-white rounded-lg flex h-12 items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed">
+              {isLoading ? (
+                <span className="inline-block animate-spin mr-2">⟳</span>
+              ) : null}
+              {isLoading ? "Creating account..." : "Create account"}
             </button>
           </form>
         );

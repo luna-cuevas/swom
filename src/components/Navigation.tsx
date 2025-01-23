@@ -4,7 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import React, { useEffect, useState } from "react";
 import SignIn from "@/components/SignIn";
-import { supabaseClient } from "@/utils/supabaseClient";
+
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { usePathname, useRouter } from "next/navigation";
@@ -31,17 +31,18 @@ import {
   LifebuoyIcon,
   PowerIcon,
 } from "@heroicons/react/24/solid";
+import { useSupabase } from "@/utils/supabaseClient";
 
 type Props = {};
 
 const Navigation = (props: Props) => {
-  const supabase = supabaseClient();
   const router = useRouter();
   const navigation = usePathname();
   const [signInActive, setSignInActive] = React.useState(false);
   const [state, setState] = useAtom(globalStateAtom);
   const { user } = state;
   const [isMenuOpen, setIsMenuOpen] = React.useState(false);
+  const supabase = useSupabase();
 
   const closeMenu = () => setIsMenuOpen(false);
 

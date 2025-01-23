@@ -5,6 +5,7 @@ import {
 } from "react-hook-form";
 import { FormValues } from "../types";
 import { motion } from "framer-motion";
+import { useState, useEffect } from "react";
 
 interface UserInfoSectionProps {
   register: UseFormRegister<FormValues>;
@@ -19,6 +20,15 @@ export const UserInfoSection = ({
   watch,
   errors,
 }: UserInfoSectionProps) => {
+  const [isWikiMujeres, setIsWikiMujeres] = useState(false);
+
+  // Force the recommended value when wikimujeres is selected
+  useEffect(() => {
+    if (isWikiMujeres) {
+      setValue("userInfo.recommended", "wikimujeres");
+    }
+  }, [isWikiMujeres, setValue]);
+
   return (
     <div className="space-y-6">
       <motion.h2
@@ -198,16 +208,11 @@ export const UserInfoSection = ({
           <label className="flex items-center space-x-2">
             <input
               type="radio"
-              value="wikimujeres"
-              {...register("userInfo.recommended", {
-                required: "Please select an option",
-              })}
-              className="w-4 h-4 text-[#E78426] focus:ring-[#E78426]"
+              checked={isWikiMujeres}
               onChange={(e) => {
-                if (e.target.checked) {
-                  setValue("userInfo.recommended", "wikimujeres");
-                }
+                setIsWikiMujeres(e.target.checked);
               }}
+              className="w-4 h-4 text-[#E78426] focus:ring-[#E78426]"
             />
             <span>Wikimujeres</span>
           </label>
@@ -215,15 +220,10 @@ export const UserInfoSection = ({
             <input
               type="text"
               {...register("userInfo.recommended", {
-                required: {
-                  value: true,
-                  message: "Please select an option or enter a value",
-                },
+                required: "Please select an option or enter a value",
                 validate: (value) => {
-                  const isWikimujeres =
-                    watch("userInfo.recommended") === "wikimujeres";
+                  if (isWikiMujeres) return true;
                   return (
-                    isWikimujeres ||
                     value.length > 0 ||
                     "Please select an option or enter a value"
                   );
@@ -231,7 +231,13 @@ export const UserInfoSection = ({
               })}
               className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#E78426] focus:border-transparent transition-all"
               placeholder="Other (please specify)"
-              disabled={watch("userInfo.recommended") === "wikimujeres"}
+              disabled={isWikiMujeres}
+              onChange={(e) => {
+                if (e.target.value) {
+                  setIsWikiMujeres(false);
+                  setValue("userInfo.recommended", e.target.value);
+                }
+              }}
             />
           </div>
         </div>

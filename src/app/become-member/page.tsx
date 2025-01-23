@@ -18,6 +18,7 @@ export default function Page() {
     signUpActive,
     setSignUpActive,
     submitted,
+    isSubmitting,
     imageFiles,
     setImageFiles,
     captchaToken,
@@ -139,7 +140,8 @@ export default function Page() {
                     <button
                       type="button"
                       onClick={goToPreviousStep}
-                      className="bg-gray-100 hover:bg-gray-200 text-gray-700 font-semibold px-6 py-2 rounded-full transition-all">
+                      disabled={isSubmitting}
+                      className="bg-gray-100 hover:bg-gray-200 text-gray-700 font-semibold px-6 py-2 rounded-full transition-all disabled:opacity-50 disabled:cursor-not-allowed">
                       Back
                     </button>
                   )}
@@ -156,8 +158,32 @@ export default function Page() {
                   ) : (
                     <button
                       type="submit"
-                      className="ml-auto bg-[#E78426] hover:bg-[#e78326d8] text-white font-bold px-8 py-3 rounded-full transition-all hover:scale-105">
-                      Submit Application
+                      disabled={isSubmitting}
+                      className="ml-auto bg-[#E78426] hover:bg-[#e78326d8] text-white font-bold px-8 py-3 rounded-full transition-all hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 flex items-center gap-2">
+                      {isSubmitting ? (
+                        <>
+                          <svg
+                            className="animate-spin -ml-1 mr-3 h-5 w-5 text-white"
+                            xmlns="http://www.w3.org/2000/svg"
+                            fill="none"
+                            viewBox="0 0 24 24">
+                            <circle
+                              className="opacity-25"
+                              cx="12"
+                              cy="12"
+                              r="10"
+                              stroke="currentColor"
+                              strokeWidth="4"></circle>
+                            <path
+                              className="opacity-75"
+                              fill="currentColor"
+                              d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                          </svg>
+                          Submitting...
+                        </>
+                      ) : (
+                        "Submit Application"
+                      )}
                     </button>
                   )}
                 </div>

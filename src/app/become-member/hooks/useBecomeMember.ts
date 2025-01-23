@@ -1,13 +1,21 @@
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { FormValues } from "../types";
-import { supabaseClient } from "@/utils/supabaseClient";
 import { toast } from "react-toastify";
-import { SupabaseClient } from "@supabase/supabase-js";
+
+const fileToBase64 = (file: File): Promise<string> => {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.readAsDataURL(file);
+    reader.onload = () => resolve(reader.result as string);
+    reader.onerror = (error) => reject(error);
+  });
+};
 
 export const useBecomeMember = () => {
   const [signUpActive, setSignUpActive] = useState(false);
   const [submitted, setSubmitted] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [imageFiles, setImageFiles] = useState<File[]>([]);
   const [captchaToken, setCaptchaToken] = useState<string | null>(null);
   const [whereIsIt, setWhereIsIt] = useState<{
@@ -19,8 +27,6 @@ export const useBecomeMember = () => {
     lat: 0,
     lng: 0,
   });
-
-  const supabase = supabaseClient() as SupabaseClient;
 
   const {
     register,
@@ -93,8 +99,8 @@ export const useBecomeMember = () => {
     },
   });
 
-  const onSubmit = async (data: FormValues) => {
-    if (!data.privacyPolicy) {
+  const onSubmit = async (formData: FormValues) => {
+    if (!formData.privacyPolicy) {
       toast.error("You must agree to the privacy policy.");
       return;
     }
@@ -109,136 +115,41 @@ export const useBecomeMember = () => {
     }
 
     try {
-      // Generate a unique ID for this submission
-      const submissionId = crypto.randomUUID();
-
-      // Upload Images to Supabase Storage
-      const imageUrls = await Promise.all(
-        imageFiles.map(async (file) => {
-          const fileExt = file.name.split('.').pop();
-          const fileName = `${Math.random()}.${fileExt}`;
-          const filePath = `public/${submissionId}/${fileName}`;
-
-          const { data: uploadData, error: uploadError } = await supabase.storage
-            .from('listing-images')
-            .upload(filePath, file);
-
-          if (uploadError) {
-            throw uploadError;
-          }
-
-          // Get the public URL
-          const { data: { publicUrl } } = supabase.storage
-            .from('listing-images')
-            .getPublicUrl(filePath);
-
-          return publicUrl;
-        })
+      setIsSubmitting(true);
+      // Convert image files to base64
+      const imageFilesData = await Promise.all(
+        imageFiles.map(async (file) => ({
+          name: file.name,
+          base64: await fileToBase64(file),
+        }))
       );
 
-      // Create user_info record
-      const { data: userInfoData, error: userInfoError } = await supabase
-        .from('user_info')
-        .insert({
-          submission_id: submissionId,
-          email: data.userInfo.email,
-          name: data.userInfo.name,
-          dob: data.userInfo.dob,
-          phone: data.userInfo.phone,
-          profession: data.userInfo.profession,
-          about_me: data.userInfo.about_me,
-          children: data.userInfo.children,
-          recommended: data.userInfo.recommended,
-          open_to_other_cities: data.userInfo.openToOtherCities,
-          open_to_other_destinations: data.userInfo.openToOtherDestinations
-        })
-        .select()
-        .single();
+      const response = await fetch('/api/become-member', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          formData,
+          imageFilesData,
+          captchaToken,
+          whereIsIt,
+        }),
+      });
 
-      if (userInfoError) throw userInfoError;
+      const data = await response.json();
 
-      // Create home_info record
-      const { data: homeInfoData, error: homeInfoError } = await supabase
-        .from('home_info')
-        .insert({
-          submission_id: submissionId,
-          title: data.homeInfo.title,
-          property_type: data.homeInfo.property,
-          description: data.homeInfo.description,
-          located_in: data.homeInfo.locatedIn,
-          bathrooms: parseInt(data.homeInfo.bathrooms),
-          area: data.homeInfo.area,
-          main_or_second: data.homeInfo.mainOrSecond,
-          address: { lat: whereIsIt.lat, lng: whereIsIt.lng, query: whereIsIt.query },
-          city: whereIsIt.query,
-          how_many_sleep: parseInt(data.homeInfo.howManySleep),
-          listing_images: imageUrls
-        })
-        .select()
-        .single();
-
-      if (homeInfoError) throw homeInfoError;
-
-      // Create amenities record
-      const { data: amenitiesData, error: amenitiesError } = await supabase
-        .from('amenities')
-        .insert({
-          submission_id: submissionId,
-          bike: data.amenities.bike,
-          car: data.amenities.car,
-          tv: data.amenities.tv,
-          dishwasher: data.amenities.dishwasher,
-          pingpong: data.amenities.pingpong,
-          billiards: data.amenities.billiards,
-          washer: data.amenities.washer,
-          dryer: data.amenities.dryer,
-          wifi: data.amenities.wifi,
-          elevator: data.amenities.elevator,
-          terrace: data.amenities.terrace,
-          scooter: data.amenities.scooter,
-          bbq: data.amenities.bbq,
-          computer: data.amenities.computer,
-          wc_access: data.amenities.wcAccess,
-          pool: data.amenities.pool,
-          playground: data.amenities.playground,
-          baby_gear: data.amenities.babyGear,
-          ac: data.amenities.ac,
-          fireplace: data.amenities.fireplace,
-          parking: data.amenities.parking,
-          hot_tub: data.amenities.hotTub,
-          sauna: data.amenities.sauna,
-          other: data.amenities.other,
-          doorman: data.amenities.doorman,
-          cleaning_service: data.amenities.cleaningService,
-          video_games: data.amenities.videoGames,
-          tennis_court: data.amenities.tennisCourt,
-          gym: data.amenities.gym
-        })
-        .select()
-        .single();
-
-      if (amenitiesError) throw amenitiesError;
-
-      // Create needs_approval record
-      const { error: approvalError } = await supabase
-        .from('needs_approval')
-        .insert({
-          submission_id: submissionId,
-          user_info_id: userInfoData.id,
-          home_info_id: homeInfoData.id,
-          amenities_id: amenitiesData.id,
-          privacy_policy_accepted: true,
-          privacy_policy_date: new Date().toISOString(),
-          status: 'pending'
-        });
-
-      if (approvalError) throw approvalError;
+      if (!response.ok) {
+        throw new Error(data.error || 'An error occurred while submitting the form');
+      }
 
       setSubmitted(true);
       toast.success("Your listing has been submitted for approval!");
     } catch (error: any) {
       console.error('Submission error:', error);
       toast.error(error.message || "An error occurred while submitting the form");
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -263,6 +174,7 @@ export const useBecomeMember = () => {
     signUpActive,
     setSignUpActive,
     submitted,
+    isSubmitting,
     imageFiles,
     setImageFiles,
     captchaToken,
