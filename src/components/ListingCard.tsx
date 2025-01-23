@@ -1,13 +1,13 @@
-import React, { useEffect } from 'react';
-import CarouselPage from './Carousel';
-import Link from 'next/link';
-import { supabaseClient } from '@/utils/supabaseClient';
-import Image from 'next/image';
-import ImageUrlBuilder from '@sanity/image-url';
-import { sanityClient } from '../utils/sanityClient';
-import { useAtom } from 'jotai';
-import { globalStateAtom } from '@/context/atoms';
-import { usePathname } from 'next/navigation';
+import React, { useEffect } from "react";
+import CarouselPage from "./Carousel";
+import Link from "next/link";
+import { getSupabaseClient } from "@/utils/supabaseClient";
+import Image from "next/image";
+import ImageUrlBuilder from "@sanity/image-url";
+import { sanityClient } from "../utils/sanityClient";
+import { useAtom } from "jotai";
+import { globalStateAtom } from "@/context/atoms";
+import { usePathname } from "next/navigation";
 
 type Props = {
   listingInfo: any;
@@ -18,7 +18,7 @@ type Props = {
 
 const ListingCard = (props: Props) => {
   const [state, setState] = useAtom(globalStateAtom);
-  const supabase = supabaseClient();
+  const supabase = getSupabaseClient();
   const builder = ImageUrlBuilder(sanityClient);
 
   function urlFor(source: any) {
@@ -31,9 +31,9 @@ const ListingCard = (props: Props) => {
       const isLiked = props.listingInfo.favorite == true ? true : false;
 
       const { data: allLiked, error: allLikedError } = await supabase
-        .from('appUsers')
-        .select('favorites')
-        .eq('id', state?.loggedInUser?.id);
+        .from("appUsers")
+        .select("favorites")
+        .eq("id", state?.loggedInUser?.id);
 
       let combinedFavorites = (allLiked && allLiked[0]?.favorites) || [];
 
@@ -78,13 +78,13 @@ const ListingCard = (props: Props) => {
       }
 
       const { data, error } = await supabase
-        .from('appUsers')
+        .from("appUsers")
         .upsert({
           id: state?.loggedInUser?.id,
           favorites: combinedFavorites,
         })
-        .eq('id', state?.loggedInUser?.id)
-        .select('*');
+        .eq("id", state?.loggedInUser?.id)
+        .select("*");
 
       if (!error) {
         // Update local state
@@ -139,7 +139,7 @@ const ListingCard = (props: Props) => {
                 ? urlFor(
                     props.listingInfo?.homeInfo.listingImages[0].asset
                   ).url()
-                : '/placeholder.png'
+                : "/placeholder.png"
             }
             alt="listing image"
             layout="fill"
@@ -162,7 +162,7 @@ const ListingCard = (props: Props) => {
             <h1 className="text-xl">{props.listingInfo?.homeInfo?.title}</h1>
             <p className="">{props.listingInfo?.homeInfo?.city}</p>
           </Link>
-          <div className={`flex ${!props.setListings && 'hidden'}`}>
+          <div className={`flex ${!props.setListings && "hidden"}`}>
             <button
               onClick={() => {
                 handleFavorite(props.listingInfo._id);
@@ -170,13 +170,13 @@ const ListingCard = (props: Props) => {
               <svg
                 stroke={
                   props.listingInfo.favorite === true
-                    ? '#7F8119'
-                    : 'rgb(0, 0, 0)'
+                    ? "#7F8119"
+                    : "rgb(0, 0, 0)"
                 }
                 fill={
                   props.listingInfo.favorite === true
-                    ? '#7F8119'
-                    : 'transparent'
+                    ? "#7F8119"
+                    : "transparent"
                 }
                 width="20px"
                 height="20px"

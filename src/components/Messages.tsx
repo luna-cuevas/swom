@@ -1,6 +1,6 @@
 "use client";
 import { globalStateAtom } from "@/context/atoms";
-import { useSupabase } from "@/utils/supabaseClient";
+import { getSupabaseClient } from "@/utils/supabaseClient";
 import { useAtom } from "jotai";
 import Image from "next/image";
 import Link from "next/link";
@@ -53,7 +53,7 @@ const Messages = (props: Props) => {
   const [sendingMessage, setSendingMessage] = useState<boolean>(false);
   const [isCheckingConversation, setIsCheckingConversation] =
     useState<boolean>(true);
-  const supabase = useSupabase();
+  const supabase = getSupabaseClient();
   const [selectedConversation, setSelectedConversation] = useState<any>(null);
 
   let selectedConvo = conversations?.find(

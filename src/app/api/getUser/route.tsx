@@ -1,8 +1,8 @@
-import { useSupabase } from "@/utils/supabaseClient";
+import { getSupabaseClient } from "@/utils/supabaseClient";
 import { NextResponse } from "next/server";
 
 export async function POST(req: Request, res: Response) {
-  const supabase = useSupabase();
+  const supabase = getSupabaseClient();
   const body = await req.json();
   try {
     // Ensure that id is a string

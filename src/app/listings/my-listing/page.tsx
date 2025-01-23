@@ -3,7 +3,7 @@ import CarouselPage from "@/components/Carousel";
 import Image from "next/image";
 import React, { useEffect, useRef, useState } from "react";
 import { set, useForm, Controller } from "react-hook-form";
-import { supabaseClient } from "@/utils/supabaseClient";
+import { getSupabaseClient } from "@/utils/supabaseClient";
 import ProfilePicDropZone from "@/components/ProfilePicDropZone";
 import {
   useParams,
@@ -29,10 +29,10 @@ const BecomeMemberDropzone = dynamic(
 );
 
 const GoogleMapComponent = dynamic(
-  () => import('@/components/GoogleMapComponent'),
-  { 
+  () => import("@/components/GoogleMapComponent"),
+  {
     loading: () => <div>Loading map...</div>,
-    ssr: false 
+    ssr: false,
   }
 );
 
@@ -45,7 +45,7 @@ const Page = (props: Props) => {
   const [profileImage, setProfileImage] = useState<File[]>([]);
   const [citySearchOpen, setCitySearchOpen] = useState(false);
   const [imageFiles, setImageFiles] = useState<File[]>([]);
-  const supabase = supabaseClient();
+  const supabase = getSupabaseClient();
   const [selectedImage, setSelectedImage] = useState(0); // Track selected image
   const aboutYourHomeRef = useRef<HTMLTextAreaElement | null>(null);
   const [aboutYou, setAboutYou] = useState(false);
@@ -430,10 +430,9 @@ const Page = (props: Props) => {
         <div className="flex flex-col mx-auto max-w-[1000px]">
           <div className="flex justify-end mb-4 px-4">
             <div className="relative group">
-              <button 
+              <button
                 disabled
-                className="bg-gray-400 cursor-not-allowed text-white py-2 px-4 rounded-xl"
-              >
+                className="bg-gray-400 cursor-not-allowed text-white py-2 px-4 rounded-xl">
                 Add Listing
               </button>
               <div className="absolute hidden group-hover:block bg-black text-white text-sm rounded-md p-2 top-full mt-2 left-1/2 transform -translate-x-1/2 w-48 text-center z-[100000]">
@@ -571,10 +570,9 @@ const Page = (props: Props) => {
                   <h1 className="font-sans my-1 break-all font-bold uppercase tracking-[0.1rem]">
                     {getValues("userInfo.profession")}
                   </h1>
-                  <Link 
+                  <Link
                     href="/add-listing"
-                    className="bg-[#F87C1B] text-white py-2 px-4 rounded-xl hover:bg-[#e67116] mt-4 mx-auto"
-                  >
+                    className="bg-[#F87C1B] text-white py-2 px-4 rounded-xl hover:bg-[#e67116] mt-4 mx-auto">
                     Add Listing
                   </Link>
                 </>

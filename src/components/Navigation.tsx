@@ -31,7 +31,7 @@ import {
   LifebuoyIcon,
   PowerIcon,
 } from "@heroicons/react/24/solid";
-import { useSupabase } from "@/utils/supabaseClient";
+import { getSupabaseClient } from "@/utils/supabaseClient";
 
 type Props = {};
 
@@ -42,7 +42,7 @@ const Navigation = (props: Props) => {
   const [state, setState] = useAtom(globalStateAtom);
   const { user } = state;
   const [isMenuOpen, setIsMenuOpen] = React.useState(false);
-  const supabase = useSupabase();
+  const supabase = getSupabaseClient();
 
   const closeMenu = () => setIsMenuOpen(false);
 

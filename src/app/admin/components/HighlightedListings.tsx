@@ -1,5 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
-import { useSupabase } from "@/utils/supabaseClient";
+import { getSupabaseClient } from "@/utils/supabaseClient";
 import {
   Table,
   TableBody,
@@ -34,7 +34,7 @@ type HighlightedListing = {
 };
 
 export default function HighlightedListings() {
-  const supabase = useSupabase();
+  const supabase = getSupabaseClient();
   const { data: highlightedListings = [], isLoading } = useQuery<
     HighlightedListing[]
   >({

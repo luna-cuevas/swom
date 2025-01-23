@@ -42,27 +42,45 @@ export async function POST(req: Request) {
     if (!listing) throw new Error("Listing not found");
 
     if (status === "approved") {
-      // Create user in auth system
-      const { data: userData, error: userError } =
-        await supabase.auth.admin.createUser({
-          email: listing.user_info.email,
-          password: crypto.randomUUID(), // Random password that will be reset
-          user_metadata: {
-            name: listing.user_info.name,
-            dob: listing.user_info.dob || "",
-            phone: listing.user_info.phone,
-            role: "member",
-          },
-          email_confirm: true,
-        });
+      // First check if user already exists
+      const { data: existingUser } = await supabase
+        .from("users")
+        .select("id")
+        .eq("email", listing.user_info.email)
+        .single();
 
-      if (userError) throw userError;
+      let userId;
 
-      // Insert into listings table with the new user_id
+      if (existingUser) {
+        userId = existingUser.id;
+      } else {
+        // Create user in auth system only if they don't exist
+        const { data: userData, error: userError } =
+          await supabase.auth.admin.createUser({
+            email: listing.user_info.email,
+            password: crypto.randomUUID(),
+            user_metadata: {
+              name: listing.user_info.name,
+              dob: listing.user_info.dob || "",
+              phone: listing.user_info.phone,
+              role: "member",
+            },
+            email_confirm: true,
+          });
+
+        if (userError) {
+          console.error("Error creating user:", userError);
+          throw userError;
+        }
+
+        userId = userData.user.id;
+      }
+
+      // Insert into listings table with the user_id
       const { error: insertError } = await supabase.from("listings").insert({
         id: listing.id,
         status: "approved",
-        user_id: userData.user.id,
+        user_id: userId,
         user_info_id: listing.user_info_id,
         home_info_id: listing.home_info_id,
         amenities_id: listing.amenities_id,
@@ -75,11 +93,19 @@ export async function POST(req: Request) {
         is_highlighted: listing.is_highlighted,
       });
 
-      if (insertError) throw insertError;
+      if (insertError) {
+        console.error("Error inserting into listings table:", insertError);
+        return NextResponse.json(
+          {
+            error: `Error inserting into listings table: ${insertError.message}`,
+          },
+          { status: 500 }
+        );
+      }
 
       // Create entry in appUsers table
       const { error: appUserError } = await supabase.from("appUsers").insert({
-        id: userData.user.id,
+        id: userId,
         name: listing.user_info.name,
         email: listing.user_info.email,
         role: "member",
@@ -92,7 +118,15 @@ export async function POST(req: Request) {
         created_at: new Date().toISOString(),
       });
 
-      if (appUserError) throw appUserError;
+      if (appUserError) {
+        console.error("Error inserting into appUsers table:", appUserError);
+        return NextResponse.json(
+          {
+            error: `Error inserting into appUsers table: ${appUserError.message}`,
+          },
+          { status: 500 }
+        );
+      }
 
       // Send password reset email using Brevo template 3
       try {

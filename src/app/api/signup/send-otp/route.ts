@@ -1,11 +1,11 @@
-import { useSupabaseWithServiceRole } from "@/utils/supabaseClient";
+import { getSupabaseAdmin } from "@/utils/supabaseClient";
 import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
 
 export async function POST(request: Request) {
   try {
     const { email } = await request.json();
-    const supabase = useSupabaseWithServiceRole();
+    const supabase = getSupabaseAdmin();
 
     const { error } = await supabase.auth.signInWithOtp({
       email,

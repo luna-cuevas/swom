@@ -1,23 +1,23 @@
-'use client';
-import CarouselPage from '@/components/Carousel';
-import Image from 'next/image';
-import { usePathname, useRouter } from 'next/navigation';
-import React, { useEffect, useState } from 'react';
-import Link from 'next/link';
-import { sanityClient } from '@/utils/sanityClient';
-import ImageUrlBuilder from '@sanity/image-url';
-import { ToastContainer, toast } from 'react-toastify';
-import 'react-toastify/dist/ReactToastify.css';
-import { useAtom } from 'jotai';
-import { globalStateAtom } from '@/context/atoms';
-import { supabaseClient } from '@/utils/supabaseClient';
-import dynamic from 'next/dynamic';
+"use client";
+import CarouselPage from "@/components/Carousel";
+import Image from "next/image";
+import { usePathname, useRouter } from "next/navigation";
+import React, { useEffect, useState } from "react";
+import Link from "next/link";
+import { sanityClient } from "@/utils/sanityClient";
+import ImageUrlBuilder from "@sanity/image-url";
+import { ToastContainer, toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
+import { useAtom } from "jotai";
+import { globalStateAtom } from "@/context/atoms";
+import { getSupabaseClient } from "@/utils/supabaseClient";
+import dynamic from "next/dynamic";
 
 const GoogleMapComponent = dynamic(
-  () => import('@/components/GoogleMapComponent'),
-  { 
+  () => import("@/components/GoogleMapComponent"),
+  {
     loading: () => <div>Loading map...</div>,
-    ssr: false 
+    ssr: false,
   }
 );
 
@@ -25,7 +25,7 @@ type Props = {};
 
 const Page = (props: Props) => {
   const pathName = usePathname();
-  const slug = pathName.split('/listings/')[1];
+  const slug = pathName.split("/listings/")[1];
   const [state, setState] = useAtom(globalStateAtom);
   const [imageFiles, setImageFiles] = useState<any[]>([]);
   const [selectedImage, setSelectedImage] = useState(0); // Track selected image
@@ -41,21 +41,20 @@ const Page = (props: Props) => {
     return builder.image(source);
   }
 
-  const supabase = supabaseClient();
+  const supabase = getSupabaseClient();
 
   const fetchUserByEmail = async (email: string) => {
     const { data, error } = await supabase
-      .from('appUsers')
-      .select('id')
-      .eq('email', email);
+      .from("appUsers")
+      .select("id")
+      .eq("email", email);
 
     if (error) {
-      console.error('Error fetching user:', error);
+      console.error("Error fetching user:", error);
     } else {
       return data;
     }
   };
-
 
   useEffect(() => {
     const fetchCities = async () => {
@@ -69,7 +68,7 @@ const Page = (props: Props) => {
     if (listings.length > 0) {
       const fetchContactedUser = async () => {
         const user = await fetchUserByEmail(listings[0]?.userInfo.email);
-        console.log('user', user);
+        console.log("user", user);
         if (user) {
           setContactedUser(user[0]?.id);
         }
@@ -96,7 +95,7 @@ const Page = (props: Props) => {
           ? 1
           : 0);
 
-      console.log('dob', age);
+      console.log("dob", age);
 
       const updatedData = data.map((item: any) => ({
         ...item,
@@ -118,33 +117,33 @@ const Page = (props: Props) => {
         data[0].homeInfo.listingImages = updatedImages;
       }
 
-      console.log('setting profile image');
+      console.log("setting profile image");
 
       if (data[0].userInfo.profileImage !== undefined) {
         const imageUrl = urlFor(data[0]?.userInfo.profileImage).url();
-        console.log('imageUrl', imageUrl);
+        console.log("imageUrl", imageUrl);
         data[0].userInfo.profileImage.src = imageUrl;
       }
 
       setListings(updatedData);
       setIsLoading(false);
     } catch (error: any) {
-      toast.error('Error fetching data:', error.message);
-      console.error('Error fetching data:', error.message);
+      toast.error("Error fetching data:", error.message);
+      console.error("Error fetching data:", error.message);
     }
   };
 
   const cityDescription = cities.filter((city: any) => {
     return city.city
       .toLowerCase()
-      .includes(listings[0]?.homeInfo?.city?.split(',')[0].toLowerCase());
+      .includes(listings[0]?.homeInfo?.city?.split(",")[0].toLowerCase());
   });
 
   useEffect(() => {
     fetchListings();
   }, []);
 
-  console.log('listing', listings[0]);
+  console.log("listing", listings[0]);
 
   if (isLoading) {
     return (
@@ -209,7 +208,7 @@ const Page = (props: Props) => {
                     src={
                       listings[0]?.userInfo?.profileImage?.src
                         ? listings[0]?.userInfo?.profileImage.src
-                        : '/placeholder.png'
+                        : "/placeholder.png"
                     }
                     sizes="100px"
                     priority
@@ -224,7 +223,7 @@ const Page = (props: Props) => {
                 <p className="font-sans">
                   {listings[0]?.userInfo?.age
                     ? `${listings[0]?.userInfo?.age} years old`
-                    : ''}
+                    : ""}
                 </p>
 
                 {/* Make sure user cant send themselves message from their own listing*/}
@@ -303,7 +302,7 @@ const Page = (props: Props) => {
                       ? listings[0]?.homeInfo?.listingImages
                       : [1, 2, 3].map((file) => ({
                           key: file,
-                          src: '/placeholder.png',
+                          src: "/placeholder.png",
                         }))
                   }
                 />
@@ -313,33 +312,33 @@ const Page = (props: Props) => {
                 className={`flex gap-4 ${
                   cityDescription[0]?.description ||
                   listings[0]?.homeInfo?.description
-                    ? 'flex-col'
-                    : 'flex-row'
+                    ? "flex-col"
+                    : "flex-row"
                 } border-t border-[#172544]`}>
                 <div
                   className={` mt-4 border-[#172544] ${
                     cityDescription[0]?.description ||
                     listings[0]?.homeInfo?.description
-                      ? 'w-full border-b-2 pb-4'
-                      : 'w-1/2 border-r-2 '
+                      ? "w-full border-b-2 pb-4"
+                      : "w-1/2 border-r-2 "
                   }`}>
                   <h1 className="font-bold text-xl">About the City</h1>
                   <p>
                     {cityDescription[0]?.description ||
-                      'No city description available.'}
+                      "No city description available."}
                   </p>
                 </div>
                 <div
                   className={`${
                     cityDescription[0]?.description ||
                     listings[0]?.homeInfo?.description
-                      ? 'w-full'
-                      : 'w-1/2'
+                      ? "w-full"
+                      : "w-1/2"
                   } mt-4 break-all`}>
                   <h1 className="font-bold text-xl">About my home</h1>
                   <p>
                     {listings[0]?.homeInfo?.description ||
-                      'No home description available.'}
+                      "No home description available."}
                   </p>
                 </div>
               </div>
@@ -435,7 +434,7 @@ const Page = (props: Props) => {
                 <p className="text-base md:text-xl">
                   {listings[0]?.homeInfo?.area
                     ? `${listings[0]?.homeInfo?.area} sqm`
-                    : ''}
+                    : ""}
                 </p>
               </div>
             </div>
@@ -444,7 +443,7 @@ const Page = (props: Props) => {
           <div className="my-2">
             <button
               onClick={() => {
-                console.log('clicked');
+                console.log("clicked");
                 setMapsActive(!mapsActive);
               }}
               className="text-2xl flex justify-between w-full text-left my-4 pb-4 border-b border-[#172544] font-serif">
@@ -452,7 +451,7 @@ const Page = (props: Props) => {
               {/* arrow down that switches to up when button active */}
               <svg
                 className={`w-6 h-6 inline-block ${
-                  mapsActive && 'rotate-180 transform'
+                  mapsActive && "rotate-180 transform"
                 }`}
                 viewBox="0 0 20 20">
                 <path
@@ -463,7 +462,7 @@ const Page = (props: Props) => {
             </button>
             <div
               className={`w-full p-4 h-[40vh] ${
-                mapsActive ? 'block' : 'hidden'
+                mapsActive ? "block" : "hidden"
               }`}>
               <GoogleMapComponent
                 exactAddress={listings[0]?.homeInfo?.address}

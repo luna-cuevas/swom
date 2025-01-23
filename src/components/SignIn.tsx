@@ -1,7 +1,7 @@
 "use client";
 import React, { useEffect } from "react";
 import { Auth } from "@supabase/auth-ui-react";
-import { useSupabase } from "@/utils/supabaseClient";
+import { getSupabaseClient } from "@/utils/supabaseClient";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import Link from "next/link";
@@ -16,13 +16,10 @@ type Props = {
 };
 
 const SignIn = (props: Props) => {
-  const supabase = useSupabase();
-  const stripeActivation = new Stripe(
-    process.env.NEXT_PUBLIC_STRIPE_SECRET_KEY!,
-    {
-      apiVersion: "2023-08-16",
-    }
-  );
+  const supabase = getSupabaseClient();
+  const stripeActivation = new Stripe(process.env.STRIPE_SECRET_KEY!, {
+    apiVersion: "2023-08-16",
+  });
 
   const [state, setState] = useAtom(globalStateAtom);
 
