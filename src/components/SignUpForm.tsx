@@ -316,7 +316,7 @@ const SignUpForm = () => {
                     <p className="text-gray-500 text-center">
                       Preparing your checkout session...
                       <br />
-                      You'll be redirected to Stripe in a moment.
+                      You will be redirected to Stripe in a moment.
                     </p>
                   </div>
                 ) : currentStep === STEP.ENTER_EMAIL ? (
