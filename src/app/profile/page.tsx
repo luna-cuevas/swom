@@ -1,6 +1,6 @@
 "use client";
 import ProfilePicDropZone from "@/components/ProfilePicDropZone";
-import { supabaseClient } from "@/utils/supabaseClient";
+import { getSupabaseClient } from "@/utils/supabaseClient";
 import Image from "next/image";
 import React, { ChangeEvent, use, useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
@@ -20,7 +20,7 @@ const Page = (props: Props) => {
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [imageUpload, setImageUpload] = useState(false);
-  const supabase = supabaseClient();
+  const supabase = getSupabaseClient();
   const [isLoading, setIsLoading] = useState(false);
   const [listingData, setListingData] = useState<any>();
 
@@ -320,7 +320,7 @@ const Page = (props: Props) => {
                     Confirm Password
                   </label>
                   <input
-                    autoComplete="w-password"
+                    autoComplete="new-password"
                     onChange={(e) => {
                       handleConfirmPasswordChange(e.target.value);
                     }}

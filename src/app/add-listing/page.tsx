@@ -1,5 +1,4 @@
 "use client";
-import { supabaseClient } from "@/utils/supabaseClient";
 import Image from "next/image";
 import Link from "next/link";
 import React, { useState, useEffect } from "react";
@@ -28,10 +27,14 @@ const BecomeMemberDropzone = dynamic(
 );
 
 const GoogleMapComponent = dynamic(
-  () => import('@/components/GoogleMapComponent'),
-  { 
-    loading: () => <div className="w-full h-[40vh] flex items-center justify-center bg-gray-100 rounded-xl">Loading map...</div>,
-    ssr: false 
+  () => import("@/components/GoogleMapComponent"),
+  {
+    loading: () => (
+      <div className="w-full h-[40vh] flex items-center justify-center bg-gray-100 rounded-xl">
+        Loading map...
+      </div>
+    ),
+    ssr: false,
   }
 );
 
@@ -58,36 +61,34 @@ export default function Page() {
   }, []);
 
   //get user information
-    useEffect(() => {
-      const fetchListings = async () => {
-        if (state.user && state.user.email) {
-          try {
-            const loggedInUserEmail = state.user.email;
-            const data = await fetch("/api/getListings", {
-              method: "POST",
-              headers: {
-                "Content-Type": "application/json",
-              },
-              body: JSON.stringify({ email: loggedInUserEmail }),
-            }).then((response) => response.json());
-  
-            // 
-            setUserData(data);
+  useEffect(() => {
+    const fetchListings = async () => {
+      if (state.user && state.user.email) {
+        try {
+          const loggedInUserEmail = state.user.email;
+          const data = await fetch("/api/getListings", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({ email: loggedInUserEmail }),
+          }).then((response) => response.json());
 
-          } catch (error: any) {
-            console.error("Error fetching data:", error.message);
-          }
+          //
+          setUserData(data);
+        } catch (error: any) {
+          console.error("Error fetching data:", error.message);
         }
-      };
-      fetchListings();
+      }
+    };
+    fetchListings();
+  }, []);
 
-    }, []);
-
-    useEffect(() => {
-        if (userData && userData[0] && userData[0].userInfo) {
-            console.log("Updated userData:", userData[0].userInfo.name);
-        }
-    }, [userData]);
+  useEffect(() => {
+    if (userData && userData[0] && userData[0].userInfo) {
+      console.log("Updated userData:", userData[0].userInfo.name);
+    }
+  }, [userData]);
 
   const {
     register,
@@ -197,7 +198,8 @@ export default function Page() {
         },
         userInfo: {
           ...userData[0].userInfo, // Use the existing user info
-          openToOtherDestinations: data.userInfo.openToOtherDestinations === "true",
+          openToOtherDestinations:
+            data.userInfo.openToOtherDestinations === "true",
         },
         homeInfo: {
           ...data.homeInfo,
@@ -211,7 +213,7 @@ export default function Page() {
 
       // Create the New Listing Document in Sanity
       const createdListing = await sanityClient.create(newListingData);
-      
+
       /* Comment out Supabase code
       // Prepare data for Supabase
       const supabaseData = {
@@ -242,7 +244,6 @@ export default function Page() {
       // Handle success
       toast.success("New listing created successfully!");
       setSubmitted(true);
-
     } catch (error) {
       console.error("Error creating new listing:", error);
       toast.error("Failed to create new listing.");
@@ -266,31 +267,31 @@ export default function Page() {
     }
   };
 
-//   const formatPhoneNumber = (phoneNumber: string) => {
-//     const cleaned = phoneNumber.replace(/\D/g, "");
-//     let formattedNumber = "";
+  //   const formatPhoneNumber = (phoneNumber: string) => {
+  //     const cleaned = phoneNumber.replace(/\D/g, "");
+  //     let formattedNumber = "";
 
-//     // Determine the length of the country code (1 or 2 digits)
-//     const countryCodeLength = cleaned.length === 11 ? 1 : 2;
+  //     // Determine the length of the country code (1 or 2 digits)
+  //     const countryCodeLength = cleaned.length === 11 ? 1 : 2;
 
-//     for (let i = 0; i < cleaned.length; i++) {
-//       if (i === 0) formattedNumber += "+";
-//       // Adjust the positions for " (" and ") " based on country code length
-//       if (i === countryCodeLength) formattedNumber += " (";
-//       if (i === countryCodeLength + 3) formattedNumber += ") ";
+  //     for (let i = 0; i < cleaned.length; i++) {
+  //       if (i === 0) formattedNumber += "+";
+  //       // Adjust the positions for " (" and ") " based on country code length
+  //       if (i === countryCodeLength) formattedNumber += " (";
+  //       if (i === countryCodeLength + 3) formattedNumber += ") ";
 
-//       if (i === countryCodeLength + 6) formattedNumber += "-";
+  //       if (i === countryCodeLength + 6) formattedNumber += "-";
 
-//       formattedNumber += cleaned[i];
-//     }
+  //       formattedNumber += cleaned[i];
+  //     }
 
-//     return formattedNumber.substring(0, countryCodeLength === 1 ? 16 : 17);
-//   };
+  //     return formattedNumber.substring(0, countryCodeLength === 1 ? 16 : 17);
+  //   };
 
-//   const handlePhoneInputChange = (e: React.FocusEvent<HTMLInputElement>) => {
-//     // const formattedNumber = formatPhoneNumber(e.target.value);
-//     setValue("userInfo.phone", e.target.value);
-//   };
+  //   const handlePhoneInputChange = (e: React.FocusEvent<HTMLInputElement>) => {
+  //     // const formattedNumber = formatPhoneNumber(e.target.value);
+  //     setValue("userInfo.phone", e.target.value);
+  //   };
 
   useEffect(() => {
     const checkListingsCount = async () => {
@@ -317,125 +318,127 @@ export default function Page() {
   }, [state.user]);
 
   if (!isMounted) {
-    return <div className="min-h-screen bg-[#F3EBE7] flex items-center justify-center">Loading...</div>;
+    return (
+      <div className="min-h-screen bg-[#F3EBE7] flex items-center justify-center">
+        Loading...
+      </div>
+    );
   }
 
   return (
     <main className="md:min-h-screen relative flex flex-col">
-    <div className="">
-          <form
-            onSubmit={handleSubmit(onSubmit, onError)}
-            className=" max-w-[1000px] gap-4 bg-[#F3EBE7] px-4 py-4 flex flex-col  m-auto">
-
-            <div className="m-auto gap-4 flex-col md:w-2/3 flex ">
+      <div className="">
+        <form
+          onSubmit={handleSubmit(onSubmit, onError)}
+          className=" max-w-[1000px] gap-4 bg-[#F3EBE7] px-4 py-4 flex flex-col  m-auto">
+          <div className="m-auto gap-4 flex-col md:w-2/3 flex ">
             <div>
-                <label htmlFor="">Give your property a title.</label>
+              <label htmlFor="">Give your property a title.</label>
+              <input
+                {...register("homeInfo.title", {
+                  required: "Please give your listing a title.",
+                })}
+                placeholder="Name of the house, street, or anything distinctive."
+                className="w-full placeholder:text-gray-500 mb-4 bg-transparent border-b border-[#172544] focus:outline-none"
+                type="text"
+                id="title"
+              />
+              <label htmlFor="">Write a description of the property.</label>
+              <textarea
+                id="description"
+                {...register("homeInfo.description", {
+                  required: "Please enter a description of your property",
+                })}
+                className="w-full bg-transparent border-b border-[#172544] focus:outline-none"
+              />
+            </div>
+            <label htmlFor="children">
+              What kind of property do you have for exchange?
+            </label>
+
+            <div className="flex flex-wrap gap-3">
+              <div className="gap-2 flex">
                 <input
-                  {...register("homeInfo.title", {
-                    required: "Please give your listing a title.",
-                  })}
-                  placeholder="Name of the house, street, or anything distinctive."
-                  className="w-full placeholder:text-gray-500 mb-4 bg-transparent border-b border-[#172544] focus:outline-none"
-                  type="text"
-                  id="title"
+                  className="w-fit bg-transparent checked:bg-[#7F8119] appearance-none border border-[#172544] rounded-xl p-[6px] my-auto"
+                  type="radio"
+                  value="House"
+                  {...register("homeInfo.property")}
+                  id="house"
                 />
-                <label htmlFor="">Write a description of the property.</label>
-                <textarea
-                  id="description"
-                  {...register("homeInfo.description", {
-                    required: "Please enter a description of your property",
-                  })}
-                  className="w-full bg-transparent border-b border-[#172544] focus:outline-none"
+                <label htmlFor="house">House</label>
+              </div>
+              <div className="gap-2 flex">
+                <input
+                  className="w-fit bg-transparent checked:bg-[#7F8119] appearance-none border border-[#172544] rounded-xl p-[6px] my-auto"
+                  type="radio"
+                  value="Apartment"
+                  {...register("homeInfo.property")}
+                  id="apartment"
+                />
+                <label htmlFor="Apartment">Apartment</label>
+              </div>
+              <div className="gap-2 flex">
+                <input
+                  className="w-fit bg-transparent checked:bg-[#7F8119] appearance-none border border-[#172544] rounded-xl p-[6px] my-auto"
+                  type="radio"
+                  value="Villa"
+                  {...register("homeInfo.property")}
+                  id="villa"
                 />
 
+                <label htmlFor="villa">Villa</label>
               </div>
-              <label htmlFor="children">
-                What kind of property do you have for exchange?
-              </label>
-
-              <div className="flex flex-wrap gap-3">
-                <div className="gap-2 flex">
-                  <input
-                    className="w-fit bg-transparent checked:bg-[#7F8119] appearance-none border border-[#172544] rounded-xl p-[6px] my-auto"
-                    type="radio"
-                    value="House"
-                    {...register("homeInfo.property")}
-                    id="house"
-                  />
-                  <label htmlFor="house">House</label>
-                </div>
-                <div className="gap-2 flex">
-                  <input
-                    className="w-fit bg-transparent checked:bg-[#7F8119] appearance-none border border-[#172544] rounded-xl p-[6px] my-auto"
-                    type="radio"
-                    value="Apartment"
-                    {...register("homeInfo.property")}
-                    id="apartment"
-                  />
-                  <label htmlFor="Apartment">Apartment</label>
-                </div>
-                <div className="gap-2 flex">
-                  <input
-                    className="w-fit bg-transparent checked:bg-[#7F8119] appearance-none border border-[#172544] rounded-xl p-[6px] my-auto"
-                    type="radio"
-                    value="Villa"
-                    {...register("homeInfo.property")}
-                    id="villa"
-                  />
-
-                  <label htmlFor="villa">Villa</label>
-                </div>
-                <div className="gap-2 flex">
-                  <input
-                    className="w-fit bg-transparent checked:bg-[#7F8119] appearance-none border border-[#172544] rounded-xl p-[6px] my-auto"
-                    type="radio"
-                    value="Farm"
-                    {...register("homeInfo.property")}
-                    id="farm"
-                  />
-                  <label htmlFor="farm">Farm</label>
-                </div>
-                <div className="gap-2 flex">
-                  <input
-                    className="w-fit bg-transparent checked:bg-[#7F8119] appearance-none border border-[#172544] rounded-xl p-[6px] my-auto"
-                    type="radio"
-                    value="Boat"
-                    {...register("homeInfo.property")}
-                    id="boat"
-                  />
-                  <label htmlFor="boat">Boat</label>
-                </div>
-                <div className="gap-2 flex">
-                  <input
-                    {...register("homeInfo.property")}
-                    className="w-fit bg-transparent checked:bg-[#7F8119] appearance-none border border-[#172544] rounded-xl p-[6px] my-auto"
-                    type="radio"
-                    value="RV"
-                    id="rv"
-                  />
-                  <label htmlFor="rv">RV</label>
-                </div>
-                <div className="gap-2 flex">
-                  <input
-                    className="w-fit bg-transparent checked:bg-[#7F8119] appearance-none border border-[#172544] rounded-xl p-[6px] my-auto"
-                    type="radio"
-                    value="Other"
-                    {...register("homeInfo.property")}
-                    id="otherProperty"
-                  />
-                  <label htmlFor="otherProperty">Other</label>
-                </div>
+              <div className="gap-2 flex">
+                <input
+                  className="w-fit bg-transparent checked:bg-[#7F8119] appearance-none border border-[#172544] rounded-xl p-[6px] my-auto"
+                  type="radio"
+                  value="Farm"
+                  {...register("homeInfo.property")}
+                  id="farm"
+                />
+                <label htmlFor="farm">Farm</label>
               </div>
-              <div className="flex md:flex-row flex-col gap-4 md:gap-12 w-full mx-auto">
-                <div className="m-auto flex-col w-full flex">
-                  <label htmlFor="address">
-                    What is the city and country where the property is located?
-                  </label>
-                  <GoogleMapComponent
-                    hideMap={true}
-                    setWhereIsIt={setWhereIsIt}
-                  />
-                  {/* <textarea
+              <div className="gap-2 flex">
+                <input
+                  className="w-fit bg-transparent checked:bg-[#7F8119] appearance-none border border-[#172544] rounded-xl p-[6px] my-auto"
+                  type="radio"
+                  value="Boat"
+                  {...register("homeInfo.property")}
+                  id="boat"
+                />
+                <label htmlFor="boat">Boat</label>
+              </div>
+              <div className="gap-2 flex">
+                <input
+                  {...register("homeInfo.property")}
+                  className="w-fit bg-transparent checked:bg-[#7F8119] appearance-none border border-[#172544] rounded-xl p-[6px] my-auto"
+                  type="radio"
+                  value="RV"
+                  id="rv"
+                />
+                <label htmlFor="rv">RV</label>
+              </div>
+              <div className="gap-2 flex">
+                <input
+                  className="w-fit bg-transparent checked:bg-[#7F8119] appearance-none border border-[#172544] rounded-xl p-[6px] my-auto"
+                  type="radio"
+                  value="Other"
+                  {...register("homeInfo.property")}
+                  id="otherProperty"
+                />
+                <label htmlFor="otherProperty">Other</label>
+              </div>
+            </div>
+            <div className="flex md:flex-row flex-col gap-4 md:gap-12 w-full mx-auto">
+              <div className="m-auto flex-col w-full flex">
+                <label htmlFor="address">
+                  What is the city and country where the property is located?
+                </label>
+                <GoogleMapComponent
+                  hideMap={true}
+                  setWhereIsIt={setWhereIsIt}
+                />
+                {/* <textarea
                     rows={1}
                     id="address"
                     {...register('homeInfo.address', {
@@ -443,509 +446,506 @@ export default function Page() {
                     })}
                     className="w-full bg-transparent border-b border-[#172544] focus:outline-none"
                   /> */}
-                </div>
               </div>
-
-              <div>
-                <label htmlFor="">Is your property located in:</label>
-                <div className="flex gap-2 flex-wrap">
-                  <div className="flex gap-2">
-                    <input
-                      className="bg-transparent checked:bg-[#7F8119] appearance-none border border-[#172544] rounded-xl p-[6px] my-auto"
-                      type="radio"
-                      id="condominium"
-                      value="a condominium"
-                      {...register("homeInfo.locatedIn", {})}
-                    />
-                    <label htmlFor="condominium">a condominium</label>
-                  </div>
-                  <div className="flex gap-2">
-                    <input
-                      className="bg-transparent checked:bg-[#7F8119] appearance-none border border-[#172544] rounded-xl p-[6px] my-auto"
-                      type="radio"
-                      id="gated"
-                      value="a gated community"
-                      {...register("homeInfo.locatedIn")}
-                    />
-                    <label htmlFor="gated">a gated community</label>
-                  </div>
-                  <div className="flex gap-2">
-                    <input
-                      className="bg-transparent checked:bg-[#7F8119] appearance-none border border-[#172544] rounded-xl p-[6px] my-auto"
-                      type="radio"
-                      id="itRestsFreely"
-                      value="it rests freely"
-                      {...register("homeInfo.locatedIn")}
-                    />
-                    <label htmlFor="itRestsFreely">it rests freely</label>
-                  </div>
-                  <div className="flex gap-2">
-                    <input
-                      className="bg-transparent checked:bg-[#7F8119] appearance-none border border-[#172544] rounded-xl p-[6px] my-auto"
-                      type="radio"
-                      id="other"
-                      value="other"
-                      {...register("homeInfo.locatedIn")}
-                    />
-                    <label htmlFor="other">other</label>
-                  </div>
-                </div>
-              </div>
-              <div className="flex gap-4 md:flex-row flex-col">
-                <label htmlFor="">How many people does it sleep?</label>
-                <select
-                  className="bg-transparent focus:outline-none  rounded-xl border w-fit px-2 border-[#172544]"
-                  {...register("homeInfo.howManySleep", {
-                    required: "Please select how many people it sleeps",
-                  })}
-                  id="">
-                  <option value="1">1</option>
-                  <option value="2">2</option>
-                  <option value="3">3</option>
-                  <option value="4">4</option>
-                  <option value="5">5</option>
-                  <option value="6">6</option>
-                  <option value="7+">7+</option>
-                </select>
-              </div>
-              <div className="gap-4 flex md:flex-row flex-col">
-                <label htmlFor="">How many bathrooms?</label>
-                <select
-                  className="bg-transparent focus:outline-none  rounded-xl border w-fit px-2 border-[#172544]"
-                  {...register("homeInfo.bathrooms", {
-                    required: "Please select how many bathrooms",
-                  })}
-                  id="">
-                  <option value="1">1</option>
-                  <option value="2">2</option>
-                  <option value="3">3</option>
-                  <option value="4+">4+</option>
-                </select>
-              </div>
-              <div className="gap-4 flex md:flex-row flex-col">
-                <label htmlFor="">
-                  Is this your main property or your second home?
-                </label>
-                <select
-                  className="bg-transparent focus:outline-none  rounded-xl border w-fit px-2 border-[#172544]"
-                  {...register("homeInfo.mainOrSecond", {
-                    required:
-                      "Please select if this is your main or second home",
-                  })}
-                  id="">
-                  <option value="main">Main</option>
-                  <option value="second">Second</option>
-                </select>
-              </div>
-              <div className="gap-4 flex md:flex-row flex-col">
-                <label htmlFor="">Size in square meters.</label>
-                <select
-                  className="bg-transparent focus:outline-none  rounded-xl border w-fit px-2 border-[#172544]"
-                  {...register("homeInfo.area", {
-                    required: "Please select the size of your home",
-                  })}
-                  id="">
-                  <option value="60-100">60 - 100 m2</option>
-                  <option value="100-150">100 - 150 m2</option>
-                  <option value="150-200">150 - 200 m2</option>
-                  <option value="200-250">200 - 250 m2</option>
-                  <option value="250-300">250 - 300 m2</option>
-                  <option value="300-350">300 - 350 m2</option>
-                  <option value="350-400">350 - 400 m2</option>
-                  <option value="400-450">400 - 450 m2</option>
-                  <option value="450-500">450 - 500 m2</option>
-                  <option value="500-550">500 - 550 m2</option>
-                  <option value="550-600">550 - 600 m2</option>
-                </select>
-              </div>
-              <div>
-                <label htmlFor="">Upload some photos.</label>
-                <BecomeMemberDropzone
-                  imageFiles={imageFiles}
-                  setImageFiles={setImageFiles}
-                />
-              </div>
-
             </div>
-            <div className="m-auto flex-col md:w-2/3 flex">
-              <label htmlFor="">What amenities does your property have?</label>
-            </div>
-            <div className="flex md:w-2/3 m-auto flex-wrap pb-8">
-              <div className="w-1/3 gap-2 flex flex-col">
-                <div className="flex gap-2">
-                  <input
-                    className="bg-transparent checked:bg-[#7F8119] appearance-none border border-[#172544] rounded-xl p-[6px] my-auto"
-                    type="checkbox"
-                    {...register("amenities.bike")}
-                    id="bike"
-                  />
-                  <label className="" htmlFor="bike">
-                    Bike
-                  </label>
-                </div>
-                <div className="flex gap-2">
-                  <input
-                    className="bg-transparent checked:bg-[#7F8119] appearance-none border border-[#172544] rounded-xl p-[6px] my-auto"
-                    type="checkbox"
-                    {...register("amenities.car")}
-                    id="car"
-                  />
-                  <label className="" htmlFor="car">
-                    Car
-                  </label>
-                </div>
 
+            <div>
+              <label htmlFor="">Is your property located in:</label>
+              <div className="flex gap-2 flex-wrap">
                 <div className="flex gap-2">
                   <input
                     className="bg-transparent checked:bg-[#7F8119] appearance-none border border-[#172544] rounded-xl p-[6px] my-auto"
-                    type="checkbox"
-                    {...register("amenities.tv")}
-                    id="tv"
+                    type="radio"
+                    id="condominium"
+                    value="a condominium"
+                    {...register("homeInfo.locatedIn", {})}
                   />
-                  <label className="" htmlFor="tv">
-                    TV
-                  </label>
-                </div>
-
-                <div className="flex gap-2">
-                  <input
-                    className="bg-transparent checked:bg-[#7F8119] appearance-none border border-[#172544] rounded-xl p-[6px] my-auto"
-                    type="checkbox"
-                    {...register("amenities.dishwasher")}
-                    id="dishwasher"
-                  />
-                  <label className="" htmlFor="dishwasher">
-                    Dishwasher
-                  </label>
-                </div>
-
-                <div className="flex gap-2">
-                  <input
-                    className="bg-transparent checked:bg-[#7F8119] appearance-none border border-[#172544] rounded-xl p-[6px] my-auto"
-                    type="checkbox"
-                    {...register("amenities.pingpong")}
-                    id="pingpong"
-                  />
-                  <label className="" htmlFor="pingpong">
-                    Ping pong
-                  </label>
-                </div>
-
-                <div className="flex gap-2">
-                  <input
-                    className="bg-transparent checked:bg-[#7F8119] appearance-none border border-[#172544] rounded-xl p-[6px] my-auto"
-                    type="checkbox"
-                    {...register("amenities.billiards")}
-                    id="billiards"
-                  />
-                  <label className="" htmlFor="billiards">
-                    Billiards
-                  </label>
-                </div>
-              </div>
-
-              <div className="w-1/3 gap-2 flex flex-col">
-                <div className="gap-2 flex">
-                  <input
-                    className="bg-transparent checked:bg-[#7F8119] appearance-none border border-[#172544] rounded-xl p-[6px] my-auto"
-                    type="checkbox"
-                    {...register("amenities.washer")}
-                    id="washer"
-                  />
-                  <label className="" htmlFor="washer">
-                    Washer
-                  </label>
+                  <label htmlFor="condominium">a condominium</label>
                 </div>
                 <div className="flex gap-2">
                   <input
                     className="bg-transparent checked:bg-[#7F8119] appearance-none border border-[#172544] rounded-xl p-[6px] my-auto"
-                    type="checkbox"
-                    {...register("amenities.dryer")}
-                    id="dryer"
+                    type="radio"
+                    id="gated"
+                    value="a gated community"
+                    {...register("homeInfo.locatedIn")}
                   />
-                  <label className="" htmlFor="dryer">
-                    Dryer
-                  </label>
-                </div>
-
-                <div className="flex gap-2">
-                  <input
-                    className="bg-transparent checked:bg-[#7F8119] appearance-none border border-[#172544] rounded-xl p-[6px] my-auto"
-                    type="checkbox"
-                    {...register("amenities.wifi")}
-                    id="wifi"
-                  />
-                  <label className="" htmlFor="wifi">
-                    Wifi
-                  </label>
-                </div>
-
-                <div className="flex gap-2">
-                  <input
-                    className="bg-transparent checked:bg-[#7F8119] appearance-none border border-[#172544] rounded-xl p-[6px] my-auto"
-                    type="checkbox"
-                    {...register("amenities.elevator")}
-                    id="elevator"
-                  />
-                  <label className="" htmlFor="elevator">
-                    Elevator
-                  </label>
-                </div>
-
-                <div className="flex gap-2">
-                  <input
-                    className="bg-transparent checked:bg-[#7F8119] appearance-none border border-[#172544] rounded-xl p-[6px] my-auto"
-                    type="checkbox"
-                    {...register("amenities.terrace")}
-                    id="terrace"
-                  />
-                  <label className="" htmlFor="terrace">
-                    Terrace
-                  </label>
-                </div>
-
-                <div className="flex gap-2">
-                  <input
-                    className="bg-transparent checked:bg-[#7F8119] appearance-none border border-[#172544] rounded-xl p-[6px] my-auto"
-                    type="checkbox"
-                    {...register("amenities.scooter")}
-                    id="scooter"
-                  />
-                  <label className="" htmlFor="scooter">
-                    Scooter
-                  </label>
-                </div>
-              </div>
-
-              <div className="w-1/3 gap-2 flex flex-col">
-                <div className="flex gap-2">
-                  <input
-                    className="bg-transparent checked:bg-[#7F8119] appearance-none border border-[#172544] rounded-xl p-[6px] my-auto"
-                    type="checkbox"
-                    {...register("amenities.bbq")}
-                    id="bbq"
-                  />
-                  <label className="" htmlFor="bbq">
-                    BBQ
-                  </label>
+                  <label htmlFor="gated">a gated community</label>
                 </div>
                 <div className="flex gap-2">
                   <input
                     className="bg-transparent checked:bg-[#7F8119] appearance-none border border-[#172544] rounded-xl p-[6px] my-auto"
-                    type="checkbox"
-                    {...register("amenities.computer")}
-                    id="computer"
+                    type="radio"
+                    id="itRestsFreely"
+                    value="it rests freely"
+                    {...register("homeInfo.locatedIn")}
                   />
-                  <label className="" htmlFor="computer">
-                    Home Computer
-                  </label>
-                </div>
-
-                <div className="flex gap-2">
-                  <input
-                    className="bg-transparent checked:bg-[#7F8119] appearance-none border border-[#172544] rounded-xl p-[6px] my-auto"
-                    {...register("amenities.wcAccess")}
-                    type="checkbox"
-                    id="wc"
-                  />
-                  <label className="" htmlFor="wc">
-                    WC Access
-                  </label>
-                </div>
-
-                <div className="flex gap-2">
-                  <input
-                    className="bg-transparent checked:bg-[#7F8119] appearance-none border border-[#172544] rounded-xl p-[6px] my-auto"
-                    type="checkbox"
-                    {...register("amenities.pool")}
-                    id="pool"
-                  />
-                  <label className="" htmlFor="pool">
-                    Pool
-                  </label>
-                </div>
-
-                <div className="flex gap-2">
-                  <input
-                    className="bg-transparent checked:bg-[#7F8119] appearance-none border border-[#172544] rounded-xl p-[6px] my-auto"
-                    type="checkbox"
-                    {...register("amenities.playground")}
-                    id="playground"
-                  />
-                  <label className="" htmlFor="playground">
-                    Playground
-                  </label>
-                </div>
-
-                <div className="flex gap-2">
-                  <input
-                    className="bg-transparent checked:bg-[#7F8119] appearance-none border border-[#172544] rounded-xl p-[6px] my-auto"
-                    type="checkbox"
-                    {...register("amenities.babyGear")}
-                    id="babyGear"
-                  />
-                  <label className="" htmlFor="babyGear">
-                    Baby gear
-                  </label>
-                </div>
-              </div>
-
-              <div className="w-1/3 gap-2 flex flex-col">
-                <div className="flex gap-2">
-                  <input
-                    className="bg-transparent checked:bg-[#7F8119] appearance-none border border-[#172544] rounded-xl p-[6px] my-auto"
-                    type="checkbox"
-                    {...register("amenities.ac")}
-                    id="ac"
-                  />
-                  <label className="" htmlFor="ac">
-                    AC
-                  </label>
+                  <label htmlFor="itRestsFreely">it rests freely</label>
                 </div>
                 <div className="flex gap-2">
                   <input
                     className="bg-transparent checked:bg-[#7F8119] appearance-none border border-[#172544] rounded-xl p-[6px] my-auto"
-                    type="checkbox"
-                    {...register("amenities.fireplace")}
-                    id="fireplace"
-                  />
-                  <label className="" htmlFor="fireplace">
-                    Fireplace
-                  </label>
-                </div>
-
-                <div className="flex gap-2">
-                  <input
-                    className="bg-transparent checked:bg-[#7F8119] appearance-none border border-[#172544] rounded-xl p-[6px] my-auto"
-                    type="checkbox"
-                    {...register("amenities.parking")}
-                    id="parking"
-                  />
-                  <label className="" htmlFor="parking">
-                    Private parking
-                  </label>
-                </div>
-
-                <div className="flex gap-2">
-                  <input
-                    className="bg-transparent checked:bg-[#7F8119] appearance-none border border-[#172544] rounded-xl p-[6px] my-auto"
-                    type="checkbox"
-                    {...register("amenities.hotTub")}
-                    id="hotTub"
-                  />
-                  <label className="" htmlFor="hotTub">
-                    Hot tub
-                  </label>
-                </div>
-
-                <div className="flex gap-2">
-                  <input
-                    className="bg-transparent checked:bg-[#7F8119] appearance-none border border-[#172544] rounded-xl p-[6px] my-auto"
-                    type="checkbox"
-                    {...register("amenities.sauna")}
-                    id="sauna"
-                  />
-                  <label className="" htmlFor="sauna">
-                    Sauna
-                  </label>
-                </div>
-
-                <div className="flex gap-2">
-                  <input
-                    className="bg-transparent checked:bg-[#7F8119] appearance-none border border-[#172544] rounded-xl p-[6px] my-auto"
-                    type="checkbox"
-                    {...register("amenities.other")}
+                    type="radio"
                     id="other"
+                    value="other"
+                    {...register("homeInfo.locatedIn")}
                   />
-                  <label className="" htmlFor="other">
-                    Other...
-                  </label>
-                </div>
-              </div>
-
-              <div className="w-1/3 gap-2 flex flex-col">
-                <div className="flex gap-2">
-                  <input
-                    className="bg-transparent checked:bg-[#7F8119] appearance-none border border-[#172544] rounded-xl p-[6px] my-auto"
-                    type="checkbox"
-                    {...register("amenities.doorman")}
-                    id="doorman"
-                  />
-                  <label className="" htmlFor="doorman">
-                    Doorman
-                  </label>
-                </div>
-                <div className="flex gap-2">
-                  <input
-                    className="bg-transparent checked:bg-[#7F8119] appearance-none border border-[#172544] rounded-xl p-[6px] my-auto"
-                    type="checkbox"
-                    {...register("amenities.cleaningService")}
-                    id="cleaningService"
-                  />
-                  <label className="" htmlFor="cleaningService">
-                    Cleaning service
-                  </label>
-                </div>
-
-                <div className="flex gap-2">
-                  <input
-                    className="bg-transparent checked:bg-[#7F8119] appearance-none border border-[#172544] rounded-xl p-[6px] my-auto"
-                    type="checkbox"
-                    {...register("amenities.videoGames")}
-                    id="videoGames"
-                  />
-                  <label className="" htmlFor="videoGames">
-                    Video games
-                  </label>
-                </div>
-
-                <div className="flex gap-2">
-                  <input
-                    className="bg-transparent checked:bg-[#7F8119] appearance-none border border-[#172544] rounded-xl p-[6px] my-auto"
-                    type="checkbox"
-                    {...register("amenities.tennisCourt")}
-                    id="tennisCourt"
-                  />
-                  <label className="" htmlFor="tennisCourt">
-                    Tennis court
-                  </label>
-                </div>
-
-                <div className="flex gap-2">
-                  <input
-                    className="bg-transparent checked:bg-[#7F8119] appearance-none border border-[#172544] rounded-xl p-[6px] my-auto"
-                    type="checkbox"
-                    {...register("amenities.gym")}
-                    id="gym"
-                  />
-                  <label className="" htmlFor="gym">
-                    Gym
-                  </label>
+                  <label htmlFor="other">other</label>
                 </div>
               </div>
             </div>
-            <div className="flex justify-center">
-              <div className="relative group">
-                <button
-                  type="submit"
-                  disabled={hasMaxListings}
-                  className={`${
-                    hasMaxListings 
-                      ? "bg-gray-400 cursor-not-allowed" 
-                      : "bg-[#E78426] hover:bg-[#e78326d8]"
-                  } text-[#fff] font-bold px-4 py-2 rounded-3xl`}>
-                  Submit
-                </button>
-                {hasMaxListings && (
-                  <div className="absolute hidden group-hover:block bg-black text-white text-sm rounded-md p-2 top-full mt-2 left-1/2 transform -translate-x-1/2 w-48 text-center z-[100000]">
-                    Maximum of 2 listings allowed
-                  </div>
-                )}
+            <div className="flex gap-4 md:flex-row flex-col">
+              <label htmlFor="">How many people does it sleep?</label>
+              <select
+                className="bg-transparent focus:outline-none  rounded-xl border w-fit px-2 border-[#172544]"
+                {...register("homeInfo.howManySleep", {
+                  required: "Please select how many people it sleeps",
+                })}
+                id="">
+                <option value="1">1</option>
+                <option value="2">2</option>
+                <option value="3">3</option>
+                <option value="4">4</option>
+                <option value="5">5</option>
+                <option value="6">6</option>
+                <option value="7+">7+</option>
+              </select>
+            </div>
+            <div className="gap-4 flex md:flex-row flex-col">
+              <label htmlFor="">How many bathrooms?</label>
+              <select
+                className="bg-transparent focus:outline-none  rounded-xl border w-fit px-2 border-[#172544]"
+                {...register("homeInfo.bathrooms", {
+                  required: "Please select how many bathrooms",
+                })}
+                id="">
+                <option value="1">1</option>
+                <option value="2">2</option>
+                <option value="3">3</option>
+                <option value="4+">4+</option>
+              </select>
+            </div>
+            <div className="gap-4 flex md:flex-row flex-col">
+              <label htmlFor="">
+                Is this your main property or your second home?
+              </label>
+              <select
+                className="bg-transparent focus:outline-none  rounded-xl border w-fit px-2 border-[#172544]"
+                {...register("homeInfo.mainOrSecond", {
+                  required: "Please select if this is your main or second home",
+                })}
+                id="">
+                <option value="main">Main</option>
+                <option value="second">Second</option>
+              </select>
+            </div>
+            <div className="gap-4 flex md:flex-row flex-col">
+              <label htmlFor="">Size in square meters.</label>
+              <select
+                className="bg-transparent focus:outline-none  rounded-xl border w-fit px-2 border-[#172544]"
+                {...register("homeInfo.area", {
+                  required: "Please select the size of your home",
+                })}
+                id="">
+                <option value="60-100">60 - 100 m2</option>
+                <option value="100-150">100 - 150 m2</option>
+                <option value="150-200">150 - 200 m2</option>
+                <option value="200-250">200 - 250 m2</option>
+                <option value="250-300">250 - 300 m2</option>
+                <option value="300-350">300 - 350 m2</option>
+                <option value="350-400">350 - 400 m2</option>
+                <option value="400-450">400 - 450 m2</option>
+                <option value="450-500">450 - 500 m2</option>
+                <option value="500-550">500 - 550 m2</option>
+                <option value="550-600">550 - 600 m2</option>
+              </select>
+            </div>
+            <div>
+              <label htmlFor="">Upload some photos.</label>
+              <BecomeMemberDropzone
+                imageFiles={imageFiles}
+                setImageFiles={setImageFiles}
+              />
+            </div>
+          </div>
+          <div className="m-auto flex-col md:w-2/3 flex">
+            <label htmlFor="">What amenities does your property have?</label>
+          </div>
+          <div className="flex md:w-2/3 m-auto flex-wrap pb-8">
+            <div className="w-1/3 gap-2 flex flex-col">
+              <div className="flex gap-2">
+                <input
+                  className="bg-transparent checked:bg-[#7F8119] appearance-none border border-[#172544] rounded-xl p-[6px] my-auto"
+                  type="checkbox"
+                  {...register("amenities.bike")}
+                  id="bike"
+                />
+                <label className="" htmlFor="bike">
+                  Bike
+                </label>
+              </div>
+              <div className="flex gap-2">
+                <input
+                  className="bg-transparent checked:bg-[#7F8119] appearance-none border border-[#172544] rounded-xl p-[6px] my-auto"
+                  type="checkbox"
+                  {...register("amenities.car")}
+                  id="car"
+                />
+                <label className="" htmlFor="car">
+                  Car
+                </label>
+              </div>
+
+              <div className="flex gap-2">
+                <input
+                  className="bg-transparent checked:bg-[#7F8119] appearance-none border border-[#172544] rounded-xl p-[6px] my-auto"
+                  type="checkbox"
+                  {...register("amenities.tv")}
+                  id="tv"
+                />
+                <label className="" htmlFor="tv">
+                  TV
+                </label>
+              </div>
+
+              <div className="flex gap-2">
+                <input
+                  className="bg-transparent checked:bg-[#7F8119] appearance-none border border-[#172544] rounded-xl p-[6px] my-auto"
+                  type="checkbox"
+                  {...register("amenities.dishwasher")}
+                  id="dishwasher"
+                />
+                <label className="" htmlFor="dishwasher">
+                  Dishwasher
+                </label>
+              </div>
+
+              <div className="flex gap-2">
+                <input
+                  className="bg-transparent checked:bg-[#7F8119] appearance-none border border-[#172544] rounded-xl p-[6px] my-auto"
+                  type="checkbox"
+                  {...register("amenities.pingpong")}
+                  id="pingpong"
+                />
+                <label className="" htmlFor="pingpong">
+                  Ping pong
+                </label>
+              </div>
+
+              <div className="flex gap-2">
+                <input
+                  className="bg-transparent checked:bg-[#7F8119] appearance-none border border-[#172544] rounded-xl p-[6px] my-auto"
+                  type="checkbox"
+                  {...register("amenities.billiards")}
+                  id="billiards"
+                />
+                <label className="" htmlFor="billiards">
+                  Billiards
+                </label>
               </div>
             </div>
-          </form>
-        </div>
-      {" "}
+
+            <div className="w-1/3 gap-2 flex flex-col">
+              <div className="gap-2 flex">
+                <input
+                  className="bg-transparent checked:bg-[#7F8119] appearance-none border border-[#172544] rounded-xl p-[6px] my-auto"
+                  type="checkbox"
+                  {...register("amenities.washer")}
+                  id="washer"
+                />
+                <label className="" htmlFor="washer">
+                  Washer
+                </label>
+              </div>
+              <div className="flex gap-2">
+                <input
+                  className="bg-transparent checked:bg-[#7F8119] appearance-none border border-[#172544] rounded-xl p-[6px] my-auto"
+                  type="checkbox"
+                  {...register("amenities.dryer")}
+                  id="dryer"
+                />
+                <label className="" htmlFor="dryer">
+                  Dryer
+                </label>
+              </div>
+
+              <div className="flex gap-2">
+                <input
+                  className="bg-transparent checked:bg-[#7F8119] appearance-none border border-[#172544] rounded-xl p-[6px] my-auto"
+                  type="checkbox"
+                  {...register("amenities.wifi")}
+                  id="wifi"
+                />
+                <label className="" htmlFor="wifi">
+                  Wifi
+                </label>
+              </div>
+
+              <div className="flex gap-2">
+                <input
+                  className="bg-transparent checked:bg-[#7F8119] appearance-none border border-[#172544] rounded-xl p-[6px] my-auto"
+                  type="checkbox"
+                  {...register("amenities.elevator")}
+                  id="elevator"
+                />
+                <label className="" htmlFor="elevator">
+                  Elevator
+                </label>
+              </div>
+
+              <div className="flex gap-2">
+                <input
+                  className="bg-transparent checked:bg-[#7F8119] appearance-none border border-[#172544] rounded-xl p-[6px] my-auto"
+                  type="checkbox"
+                  {...register("amenities.terrace")}
+                  id="terrace"
+                />
+                <label className="" htmlFor="terrace">
+                  Terrace
+                </label>
+              </div>
+
+              <div className="flex gap-2">
+                <input
+                  className="bg-transparent checked:bg-[#7F8119] appearance-none border border-[#172544] rounded-xl p-[6px] my-auto"
+                  type="checkbox"
+                  {...register("amenities.scooter")}
+                  id="scooter"
+                />
+                <label className="" htmlFor="scooter">
+                  Scooter
+                </label>
+              </div>
+            </div>
+
+            <div className="w-1/3 gap-2 flex flex-col">
+              <div className="flex gap-2">
+                <input
+                  className="bg-transparent checked:bg-[#7F8119] appearance-none border border-[#172544] rounded-xl p-[6px] my-auto"
+                  type="checkbox"
+                  {...register("amenities.bbq")}
+                  id="bbq"
+                />
+                <label className="" htmlFor="bbq">
+                  BBQ
+                </label>
+              </div>
+              <div className="flex gap-2">
+                <input
+                  className="bg-transparent checked:bg-[#7F8119] appearance-none border border-[#172544] rounded-xl p-[6px] my-auto"
+                  type="checkbox"
+                  {...register("amenities.computer")}
+                  id="computer"
+                />
+                <label className="" htmlFor="computer">
+                  Home Computer
+                </label>
+              </div>
+
+              <div className="flex gap-2">
+                <input
+                  className="bg-transparent checked:bg-[#7F8119] appearance-none border border-[#172544] rounded-xl p-[6px] my-auto"
+                  {...register("amenities.wcAccess")}
+                  type="checkbox"
+                  id="wc"
+                />
+                <label className="" htmlFor="wc">
+                  WC Access
+                </label>
+              </div>
+
+              <div className="flex gap-2">
+                <input
+                  className="bg-transparent checked:bg-[#7F8119] appearance-none border border-[#172544] rounded-xl p-[6px] my-auto"
+                  type="checkbox"
+                  {...register("amenities.pool")}
+                  id="pool"
+                />
+                <label className="" htmlFor="pool">
+                  Pool
+                </label>
+              </div>
+
+              <div className="flex gap-2">
+                <input
+                  className="bg-transparent checked:bg-[#7F8119] appearance-none border border-[#172544] rounded-xl p-[6px] my-auto"
+                  type="checkbox"
+                  {...register("amenities.playground")}
+                  id="playground"
+                />
+                <label className="" htmlFor="playground">
+                  Playground
+                </label>
+              </div>
+
+              <div className="flex gap-2">
+                <input
+                  className="bg-transparent checked:bg-[#7F8119] appearance-none border border-[#172544] rounded-xl p-[6px] my-auto"
+                  type="checkbox"
+                  {...register("amenities.babyGear")}
+                  id="babyGear"
+                />
+                <label className="" htmlFor="babyGear">
+                  Baby gear
+                </label>
+              </div>
+            </div>
+
+            <div className="w-1/3 gap-2 flex flex-col">
+              <div className="flex gap-2">
+                <input
+                  className="bg-transparent checked:bg-[#7F8119] appearance-none border border-[#172544] rounded-xl p-[6px] my-auto"
+                  type="checkbox"
+                  {...register("amenities.ac")}
+                  id="ac"
+                />
+                <label className="" htmlFor="ac">
+                  AC
+                </label>
+              </div>
+              <div className="flex gap-2">
+                <input
+                  className="bg-transparent checked:bg-[#7F8119] appearance-none border border-[#172544] rounded-xl p-[6px] my-auto"
+                  type="checkbox"
+                  {...register("amenities.fireplace")}
+                  id="fireplace"
+                />
+                <label className="" htmlFor="fireplace">
+                  Fireplace
+                </label>
+              </div>
+
+              <div className="flex gap-2">
+                <input
+                  className="bg-transparent checked:bg-[#7F8119] appearance-none border border-[#172544] rounded-xl p-[6px] my-auto"
+                  type="checkbox"
+                  {...register("amenities.parking")}
+                  id="parking"
+                />
+                <label className="" htmlFor="parking">
+                  Private parking
+                </label>
+              </div>
+
+              <div className="flex gap-2">
+                <input
+                  className="bg-transparent checked:bg-[#7F8119] appearance-none border border-[#172544] rounded-xl p-[6px] my-auto"
+                  type="checkbox"
+                  {...register("amenities.hotTub")}
+                  id="hotTub"
+                />
+                <label className="" htmlFor="hotTub">
+                  Hot tub
+                </label>
+              </div>
+
+              <div className="flex gap-2">
+                <input
+                  className="bg-transparent checked:bg-[#7F8119] appearance-none border border-[#172544] rounded-xl p-[6px] my-auto"
+                  type="checkbox"
+                  {...register("amenities.sauna")}
+                  id="sauna"
+                />
+                <label className="" htmlFor="sauna">
+                  Sauna
+                </label>
+              </div>
+
+              <div className="flex gap-2">
+                <input
+                  className="bg-transparent checked:bg-[#7F8119] appearance-none border border-[#172544] rounded-xl p-[6px] my-auto"
+                  type="checkbox"
+                  {...register("amenities.other")}
+                  id="other"
+                />
+                <label className="" htmlFor="other">
+                  Other...
+                </label>
+              </div>
+            </div>
+
+            <div className="w-1/3 gap-2 flex flex-col">
+              <div className="flex gap-2">
+                <input
+                  className="bg-transparent checked:bg-[#7F8119] appearance-none border border-[#172544] rounded-xl p-[6px] my-auto"
+                  type="checkbox"
+                  {...register("amenities.doorman")}
+                  id="doorman"
+                />
+                <label className="" htmlFor="doorman">
+                  Doorman
+                </label>
+              </div>
+              <div className="flex gap-2">
+                <input
+                  className="bg-transparent checked:bg-[#7F8119] appearance-none border border-[#172544] rounded-xl p-[6px] my-auto"
+                  type="checkbox"
+                  {...register("amenities.cleaningService")}
+                  id="cleaningService"
+                />
+                <label className="" htmlFor="cleaningService">
+                  Cleaning service
+                </label>
+              </div>
+
+              <div className="flex gap-2">
+                <input
+                  className="bg-transparent checked:bg-[#7F8119] appearance-none border border-[#172544] rounded-xl p-[6px] my-auto"
+                  type="checkbox"
+                  {...register("amenities.videoGames")}
+                  id="videoGames"
+                />
+                <label className="" htmlFor="videoGames">
+                  Video games
+                </label>
+              </div>
+
+              <div className="flex gap-2">
+                <input
+                  className="bg-transparent checked:bg-[#7F8119] appearance-none border border-[#172544] rounded-xl p-[6px] my-auto"
+                  type="checkbox"
+                  {...register("amenities.tennisCourt")}
+                  id="tennisCourt"
+                />
+                <label className="" htmlFor="tennisCourt">
+                  Tennis court
+                </label>
+              </div>
+
+              <div className="flex gap-2">
+                <input
+                  className="bg-transparent checked:bg-[#7F8119] appearance-none border border-[#172544] rounded-xl p-[6px] my-auto"
+                  type="checkbox"
+                  {...register("amenities.gym")}
+                  id="gym"
+                />
+                <label className="" htmlFor="gym">
+                  Gym
+                </label>
+              </div>
+            </div>
+          </div>
+          <div className="flex justify-center">
+            <div className="relative group">
+              <button
+                type="submit"
+                disabled={hasMaxListings}
+                className={`${
+                  hasMaxListings
+                    ? "bg-gray-400 cursor-not-allowed"
+                    : "bg-[#E78426] hover:bg-[#e78326d8]"
+                } text-[#fff] font-bold px-4 py-2 rounded-3xl`}>
+                Submit
+              </button>
+              {hasMaxListings && (
+                <div className="absolute hidden group-hover:block bg-black text-white text-sm rounded-md p-2 top-full mt-2 left-1/2 transform -translate-x-1/2 w-48 text-center z-[100000]">
+                  Maximum of 2 listings allowed
+                </div>
+              )}
+            </div>
+          </div>
+        </form>
+      </div>{" "}
       {submitted && (
         // thank you for your submission, someone will be in touch with you shortly
         <div className="flex flex-col my-8 justify-center items-center">

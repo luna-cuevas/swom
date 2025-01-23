@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { supabaseClient } from "@/utils/supabaseClient";
+import { getSupabaseClient } from "@/utils/supabaseClient";
 import { useRouter, useSearchParams } from "next/navigation";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
@@ -10,7 +10,7 @@ import { globalStateAtom } from "@/context/atoms";
 import Stripe from "stripe";
 
 const ResetPassword = () => {
-  const supabase = supabaseClient();
+  const supabase = getSupabaseClient();
   const router = useRouter();
   const searchParams = useSearchParams();
   const [password, setPassword] = useState("");
@@ -19,12 +19,9 @@ const ResetPassword = () => {
   const accessToken = searchParams.get("access_token");
   const type = searchParams.get("type");
 
-  const stripeActivation = new Stripe(
-    process.env.NEXT_PUBLIC_STRIPE_SECRET_KEY!,
-    {
-      apiVersion: "2023-08-16",
-    }
-  );
+  const stripeActivation = new Stripe(process.env.STRIPE_SECRET_KEY!, {
+    apiVersion: "2023-08-16",
+  });
 
   const [state, setState] = useAtom(globalStateAtom);
 

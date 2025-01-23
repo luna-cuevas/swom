@@ -1,16 +1,13 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { createClient, SupabaseClient } from '@supabase/supabase-js';
-import nodemailer, { Transporter } from 'nodemailer';
-import { emailTemplate } from './emailTemplate';
+import { NextRequest, NextResponse } from "next/server";
+import nodemailer, { Transporter } from "nodemailer";
+import { emailTemplate } from "./emailTemplate";
+import { getSupabaseAdmin } from "@/utils/supabaseClient";
 
-// Initialize Supabase client
-const supabaseUrl: string = process.env.NEXT_PUBLIC_SUPABASE_URL as string;
-const supabaseServiceRoleKey: string = process.env.NEXT_PUBLIC_SUPABASE_SERVICE_ROLE_KEY as string;
-const supabase: SupabaseClient = createClient(supabaseUrl, supabaseServiceRoleKey);
+const supabase = getSupabaseAdmin();
 
 // Create a Nodemailer transporter
 const transporter: Transporter = nodemailer.createTransport({
-  service: 'gmail',
+  service: "gmail",
   auth: {
     user: process.env.EMAIL_USER,
     pass: process.env.EMAIL_PASS,
@@ -18,7 +15,11 @@ const transporter: Transporter = nodemailer.createTransport({
 });
 
 // Function to send email using Nodemailer
-const sendEmail = async (to: string, subject: string, html: string): Promise<void> => {
+const sendEmail = async (
+  to: string,
+  subject: string,
+  html: string
+): Promise<void> => {
   const mailOptions = {
     from: process.env.EMAIL_USER,
     to: to,
@@ -29,10 +30,10 @@ const sendEmail = async (to: string, subject: string, html: string): Promise<voi
   return new Promise((resolve, reject) => {
     transporter.sendMail(mailOptions, (error, info) => {
       if (error) {
-        console.error('Error sending email:', error);
+        console.error("Error sending email:", error);
         reject(error);
       } else {
-        console.log('Email sent:', info.response);
+        console.log("Email sent:", info.response);
         resolve(info);
       }
     });
@@ -40,19 +41,21 @@ const sendEmail = async (to: string, subject: string, html: string): Promise<voi
 };
 
 export async function GET(req: NextRequest): Promise<NextResponse> {
-  if (req.method !== 'GET') {
-    return NextResponse.json({ error: 'Method not allowed' }, { status: 405 });
+  if (req.method !== "GET") {
+    return NextResponse.json({ error: "Method not allowed" }, { status: 405 });
   }
 
   try {
     // Fetch distinct user_id with unread messages from Supabase
     const { data: receipts, error: receiptsError } = await supabase
-      .from('read_receipts')
-      .select('user_id, notified')
-      .eq('notified', false);
+      .from("read_receipts")
+      .select("user_id, notified")
+      .eq("notified", false);
 
     if (receiptsError) {
-      throw new Error(`Error fetching unread messages: ${receiptsError.message}`);
+      throw new Error(
+        `Error fetching unread messages: ${receiptsError.message}`
+      );
     }
 
     // Group unread messages by user_id
@@ -62,13 +65,16 @@ export async function GET(req: NextRequest): Promise<NextResponse> {
     // Send email to each user with unread messages
     for (const user_id of userIds) {
       const { data: userData, error: userError } = await supabase
-        .from('appUsers')
-        .select('email')
-        .eq('id', user_id)
+        .from("appUsers")
+        .select("email")
+        .eq("id", user_id)
         .single();
 
       if (userError) {
-        console.error(`Error fetching user email for user_id ${user_id}:`, userError);
+        console.error(
+          `Error fetching user email for user_id ${user_id}:`,
+          userError
+        );
         continue;
       }
 
@@ -79,28 +85,36 @@ export async function GET(req: NextRequest): Promise<NextResponse> {
 
       await sendEmail(
         userData.email,
-        'You have unread messages',
+        "You have unread messages",
         emailTemplate
       );
 
       // Update notified to true
       const { error: updateError } = await supabase
-        .from('read_receipts')
+        .from("read_receipts")
         .update({ notified: true })
-        .eq('user_id', user_id);
+        .eq("user_id", user_id);
 
       if (updateError) {
-        console.error(`Error updating notified for user_id ${user_id}:`, updateError);
+        console.error(
+          `Error updating notified for user_id ${user_id}:`,
+          updateError
+        );
       }
     }
 
-    return NextResponse.json({ message: 'Emails sent and notifications updated successfully' });
+    return NextResponse.json({
+      message: "Emails sent and notifications updated successfully",
+    });
   } catch (error: unknown) {
-    console.error('Unhandled error in main handler:', error);
+    console.error("Unhandled error in main handler:", error);
     if (error instanceof Error) {
       return NextResponse.json({ error: error.message }, { status: 500 });
     } else {
-      return NextResponse.json({ error: "An unknown error has occurred." }, { status: 500 });
+      return NextResponse.json(
+        { error: "An unknown error has occurred." },
+        { status: 500 }
+      );
     }
   }
 }

@@ -15,12 +15,9 @@ export interface CheckoutSubscriptionBody {
 export async function POST(req: Request) {
   const body = (await req.json()) as CheckoutSubscriptionBody;
   const origin = req.headers.get("origin") || "http://localhost:3000";
-  const stripe = new Stripe(
-    process.env.NEXT_PUBLIC_STRIPE_SECRET_KEY as string,
-    {
-      apiVersion: "2023-08-16",
-    }
-  );
+  const stripe = new Stripe(process.env.STRIPE_SECRET_KEY as string, {
+    apiVersion: "2023-08-16",
+  });
 
   // if user is logged in, redirect to thank you page, otherwise redirect to signup page.
   const success_url = `${origin}/sign-up?session_id={CHECKOUT_SESSION_ID}`;

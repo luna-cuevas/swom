@@ -9,12 +9,13 @@ const nextConfig = {
       "drive.google.com",
       "cdn.sanity.io",
       "wikimujeres.com",
+      "qzpzjyljdlpxohqddayi.supabase.co",
     ],
   },
   compiler: {
     styledComponents: true,
   },
-  transpilePackages: ['@react-google-maps/api'],
+  transpilePackages: ["@react-google-maps/api"],
   webpack: (config) => {
     // This is specifically for handling the window is not defined error in Vercel
     if (!config.resolve) {
@@ -23,7 +24,7 @@ const nextConfig = {
     if (!config.resolve.fallback) {
       config.resolve.fallback = {};
     }
-    
+
     config.resolve.fallback = {
       ...config.resolve.fallback,
       fs: false,

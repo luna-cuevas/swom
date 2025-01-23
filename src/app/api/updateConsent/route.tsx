@@ -1,11 +1,11 @@
 import { NextResponse } from "next/server";
-import { supabaseClient } from "@/utils/supabaseClient";
+import { getSupabaseClient } from "@/utils/supabaseClient";
 import crypto from "crypto";
 
 export async function POST(request: Request) {
   const { consentId, acceptType, acceptedCategories, rejectedCategories } =
     await request.json();
-  const supabase = supabaseClient();
+  const supabase = getSupabaseClient();
 
   const ip =
     request.headers.get("x-forwarded-for") ||

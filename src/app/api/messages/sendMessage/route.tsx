@@ -1,14 +1,14 @@
-import { supabaseClient } from '@/utils/supabaseClient';
-import { NextResponse } from 'next/server';
+import { getSupabaseClient } from "@/utils/supabaseClient";
+import { NextResponse } from "next/server";
 
 export async function POST(req: Request, res: Response) {
-  const supabase = supabaseClient();
+  const supabase = getSupabaseClient();
   const body = await req.json();
 
   const { data: existingData, error: existingError } = await supabase
-    .from('messages')
-    .select('messagesObj')
-    .eq('conversation_id', body.selectedConversation);
+    .from("messages")
+    .select("messagesObj")
+    .eq("conversation_id", body.selectedConversation);
 
   if (existingError) {
     return NextResponse.json({ res, error: existingError });
@@ -29,37 +29,41 @@ export async function POST(req: Request, res: Response) {
       timestamp: new Date(),
     },
   ];
-  console.log("sending this message", body.contacted_user, body.selectedConversation)
+  console.log(
+    "sending this message",
+    body.contacted_user,
+    body.selectedConversation
+  );
   const { data, error } = await supabase
-    .from('messages')
+    .from("messages")
     .upsert([
       {
         conversation_id: body.conversation_id,
         messagesObj: updatedMessages,
       },
     ])
-    .eq('conversation_id', body.selectedConversation)
-    .select('*');
-    
-    // Insert into read_receipts table
-    const { data: readReceiptData, error: readReceiptError } = await supabase
-      .from('read_receipts')
-      .insert([
-        {
-          conversation_id: body.conversation_id,
-          user_id: body.contacted_user,
-        },
-      ])
-      .select('*');
+    .eq("conversation_id", body.selectedConversation)
+    .select("*");
 
-    if (readReceiptError) {
-      return NextResponse.json({ res, error: readReceiptError });
-    }
+  // Insert into read_receipts table
+  const { data: readReceiptData, error: readReceiptError } = await supabase
+    .from("read_receipts")
+    .insert([
+      {
+        conversation_id: body.conversation_id,
+        user_id: body.contacted_user,
+      },
+    ])
+    .select("*");
 
-    console.log('server - messages data', data);
-    console.log('server - read receipts data', readReceiptData);
+  if (readReceiptError) {
+    return NextResponse.json({ res, error: readReceiptError });
+  }
+
+  console.log("server - messages data", data);
+  console.log("server - read receipts data", readReceiptData);
   if (data) {
-    console.log('server - messages data', data);
+    console.log("server - messages data", data);
     return NextResponse.json(data);
   } else {
     throw error;
