@@ -3,7 +3,13 @@ import { NextRequest, NextResponse } from "next/server";
 import { stripe } from "@/utils/stripe";
 import Stripe from "stripe";
 
+// Configure the runtime and specify we don't want the body parsed
 export const runtime = 'nodejs';
+export const config = {
+  api: {
+    bodyParser: false
+  }
+};
 
 // Utility function for consistent error logging
 function logError(context: string, error: any, additionalData?: any) {
@@ -36,7 +42,19 @@ export async function POST(req: NextRequest) {
       throw new Error("STRIPE_WEBHOOK_SECRET is not set");
     }
 
-    const rawBody = await req.text();
+    const chunks = [];
+    const reader = req.body?.getReader();
+    if (!reader) {
+      throw new Error("No request body found");
+    }
+
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      chunks.push(value);
+    }
+
+    const rawBody = Buffer.concat(chunks).toString('utf8');
     const signature = req.headers.get("stripe-signature");
 
     if (!signature) {
@@ -52,6 +70,7 @@ export async function POST(req: NextRequest) {
       console.log('Secret:', process.env.STRIPE_WEBHOOK_SECRET);
       console.log('Signature:', signature);
       console.log('Body length:', rawBody.length);
+      console.log('Body preview:', rawBody.substring(0, 100));
 
       event = stripe.webhooks.constructEvent(
         rawBody,
@@ -67,7 +86,7 @@ export async function POST(req: NextRequest) {
     } catch (err) {
       const error = logError("Webhook signature verification failed", err, {
         signatureHeader: signature,
-        bodyPreview: rawBody.substring(0, 100) // Log first 100 chars of body
+        bodyPreview: rawBody.substring(0, 100)
       });
       return NextResponse.json({ error }, { status: 400 });
     }
