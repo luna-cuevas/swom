@@ -3,13 +3,12 @@ import { NextRequest, NextResponse } from "next/server";
 import { stripe } from "@/utils/stripe";
 import Stripe from "stripe";
 
-// Configure the runtime and specify we don't want the body parsed
+// Configure the runtime
 export const runtime = 'nodejs';
-export const config = {
-  api: {
-    bodyParser: false
-  }
-};
+
+// New way to configure the route in App Router
+export const dynamic = 'force-dynamic';
+export const preferredRegion = 'auto';
 
 // Utility function for consistent error logging
 function logError(context: string, error: any, additionalData?: any) {
@@ -42,19 +41,7 @@ export async function POST(req: NextRequest) {
       throw new Error("STRIPE_WEBHOOK_SECRET is not set");
     }
 
-    const chunks = [];
-    const reader = req.body?.getReader();
-    if (!reader) {
-      throw new Error("No request body found");
-    }
-
-    while (true) {
-      const { done, value } = await reader.read();
-      if (done) break;
-      chunks.push(value);
-    }
-
-    const rawBody = Buffer.concat(chunks).toString('utf8');
+    const rawBody = await req.text();
     const signature = req.headers.get("stripe-signature");
 
     if (!signature) {
