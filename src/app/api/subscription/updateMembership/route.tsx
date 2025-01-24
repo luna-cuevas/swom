@@ -1,12 +1,10 @@
 import { NextResponse } from "next/server";
-import Stripe from "stripe";
+import { stripe } from "@/utils/stripe";
 
 export async function POST(req: Request, res: Response) {
   const body = await req.json();
   const origin = req.headers.get("origin") || "http://localhost:3000";
-  const stripe = new Stripe(process.env.STRIPE_SECRET_KEY as string, {
-    apiVersion: "2023-08-16",
-  });
+
   try {
     const customers = await stripe.customers.list({ email: body.email });
     const customer = customers.data[0];
