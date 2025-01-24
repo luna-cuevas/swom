@@ -47,6 +47,8 @@ export async function POST(req: NextRequest) {
     const supabase = getSupabaseAdmin();
 
     console.log('webhook secret', process.env.STRIPE_WEBHOOK_SECRET as string);
+    console.log('body', body);
+    console.log('sig', sig);
 
     try {
       event = stripe.webhooks.constructEvent(
