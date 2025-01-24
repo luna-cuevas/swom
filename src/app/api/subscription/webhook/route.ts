@@ -1,48 +1,62 @@
 import { getSupabaseAdmin } from "@/utils/supabaseClient";
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { stripe } from "@/utils/stripe";
 import Stripe from "stripe";
-import { headers } from "next/headers";
 
 export const runtime = 'nodejs';
 
-export async function POST(req: Request) {
+// Utility function for consistent error logging
+function logError(context: string, error: any, additionalData?: any) {
+  const errorMessage = error instanceof Error ? error.message : String(error);
+  const errorDetails = {
+    context,
+    error: errorMessage,
+    timestamp: new Date().toISOString(),
+    ...(additionalData && { additionalData }),
+  };
+  console.error(JSON.stringify(errorDetails, null, 2));
+  return errorDetails;
+}
+
+// Utility function for consistent success logging
+function logSuccess(context: string, data?: any) {
+  const logDetails = {
+    context,
+    success: true,
+    timestamp: new Date().toISOString(),
+    ...(data && { data }),
+  };
+  console.log(JSON.stringify(logDetails, null, 2));
+}
+
+export async function POST(req: NextRequest) {
   try {
-    const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET?.trim();
-    if (!webhookSecret) {
+    // Validate environment variables
+    if (!process.env.STRIPE_WEBHOOK_SECRET) {
       throw new Error("STRIPE_WEBHOOK_SECRET is not set");
     }
 
-    const headersList = headers();
-    const signature = headersList.get("stripe-signature");
+    const body = await req.text();
+    const sig = req.headers.get("stripe-signature");
 
-    if (!signature) {
+    if (!sig) {
       throw new Error("No Stripe signature found in request");
     }
 
-    // Get raw body as text
-    const rawBody = await req.text();
-    console.log("[webhook] Raw body length:", rawBody.length);
-    console.log("[webhook] Signature:", signature);
-
-    // Verify webhook signature
     let event: Stripe.Event;
+    const supabase = getSupabaseAdmin();
+
     try {
       event = stripe.webhooks.constructEvent(
-        rawBody,
-        signature,
-        webhookSecret
+        body,
+        sig,
+        process.env.STRIPE_WEBHOOK_SECRET
       );
-      console.log("[webhook] Event received:", event.type);
+      logSuccess("Webhook event received", { type: event.type });
     } catch (err) {
-      console.error("[webhook] Signature verification failed:", err);
-      return NextResponse.json(
-        { error: `Invalid signature: ${err}` },
-        { status: 400 }
-      );
+      const error = logError("Webhook signature verification failed", err);
+      return NextResponse.json({ error }, { status: 400 });
     }
-
-    const supabase = getSupabaseAdmin();
 
     // Helper function to get customer email
     const getCustomerEmail = async (customerId: string): Promise<string> => {
@@ -58,11 +72,10 @@ export async function POST(req: Request) {
 
     switch (event.type) {
       case "customer.subscription.created": {
-        console.log("[webhook] Processing subscription creation");
+        logSuccess("Processing subscription creation");
         const subscription = event.data.object as Stripe.Subscription;
         const email = await getCustomerEmail(subscription.customer as string);
 
-        // Update user's subscription status
         const { error: updateError } = await supabase
           .from("appUsers")
           .update({
@@ -73,20 +86,18 @@ export async function POST(req: Request) {
           .eq("email", email);
 
         if (updateError) {
-          console.error("[webhook] Error updating user:", updateError);
-          throw updateError;
+          throw new Error(`Failed to update user: ${updateError.message}`);
         }
 
-        console.log("[webhook] Successfully updated subscription for:", email);
+        logSuccess("Successfully updated subscription", { email });
         break;
       }
 
       case "customer.subscription.updated": {
-        console.log("[webhook] Processing subscription update");
+        logSuccess("Processing subscription update");
         const subscription = event.data.object as Stripe.Subscription;
         const email = await getCustomerEmail(subscription.customer as string);
 
-        // Update subscription status based on subscription object
         const { error: updateError } = await supabase
           .from("appUsers")
           .update({
@@ -97,20 +108,18 @@ export async function POST(req: Request) {
           .eq("email", email);
 
         if (updateError) {
-          console.error("[webhook] Error updating subscription:", updateError);
-          throw updateError;
+          throw new Error(`Failed to update subscription: ${updateError.message}`);
         }
 
-        console.log("[webhook] Successfully updated subscription for:", email);
+        logSuccess("Successfully updated subscription", { email });
         break;
       }
 
       case "customer.subscription.deleted": {
-        console.log("[webhook] Processing subscription deletion");
+        logSuccess("Processing subscription deletion");
         const subscription = event.data.object as Stripe.Subscription;
         const email = await getCustomerEmail(subscription.customer as string);
 
-        // Update user's subscription status to cancelled
         const { error: updateError } = await supabase
           .from("appUsers")
           .update({
@@ -120,20 +129,18 @@ export async function POST(req: Request) {
           .eq("email", email);
 
         if (updateError) {
-          console.error("[webhook] Error cancelling subscription:", updateError);
-          throw updateError;
+          throw new Error(`Failed to cancel subscription: ${updateError.message}`);
         }
 
-        console.log("[webhook] Successfully cancelled subscription for:", email);
+        logSuccess("Successfully cancelled subscription", { email });
         break;
       }
 
       case "invoice.payment_failed": {
-        console.log("[webhook] Processing payment failure");
+        logSuccess("Processing payment failure");
         const invoice = event.data.object as Stripe.Invoice;
         const email = await getCustomerEmail(invoice.customer as string);
 
-        // Optionally update user's status or send notification
         const { error: updateError } = await supabase
           .from("appUsers")
           .update({
@@ -142,21 +149,27 @@ export async function POST(req: Request) {
           .eq("email", email);
 
         if (updateError) {
-          console.error("[webhook] Error updating payment failure status:", updateError);
-          throw updateError;
+          throw new Error(`Failed to update payment failure status: ${updateError.message}`);
         }
 
-        console.log("[webhook] Successfully handled payment failure for:", email);
+        logSuccess("Successfully handled payment failure", { email });
         break;
       }
+
+      default:
+        logSuccess("Unhandled event type", { type: event.type });
     }
 
     return NextResponse.json({ success: true });
   } catch (error) {
-    console.error("[webhook] Error processing webhook:", error);
+    const errorDetails = logError("Webhook processing failed", error);
     return NextResponse.json(
-      { error: "Webhook processing failed" },
-      { status: 500 }
+      { error: errorDetails },
+      {
+        status: error instanceof Error && error.message.includes("signature")
+          ? 400
+          : 500,
+      }
     );
   }
 } 
