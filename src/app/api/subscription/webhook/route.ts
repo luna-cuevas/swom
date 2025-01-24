@@ -2,6 +2,7 @@ import { getSupabaseAdmin } from "@/utils/supabaseClient";
 import { NextResponse } from "next/server";
 import { stripe } from "@/utils/stripe";
 import Stripe from "stripe";
+import { headers } from "next/headers";
 
 export async function POST(req: Request) {
   try {
@@ -11,7 +12,8 @@ export async function POST(req: Request) {
     }
 
     const body = await req.text();
-    const signature = req.headers.get("stripe-signature");
+    const headersList = headers();
+    const signature = headersList.get("stripe-signature");
 
     if (!signature) {
       throw new Error("No Stripe signature found in request");
