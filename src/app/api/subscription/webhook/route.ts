@@ -36,29 +36,39 @@ export async function POST(req: NextRequest) {
       throw new Error("STRIPE_WEBHOOK_SECRET is not set");
     }
 
-    const body = await req.text();
-    const sig = req.headers.get("stripe-signature");
+    const rawBody = await req.text();
+    const signature = req.headers.get("stripe-signature");
 
-    if (!sig) {
+    if (!signature) {
       throw new Error("No Stripe signature found in request");
     }
 
     let event: Stripe.Event;
     const supabase = getSupabaseAdmin();
 
-    console.log('webhook secret', process.env.STRIPE_WEBHOOK_SECRET as string);
-    console.log('body', body);
-    console.log('sig', sig);
-
     try {
+      // Log the values we're using for verification
+      console.log('Webhook verification details:');
+      console.log('Secret:', process.env.STRIPE_WEBHOOK_SECRET);
+      console.log('Signature:', signature);
+      console.log('Body length:', rawBody.length);
+
       event = stripe.webhooks.constructEvent(
-        body,
-        sig,
-        process.env.STRIPE_WEBHOOK_SECRET as string
+        rawBody,
+        signature,
+        process.env.STRIPE_WEBHOOK_SECRET
       );
-      logSuccess("Webhook event received", { type: event.type });
+
+      logSuccess("Webhook event received", {
+        type: event.type,
+        eventId: event.id,
+        apiVersion: event.api_version
+      });
     } catch (err) {
-      const error = logError("Webhook signature verification failed", err);
+      const error = logError("Webhook signature verification failed", err, {
+        signatureHeader: signature,
+        bodyPreview: rawBody.substring(0, 100) // Log first 100 chars of body
+      });
       return NextResponse.json({ error }, { status: 400 });
     }
 
