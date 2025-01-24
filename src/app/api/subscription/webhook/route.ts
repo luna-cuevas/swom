@@ -4,14 +4,15 @@ import { stripe } from "@/utils/stripe";
 import Stripe from "stripe";
 import { headers } from "next/headers";
 
+export const runtime = 'nodejs';
+
 export async function POST(req: Request) {
   try {
-    // Validate environment variables
-    if (!process.env.STRIPE_WEBHOOK_SECRET) {
+    const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET?.trim();
+    if (!webhookSecret) {
       throw new Error("STRIPE_WEBHOOK_SECRET is not set");
     }
 
-    const body = await req.text();
     const headersList = headers();
     const signature = headersList.get("stripe-signature");
 
@@ -19,19 +20,24 @@ export async function POST(req: Request) {
       throw new Error("No Stripe signature found in request");
     }
 
+    // Get raw body as text
+    const rawBody = await req.text();
+    console.log("[webhook] Raw body length:", rawBody.length);
+    console.log("[webhook] Signature:", signature);
+
     // Verify webhook signature
     let event: Stripe.Event;
     try {
       event = stripe.webhooks.constructEvent(
-        body,
+        rawBody,
         signature,
-        process.env.STRIPE_WEBHOOK_SECRET
+        webhookSecret
       );
       console.log("[webhook] Event received:", event.type);
     } catch (err) {
       console.error("[webhook] Signature verification failed:", err);
       return NextResponse.json(
-        { error: "Invalid signature" },
+        { error: `Invalid signature: ${err}` },
         { status: 400 }
       );
     }
