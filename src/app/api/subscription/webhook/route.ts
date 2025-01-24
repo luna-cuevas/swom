@@ -46,11 +46,13 @@ export async function POST(req: NextRequest) {
     let event: Stripe.Event;
     const supabase = getSupabaseAdmin();
 
+    console.log('webhook secret', process.env.STRIPE_WEBHOOK_SECRET as string);
+
     try {
       event = stripe.webhooks.constructEvent(
         body,
         sig,
-        process.env.STRIPE_WEBHOOK_SECRET
+        process.env.STRIPE_WEBHOOK_SECRET as string
       );
       logSuccess("Webhook event received", { type: event.type });
     } catch (err) {

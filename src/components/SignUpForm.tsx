@@ -192,7 +192,7 @@ const SignUpForm = () => {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        priceId: "price_1PMZn5DhCJq1hRSt1v2StcWD",
+        priceId: process.env.NEXT_PUBLIC_STRIPE_PRICE_ID,
         email: email,
       }),
     });
