@@ -9,6 +9,7 @@ export interface CheckoutSubscriptionBody {
   // amount: number;
   // interval: "month" | "year";
   priceId: string;
+  email: string;
   // customerId?: string;
 }
 
@@ -35,6 +36,7 @@ export async function POST(req: Request) {
           quantity: 1,
         },
       ],
+      customer_email: body.email,
       allow_promotion_codes: true,
       success_url: success_url,
       cancel_url: `${origin}/home`,

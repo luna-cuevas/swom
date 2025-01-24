@@ -191,7 +191,10 @@ const SignUpForm = () => {
     const response = await fetch("/api/subscription/makeSubscription", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ priceId: "price_1PMZn5DhCJq1hRSt1v2StcWD" }),
+      body: JSON.stringify({
+        priceId: "price_1PMZn5DhCJq1hRSt1v2StcWD",
+        email: email,
+      }),
     });
 
     if (response.ok) {
