@@ -49,10 +49,20 @@ export async function POST(req: Request) {
       .from('conversations_new')
       .select(`
         id,
-        participants:conversation_participants(user_id)
+        host_email,
+        user_email,
+        participants:conversation_participants(
+          user_id,
+          last_read_at,
+          user:appUsers(
+            id,
+            name,
+            email,
+            profileImage
+          )
+        )
       `)
-      .eq('conversation_participants.user_id', userIds[0])
-      .eq('conversation_participants.user_id', userIds[1]);
+      .or(`and(host_email.eq."${hostEmail}",user_email.eq."${userEmail}"),and(host_email.eq."${userEmail}",user_email.eq."${hostEmail}")`);
 
     if (searchError) {
       console.error('Error searching for existing conversation:', searchError);
@@ -91,10 +101,11 @@ export async function POST(req: Request) {
       return supabase.from('conversation_participants').insert({
         conversation_id: conversation.id,
         user_id: userId,
-      });
+      }).select();
     });
 
     const participantResults = await Promise.all(participantPromises);
+    console.log('Participant results:', participantResults);
     const participantErrors = participantResults.filter(result => result.error);
 
     if (participantErrors.length > 0) {
@@ -107,18 +118,36 @@ export async function POST(req: Request) {
       );
     }
 
-    // Return the newly created conversation with its ID
-    console.log('Successfully created conversation:', conversation);
-    return NextResponse.json({
-      conversation: {
-        id: conversation.id,
-        created_at: conversation.created_at,
-        participants: userIds.map((userId: string) => ({
-          user_id: userId,
-          last_read_at: null
-        }))
-      }
-    });
+    // Return the newly created conversation with its ID and participants
+    const { data: fullConversation, error: fetchError } = await supabase
+      .from('conversations_new')
+      .select(`
+        id,
+        created_at,
+        host_email,
+        user_email,
+        listing_id,
+        participants:conversation_participants(
+          user_id,
+          last_read_at,
+          user:appUsers(
+            id,
+            name,
+            email,
+            profileImage
+          )
+        )
+      `)
+      .eq('id', conversation.id)
+      .single();
+
+    if (fetchError) {
+      console.error('Error fetching full conversation:', fetchError);
+      return NextResponse.json({ error: fetchError.message }, { status: 500 });
+    }
+
+    console.log('Successfully created conversation:', fullConversation);
+    return NextResponse.json({ conversation: fullConversation });
   } catch (error) {
     console.error('Error in create-conversation:', error);
     return NextResponse.json(

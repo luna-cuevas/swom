@@ -14,8 +14,10 @@ export default function MessagesLayout({
       new QueryClient({
         defaultOptions: {
           queries: {
-            staleTime: 5 * 1000, // Consider data stale after 5 seconds
-            refetchInterval: 10 * 1000, // Refetch every 10 seconds
+            staleTime: 30 * 1000, // Consider data stale after 30 seconds
+            refetchInterval: false, // Disable automatic refetching
+            refetchOnWindowFocus: false, // Disable refetch on window focus
+            retry: false, // Disable retries
           },
         },
       })
