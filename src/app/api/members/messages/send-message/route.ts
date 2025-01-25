@@ -83,15 +83,15 @@ export async function POST(req: Request) {
     };
 
     // Set emails if they're not already set
-    if (!conversation.host_email && host_email) {
+    if (conversation && !conversation.host_email && host_email) {
       updateData.host_email = host_email;
     }
-    if (!conversation.user_email && user_email) {
+    if (conversation && !conversation.user_email && user_email) {
       updateData.user_email = user_email;
     }
 
     // Update listing_id if provided and not already set
-    if (listing_id && !conversation.listing_id) {
+    if (listing_id && conversation && !conversation.listing_id) {
       updateData.listing_id = listing_id;
     }
 

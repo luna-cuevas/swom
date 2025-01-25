@@ -90,6 +90,11 @@ export default function MessagesPage() {
     from: new Date(),
     to: addDays(new Date(), 7),
   });
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    setIsLoading(false);
+  }, []);
 
   // Initialize URL parameters safely
   useEffect(() => {
@@ -385,11 +390,11 @@ export default function MessagesPage() {
     };
   };
 
-  if (conversationsLoading) {
+  if (conversationsLoading || isLoading) {
     return (
       <div
         role="status"
-        className="flex m-auto h-full align-middle w-fit my-auto mx-auto px-3 py-2 text-white rounded-xl">
+        className="flex m-auto h-full min-h-screen align-middle w-fit my-auto mx-auto px-3 py-2 text-white rounded-xl">
         <svg
           aria-hidden="true"
           className="m-auto w-[100px] h-[100px] text-gray-200 animate-spin dark:text-gray-600 fill-[#7F8119]"
