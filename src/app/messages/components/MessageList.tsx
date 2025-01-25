@@ -22,10 +22,12 @@ interface MessageListProps {
 }
 
 export function MessageList({ messages, currentUserId }: MessageListProps) {
-  const messagesEndRef = useRef<HTMLDivElement>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
 
   const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    if (containerRef.current) {
+      containerRef.current.scrollTop = containerRef.current.scrollHeight;
+    }
   };
 
   useEffect(() => {
@@ -33,7 +35,9 @@ export function MessageList({ messages, currentUserId }: MessageListProps) {
   }, [messages]);
 
   return (
-    <div className="flex-1 overflow-y-auto py-6 px-2 md:px-10">
+    <div
+      ref={containerRef}
+      className="flex-1 overflow-y-auto py-6 px-2 md:px-10">
       {messages.length === 0 ? (
         <div className="flex justify-center items-center h-full">
           <div className="text-center text-gray-500">
@@ -79,7 +83,6 @@ export function MessageList({ messages, currentUserId }: MessageListProps) {
           </ul>
         </div>
       )}
-      <div ref={messagesEndRef} />
     </div>
   );
 }

@@ -13,7 +13,9 @@ interface UserInfo {
 interface HomeInfo {
   title: string;
   listing_images: string[];
-  price_per_night: number;
+  city: string;
+  how_many_sleep: number;
+  bathrooms: number;
 }
 
 interface ListingData {
@@ -51,7 +53,10 @@ export async function POST(req: Request) {
         ),
         home_info:home_info_id (
           title,
-          listing_images
+          listing_images, 
+          city,
+          how_many_sleep,
+          bathrooms
         )
       `)
       .eq('id', listingId)
@@ -77,8 +82,10 @@ export async function POST(req: Request) {
         listing: {
           id: listingData.id,
           title: listingData.home_info.title || 'Untitled Listing',
-          price_per_night: 0,
-          images: listingData.home_info.listing_images || []
+          images: listingData.home_info.listing_images || [],
+          city: listingData.home_info.city,
+          bedrooms: listingData.home_info.how_many_sleep,
+          bathrooms: listingData.home_info.bathrooms
         }
       });
     }

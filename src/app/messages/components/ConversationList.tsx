@@ -83,16 +83,32 @@ export function ConversationList({
 
               if (!otherParticipant?.user) return null;
 
+              console.log("📝 Conversation details:", {
+                conversationId: conversation.id,
+                type: typeof conversation.id,
+                selectedId: selectedConversationId,
+                selectedType: typeof selectedConversationId,
+              });
+
               const isSelected = selectedConversationId === conversation.id;
+              console.log("🎯 Conversation selection check:", {
+                conversationId: conversation.id,
+                selectedId: selectedConversationId,
+                isSelected,
+              });
 
               return (
                 <li
                   key={conversation.id}
-                  onClick={() => onSelectConversation(conversation.id)}
-                  className={cn(
-                    "p-3 flex items-center space-x-3 hover:bg-gray-50 transition-colors cursor-pointer",
-                    { "bg-white": isSelected }
-                  )}>
+                  onClick={() => {
+                    console.log("🖱️ Clicking conversation:", conversation.id);
+                    onSelectConversation(conversation.id);
+                  }}
+                  className={`p-3 flex !border-t-0 items-center space-x-3 cursor-pointer border-l-4 transition-all duration-200 ${
+                    isSelected
+                      ? "bg-white !border-[#E88527] shadow-sm"
+                      : "bg-transparent border-transparent hover:!border-[#E88527]/50"
+                  }`}>
                   <Avatar className="h-12 w-12">
                     <AvatarImage src={otherParticipant.user.profileImage} />
                     <AvatarFallback className="bg-[#E88527] text-white">
@@ -100,7 +116,10 @@ export function ConversationList({
                     </AvatarFallback>
                   </Avatar>
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium text-gray-900 truncate">
+                    <p
+                      className={`text-sm font-medium truncate ${
+                        isSelected ? "text-[#E88527]" : "text-gray-900"
+                      }`}>
                       {otherParticipant.user.name}
                     </p>
                     {conversation.last_message && (

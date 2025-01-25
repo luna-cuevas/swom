@@ -1,17 +1,22 @@
 "use client";
 
-import { useEffect, useState, useRef, useCallback } from "react";
+import { useEffect, useState } from "react";
 import { useAtom } from "jotai";
 import { globalStateAtom } from "@/context/atoms";
-import { getSupabaseClient } from "@/utils/supabaseClient";
 import { MessageList } from "./components/MessageList";
 import { ConversationList } from "./components/ConversationList";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Send, Calendar, Menu, X, Home, CalendarDays } from "lucide-react";
-import { useSearchParams } from "next/navigation";
 import Image from "next/image";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { DatePickerWithRange } from "@/components/ui/date-range-picker";
+import { addDays } from "date-fns";
+import { DateRange } from "react-day-picker";
+import { useConversations } from "./hooks/useConversations";
+import { useMessages } from "./hooks/useMessages";
+import { useMessageSubscription } from "./hooks/useMessageSubscription";
+import { useNewConversation } from "./hooks/useNewConversation";
+import { useUrlParams } from "./hooks/useUrlParams";
 import {
   Dialog,
   DialogContent,
@@ -21,308 +26,85 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
-import { DatePickerWithRange } from "@/components/ui/date-range-picker";
-import { addDays } from "date-fns";
-import { DateRange } from "react-day-picker";
 
-interface Message {
-  id: string;
-  content: string;
-  created_at: string;
-  sender: {
-    id: string;
-    name: string;
-    avatar_url?: string;
-  };
-}
-
-interface Conversation {
-  id: string;
-  last_message: string | null;
-  last_message_at: string | null;
-  listing_id: string | null;
-  participants: Array<{
-    user_id: string;
-    last_read_at: string | null;
-    user: {
-      id: string;
-      name: string;
-      profileImage?: string;
-      email: string;
-    };
-  }>;
-}
-
-interface ListingInfo {
-  id: string;
-  title: string;
-  price: number;
-  image: string;
-}
-
-interface Host {
-  id: string;
-  name: string;
-  profileImage?: string;
-  email: string;
-}
-
-interface TypingStatus {
-  userId: string;
-  isTyping: boolean;
-  timestamp: number;
-}
-
+/**
+ * MessagesPage Component
+ *
+ * This component serves as the main messaging interface, allowing users to:
+ * - View and select conversations
+ * - Send and receive messages in real-time
+ * - Create new conversations from listing pages
+ * - View listing details and make reservations
+ */
 export default function MessagesPage() {
   const [state] = useAtom(globalStateAtom);
-  const [selectedConversationId, setSelectedConversationId] = useState<
-    string | null
-  >(null);
-  const [newMessage, setNewMessage] = useState("");
   const [mobileNavMenu, setMobileNavMenu] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [contactingHost, setContactingHost] = useState<Host | null>(null);
-  const [urlParams, setUrlParams] = useState<{
-    listingId: string | null;
-    hostEmail: string | null;
-  }>({
-    listingId: null,
-    hostEmail: null,
-  });
-  const searchParams = useSearchParams();
-  const supabase = getSupabaseClient();
-  const queryClient = useQueryClient();
-  const [listingInfo, setListingInfo] = useState<ListingInfo | null>(null);
   const [dateRange, setDateRange] = useState<DateRange | undefined>({
     from: new Date(),
     to: addDays(new Date(), 7),
   });
   const [isLoading, setIsLoading] = useState(true);
-  const [typingUsers, setTypingUsers] = useState<Record<string, TypingStatus>>(
-    {}
-  );
-  const typingTimeoutRef = useRef<NodeJS.Timeout>();
-  const lastTypingUpdateRef = useRef<number>(0);
-  const [isCreatingConversation, setIsCreatingConversation] = useState(false);
-  const [isHandlingUrlParams, setIsHandlingUrlParams] = useState(false);
-  const [shouldAutoSelectFirst, setShouldAutoSelectFirst] = useState(true);
 
-  useEffect(() => {
-    setIsLoading(false);
-  }, []);
-
-  useEffect(() => {
-    if (searchParams) {
-      const newListingId = searchParams.get("listingId");
-      const newHostEmail = searchParams.get("hostEmail");
-
-      console.log("🔍 URL Parameters changed:", {
-        newListingId,
-        newHostEmail,
-        currentListingId: urlParams.listingId,
-        currentHostEmail: urlParams.hostEmail,
-      });
-
-      if (newListingId && newHostEmail) {
-        if (
-          newListingId !== urlParams.listingId ||
-          newHostEmail !== urlParams.hostEmail
-        ) {
-          setShouldAutoSelectFirst(false);
-          setIsHandlingUrlParams(true);
-
-          setSelectedConversationId(null);
-          setContactingHost(null);
-          setListingInfo(null);
-          setError(null);
-
-          setUrlParams({
-            listingId: newListingId,
-            hostEmail: newHostEmail,
-          });
-        }
-      }
-    }
-  }, [searchParams, urlParams.listingId, urlParams.hostEmail]);
-
-  const { data: conversationsData, isLoading: conversationsLoading } = useQuery<
-    Conversation[]
-  >({
-    queryKey: ["conversations", state.user?.id],
-    queryFn: async () => {
-      if (!state.user?.id) return [];
-      const response = await fetch(`/api/members/messages/get-conversations`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email: state.user.email }),
-      });
-      const data = await response.json();
-      return data.conversations || [];
-    },
-    enabled: !!state.user?.id,
-  });
-
-  useEffect(() => {
-    if (
-      shouldAutoSelectFirst &&
-      !selectedConversationId &&
-      !isHandlingUrlParams &&
-      conversationsData &&
-      conversationsData.length > 0
-    ) {
-      setSelectedConversationId(conversationsData[0].id);
-    }
-  }, [
+  // Initialize URL parameters and auto-selection behavior
+  const {
+    urlParams,
+    setUrlParams,
     shouldAutoSelectFirst,
-    selectedConversationId,
+    setShouldAutoSelectFirst,
     isHandlingUrlParams,
-    conversationsData,
-  ]);
+    setIsHandlingUrlParams,
+  } = useUrlParams();
 
-  const { data: messages = [] } = useQuery({
-    queryKey: ["messages", selectedConversationId],
-    queryFn: async () => {
-      if (!selectedConversationId || !state.user?.id) return [];
-      const response = await fetch(
-        `/api/members/messages/get-messages?conversationId=${selectedConversationId}&userId=${state.user.id}`
-      );
-      const data = await response.json();
-      return data.messages || [];
-    },
-    enabled: !!selectedConversationId && !!state.user?.id,
+  // Manage conversations and selection
+  const {
+    conversations: conversationsData,
+    isLoading: conversationsLoading,
+    selectedConversationId,
+    setSelectedConversationId,
+  } = useConversations({
+    userId: state.user?.id,
+    userEmail: state.user?.email,
+    shouldAutoSelectFirst,
   });
 
-  const sendMessageMutation = useMutation({
-    mutationFn: async ({
-      content,
-      conversation_id,
-      sender_id,
-    }: {
-      content: string;
-      conversation_id: string;
-      sender_id: string;
-    }) => {
-      const response = await fetch("/api/members/messages/send-message", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          conversation_id,
-          content,
-          sender_id,
-          listing_id: listingInfo?.id,
-          user_email: state.user.email,
-          host_email: contactingHost?.email,
-        }),
-      });
-      return response.json();
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({
-        queryKey: ["messages", selectedConversationId],
-      });
-      queryClient.invalidateQueries({
-        queryKey: ["conversations", state.user?.id],
-      });
-      setNewMessage("");
-    },
+  // Handle new conversation creation
+  const {
+    isCreatingConversation,
+    error,
+    contactingHost,
+    listingInfo,
+    setListingInfo,
+    setContactingHost,
+  } = useNewConversation({
+    userId: state.user?.id,
+    userEmail: state.user?.email,
+    urlParams,
+    setUrlParams,
+    setSelectedConversationId,
+    setShouldAutoSelectFirst,
+    isHandlingUrlParams,
+    setIsHandlingUrlParams,
   });
 
-  const subscribeToMessages = useCallback(
-    (conversationId: string) => {
-      if (!conversationId || !state.user?.id) return () => {};
+  // Manage messages and sending
+  const { messages, newMessage, setNewMessage, sendMessage } = useMessages({
+    conversationId: selectedConversationId,
+    userId: state.user?.id,
+    listingInfo,
+    contactingHostEmail: contactingHost?.email || null,
+    userEmail: state.user?.email,
+  });
 
-      // Prevent multiple subscriptions to the same channel
-      const channelName = `messages:${conversationId}`;
-      const existingChannel = supabase
-        .getChannels()
-        .find((ch) => ch.topic === channelName);
-      if (existingChannel) {
-        console.log("Channel already exists, skipping subscription");
-        return () => {};
-      }
+  // Handle real-time message subscriptions
+  const { typingUsers, updateTypingStatus, subscribeToMessages } =
+    useMessageSubscription({
+      conversationId: selectedConversationId,
+      userId: state.user?.id,
+      isHandlingUrlParams,
+      isCreatingConversation,
+    });
 
-      const channel = supabase.channel(channelName, {
-        config: {
-          broadcast: { self: true },
-          presence: { key: state.user.id },
-        },
-      });
-
-      channel
-        .on(
-          "postgres_changes",
-          {
-            event: "INSERT",
-            schema: "public",
-            table: "messages_new",
-            filter: `conversation_id=eq.${conversationId}`,
-          },
-          (payload) => {
-            if (payload.new) {
-              queryClient.invalidateQueries({
-                queryKey: ["messages", conversationId],
-                exact: true,
-              });
-
-              if (payload.new.sender_id !== state.user?.id) {
-                queryClient.invalidateQueries({
-                  queryKey: ["conversations", state.user?.id],
-                  exact: true,
-                });
-              }
-            }
-          }
-        )
-        .on("presence", { event: "sync" }, () => {
-          const state = channel.presenceState();
-          console.log("Presence state:", state);
-        })
-        .on("presence", { event: "join" }, ({ key, newPresences }) => {
-          console.log("Join:", key, newPresences);
-        })
-        .on("presence", { event: "leave" }, ({ key, leftPresences }) => {
-          console.log("Leave:", key, leftPresences);
-        })
-        .on("broadcast", { event: "typing" }, ({ payload }) => {
-          if (payload.userId !== state.user?.id) {
-            setTypingUsers((prev) => ({
-              ...prev,
-              [payload.userId]: {
-                userId: payload.userId,
-                isTyping: payload.isTyping,
-                timestamp: Date.now(),
-              },
-            }));
-
-            setTimeout(() => {
-              setTypingUsers((prev) => {
-                const { [payload.userId]: _, ...rest } = prev;
-                return rest;
-              });
-            }, 3000);
-          }
-        });
-
-      channel.subscribe((status) => {
-        if (status === "SUBSCRIBED") {
-          console.log(
-            `Subscribed to messages in conversation ${conversationId}`
-          );
-        } else if (status === "CLOSED" || status === "CHANNEL_ERROR") {
-          console.log(
-            `Channel ${status.toLowerCase()} for conversation ${conversationId}`
-          );
-        }
-      });
-
-      return () => {
-        console.log(`Cleaning up subscription for ${conversationId}`);
-        channel.unsubscribe();
-      };
-    },
-    [state.user?.id]
-  );
-
+  // Set up message subscription for selected conversation
   useEffect(() => {
     let cleanup: (() => void) | undefined;
 
@@ -332,7 +114,7 @@ export default function MessagesPage() {
       !isCreatingConversation
     ) {
       const selectedConversation = conversationsData?.find(
-        (conv: Conversation) => conv.id === selectedConversationId
+        (conv) => conv.id === selectedConversationId
       );
 
       if (selectedConversation) {
@@ -363,13 +145,14 @@ export default function MessagesPage() {
               setListingInfo({
                 id: data.listing.id,
                 title: data.listing.title,
-                price: data.listing.price_per_night,
                 image: data.listing.images[0] || "/placeholder.jpg",
+                bathrooms: data.listing.bathrooms,
+                bedrooms: data.listing.bedrooms,
+                city: data.listing.city,
               });
             }
           } catch (error) {
             console.error("Error fetching conversation info:", error);
-            setError("Failed to load conversation details");
           }
         };
 
@@ -392,210 +175,9 @@ export default function MessagesPage() {
     subscribeToMessages,
   ]);
 
-  const sendMessage = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!newMessage.trim() || !selectedConversationId) return;
-
-    sendMessageMutation.mutate({
-      conversation_id: selectedConversationId,
-      content: newMessage,
-      sender_id: state.user.id,
-    });
-  };
-
-  const updateTypingStatus = (isTyping: boolean) => {
-    if (!selectedConversationId || !state.user?.id) return;
-
-    const now = Date.now();
-    if (now - lastTypingUpdateRef.current < 1000) return;
-
-    const channel = supabase.channel(`messages:${selectedConversationId}`);
-    channel.send({
-      type: "broadcast",
-      event: "typing",
-      payload: {
-        userId: state.user.id,
-        isTyping,
-      },
-    });
-
-    lastTypingUpdateRef.current = now;
-
-    if (typingTimeoutRef.current) {
-      clearTimeout(typingTimeoutRef.current);
-    }
-
-    if (isTyping) {
-      typingTimeoutRef.current = setTimeout(() => {
-        updateTypingStatus(false);
-      }, 3000);
-    }
-  };
-
-  const clearUrlParams = () => {
-    console.log("🧹 Clearing URL parameters");
-    if (typeof window !== "undefined") {
-      const url = new URL(window.location.href);
-      url.searchParams.delete("listingId");
-      url.searchParams.delete("hostEmail");
-      window.history.replaceState({}, "", url.toString());
-
-      if (urlParams.listingId !== null || urlParams.hostEmail !== null) {
-        setUrlParams({ listingId: null, hostEmail: null });
-        setShouldAutoSelectFirst(true);
-        setIsHandlingUrlParams(false);
-      }
-    }
-  };
-
-  const createNewConversation = async () => {
-    if (!isHandlingUrlParams) return;
-
-    if (
-      !state.user?.id ||
-      !urlParams.listingId ||
-      !urlParams.hostEmail ||
-      isCreatingConversation
-    ) {
-      console.log("❌ Cannot create conversation - missing data:", {
-        userId: state.user?.id,
-        listingId: urlParams.listingId,
-        hostEmail: urlParams.hostEmail,
-        isCreating: isCreatingConversation,
-      });
-      return;
-    }
-
-    try {
-      setIsCreatingConversation(true);
-      setError(null);
-
-      console.log("📡 Fetching host info...");
-      const hostResponse = await fetch(
-        `/api/members/messages/get-host?email=${encodeURIComponent(urlParams.hostEmail)}`
-      );
-      const hostData = await hostResponse.json();
-      console.log("📥 Received host info:", hostData);
-
-      if (!hostResponse.ok || !hostData.host) {
-        console.error("❌ Failed to fetch host info:", hostResponse.status);
-        throw new Error("Failed to fetch host info");
-      }
-
-      const host = hostData.host;
-      console.log("👤 Setting host info:", host);
-      setContactingHost(host);
-
-      // Fetch listing info
-      console.log("📡 Fetching listing info...");
-      const listingResponse = await fetch(
-        `/api/members/messages/get-conversation-info`,
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ listingId: urlParams.listingId }),
-        }
-      );
-      const listingData = await listingResponse.json();
-      console.log("📥 Received listing info:", listingData);
-
-      if (listingData.listing) {
-        console.log("🏠 Setting listing info:", listingData.listing);
-        setListingInfo({
-          id: listingData.listing.id,
-          title: listingData.listing.title,
-          price: listingData.listing.price_per_night,
-          image: listingData.listing.images[0] || "/placeholder.jpg",
-        });
-      }
-
-      // Check if conversation already exists
-      console.log(
-        "🔍 Checking for existing conversation with host:",
-        urlParams.hostEmail
-      );
-      const existingConversation = conversationsData?.find(
-        (conv: Conversation) =>
-          conv.participants.some((p) => p.user.email === urlParams.hostEmail)
-      );
-
-      if (existingConversation) {
-        console.log("✨ Found existing conversation:", existingConversation);
-        setSelectedConversationId(existingConversation.id);
-        setIsHandlingUrlParams(false);
-        clearUrlParams();
-        return;
-      }
-
-      // Create new conversation
-      console.log("📝 Creating new conversation with data:", {
-        participants: [state.user.id, host.id],
-        listingId: urlParams.listingId,
-        hostEmail: urlParams.hostEmail,
-        userEmail: state.user.email,
-        host: host,
-      });
-
-      const response = await fetch(
-        "/api/members/messages/create-conversation",
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            participants: [state.user.id, host.id],
-            listingId: urlParams.listingId,
-            hostEmail: urlParams.hostEmail,
-            userEmail: state.user.email,
-            host: host,
-          }),
-        }
-      );
-
-      const data = await response.json();
-      console.log("📥 Create conversation response:", data);
-
-      if (!response.ok) {
-        console.error(
-          "❌ Failed to create conversation:",
-          response.status,
-          data
-        );
-        throw new Error(data.error || `HTTP error! status: ${response.status}`);
-      }
-
-      if (data.conversation?.id) {
-        console.log("✅ Successfully created conversation:", data.conversation);
-        setSelectedConversationId(data.conversation.id);
-        await queryClient.invalidateQueries({
-          queryKey: ["conversations", state.user?.id],
-        });
-        clearUrlParams();
-      } else {
-        console.error("❌ Invalid response format:", data);
-        throw new Error("Invalid response format from server");
-      }
-    } catch (error) {
-      console.error("❌ Error creating new conversation:", error);
-      setError(
-        error instanceof Error
-          ? error.message
-          : "Failed to create conversation. Please try again."
-      );
-    } finally {
-      setIsCreatingConversation(false);
-      setIsHandlingUrlParams(false);
-    }
-  };
-
   useEffect(() => {
-    createNewConversation();
-  }, [
-    state.user?.id,
-    urlParams.listingId,
-    urlParams.hostEmail,
-    isHandlingUrlParams,
-    isCreatingConversation,
-  ]);
+    setIsLoading(false);
+  }, []);
 
   if (conversationsLoading || isLoading || isCreatingConversation) {
     return (
@@ -704,9 +286,21 @@ export default function MessagesPage() {
                         <h3 className="font-medium text-gray-900 truncate">
                           {listingInfo.title}
                         </h3>
-                        <p className="text-sm text-gray-500">
-                          ${listingInfo.price} per night
-                        </p>
+                        <div className="flex flex-col gap-1">
+                          <p className="text-sm text-gray-500">
+                            {listingInfo.bedrooms}{" "}
+                            {listingInfo.bedrooms === 1
+                              ? "bedroom"
+                              : "bedrooms"}{" "}
+                            • {listingInfo.bathrooms}{" "}
+                            {listingInfo.bathrooms === 1
+                              ? "bathroom"
+                              : "bathrooms"}
+                          </p>
+                          <p className="text-sm text-gray-500">
+                            {listingInfo.city}
+                          </p>
+                        </div>
                       </div>
                     </div>
                     <div className="flex gap-2 w-full md:w-auto">
@@ -741,15 +335,6 @@ export default function MessagesPage() {
                                 date={dateRange}
                                 onDateChange={setDateRange}
                               />
-                            </div>
-                            <div className="grid gap-2">
-                              <Label>Total</Label>
-                              <p className="text-2xl font-semibold text-gray-900">
-                                ${listingInfo.price * 7}
-                              </p>
-                              <p className="text-sm text-gray-500">
-                                for 7 nights
-                              </p>
                             </div>
                           </div>
                           <Button
