@@ -428,7 +428,7 @@ const Page = () => {
                 </Link>
               ) : (
                 <Link
-                  href={`/messages?contactedUser=${listing.user_info.id}&userId=${state?.user?.id}`}
+                  href={`/messages?listingId=${listing.id}&hostEmail=${encodeURIComponent(listing.user_info.email)}`}
                   className="block w-full py-3 px-4 text-center bg-[#172544] text-white rounded-lg hover:bg-[#0f1a2e] transition-colors mb-6 font-['Noto']">
                   Contact Host
                 </Link>

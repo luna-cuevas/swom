@@ -144,23 +144,44 @@ const Navigation = () => {
   const handleSignOut = async () => {
     try {
       await supabase.auth.signOut();
-      localStorage.clear();
+      localStorage.removeItem("SWOMGlobalState-v3");
+
+      // Reset state with default values instead of clearing everything
       setState({
-        ...state,
+        session: null,
         user: {
           email: "",
+          id: "",
+          name: "",
+          role: "",
+          profileImage: "",
+          favorites: [],
+          privacyPolicy: "",
+          privacyPolicyDate: "",
+          subscribed: false,
+          subscription_id: "",
+          stripe_customer_id: "",
         },
+        showMobileMenu: false,
+        noUser: false,
+        imgUploadPopUp: false,
+        isSubscribed: false,
         loggedInUser: null,
         activeNavButtons: false,
-        isSubscribed: false,
-        allListings: [],
         unreadCount: 0,
-        session: null,
+        unreadConversations: [],
+        signInActive: false,
+        allListings: {
+          listings: [],
+          lastFetched: 0,
+        },
       });
+
       router.push("/home");
       toast.success("Signed out successfully");
     } catch (error) {
       console.error("Error signing out:", error);
+      toast.error("Error signing out");
     }
   };
 

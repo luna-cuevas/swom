@@ -122,7 +122,6 @@ export async function GET(request: Request) {
     const { searchParams } = new URL(request.url);
     const id = searchParams.get("id");
     const email = searchParams.get("email");
-    console.log(id);
 
     if (!id && !email) {
       return NextResponse.json(
@@ -215,32 +214,38 @@ export async function GET(request: Request) {
       },
     }));
 
-    // Check if the user has an active subscription
-    const { data: appUser } = await supabase
-      .from("appUsers")
-      .select("subscribed, favorites")
-      .eq("email", email)
-      .single();
-
-    if (!appUser?.subscribed) {
-      return NextResponse.json(
-        { error: "Listing not available" },
-        { status: 403 }
-      );
+    // If fetching by ID, return the full listing data without subscription check
+    if (id) {
+      return NextResponse.json(transformedListings[0]);
     }
 
-    // Add favorite status to the listings
-    const listingsWithFavorites = transformedListings.map((listing: any) => ({
-      ...listing,
-      favorite:
-        appUser.favorites?.some(
-          (fav: { listingId: string }) => fav.listingId === listing.id
-        ) || false,
-    }));
+    // If fetching by email, check subscription and add favorites
+    if (email) {
+      const { data: appUser } = await supabase
+        .from("appUsers")
+        .select("subscribed, favorites")
+        .eq("email", email)
+        .single();
 
-    // If ID was provided, return single listing, otherwise return array
-    const response = id ? listingsWithFavorites[0] : listingsWithFavorites;
-    return NextResponse.json(response);
+      if (!appUser?.subscribed) {
+        return NextResponse.json(
+          { error: "Subscription required" },
+          { status: 403 }
+        );
+      }
+
+      const listingsWithFavorites = transformedListings.map((listing: any) => ({
+        ...listing,
+        favorite:
+          appUser.favorites?.some(
+            (fav: { listingId: string }) => fav.listingId === listing.id
+          ) || false,
+      }));
+
+      return NextResponse.json(listingsWithFavorites);
+    }
+
+    return NextResponse.json(transformedListings);
   } catch (error) {
     console.error("Error fetching listing:", error);
     return NextResponse.json(

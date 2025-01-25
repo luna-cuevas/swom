@@ -1,8 +1,22 @@
 import { atom } from "jotai";
 
+type User = {
+  email: string;
+  id: string;
+  name: string;
+  role: string;
+  profileImage: string;
+  favorites: any[];
+  privacyPolicy: string;
+  privacyPolicyDate: string;
+  subscribed: boolean;
+  subscription_id: string;
+  stripe_customer_id: string;
+};
+
 type State = {
   session: null | string;
-  user: { email: string };
+  user: User;
   showMobileMenu: boolean;
   noUser: boolean;
   imgUploadPopUp: boolean;
@@ -51,7 +65,19 @@ const atomWithLocalStorage = (key: string, initialValue: any) => {
 // Define your initial state
 const initialState: State = {
   session: null,
-  user: { email: "" },
+  user: {
+    email: "",
+    id: "",
+    name: "",
+    role: "",
+    profileImage: "",
+    favorites: [],
+    privacyPolicy: "",
+    privacyPolicyDate: "",
+    subscribed: false,
+    subscription_id: "",
+    stripe_customer_id: "",
+  },
   showMobileMenu: false,
   noUser: false,
   imgUploadPopUp: false,

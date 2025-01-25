@@ -84,22 +84,50 @@ const SignIn = () => {
       toast.success("Signed in successfully");
       const loggedInUser = await fetchLoggedInUser(session.user);
       const subbed = await isUserSubscribed(session.user.email);
-      setState({
-        ...state,
+
+      setState((prevState) => ({
+        ...prevState,
         session,
-        user: session.user,
-        loggedInUser: loggedInUser,
+        user: {
+          ...prevState.user,
+          email: session.user.email,
+          id: session.user.id,
+          name: loggedInUser?.name || "",
+          role: loggedInUser?.role || "",
+          profileImage: loggedInUser?.profileImage || "",
+          favorites: loggedInUser?.favorites || [],
+          privacyPolicy: loggedInUser?.privacyPolicy || "",
+          privacyPolicyDate: loggedInUser?.privacyPolicyDate || "",
+          subscribed: loggedInUser?.subscribed || false,
+          subscription_id: loggedInUser?.subscription_id || "",
+          stripe_customer_id: loggedInUser?.stripe_customer_id || "",
+        },
+        loggedInUser,
         isSubscribed: subbed,
         activeNavButtons: true,
-      });
-
-      setState({
-        ...state,
         signInActive: false,
-      });
+      }));
     } else if (event === "SIGNED_OUT") {
-      console.log("session", event);
-      console.log("SignIn Failed");
+      setState((prevState) => ({
+        ...prevState,
+        session: null,
+        user: {
+          email: "",
+          id: "",
+          name: "",
+          role: "",
+          profileImage: "",
+          favorites: [],
+          privacyPolicy: "",
+          privacyPolicyDate: "",
+          subscribed: false,
+          subscription_id: "",
+          stripe_customer_id: "",
+        },
+        loggedInUser: null,
+        activeNavButtons: false,
+        isSubscribed: false,
+      }));
     }
   };
 

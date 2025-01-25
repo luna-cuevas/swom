@@ -1,20 +1,44 @@
-const getUnreadConversations = async (userId: string) => {
-    const response = await fetch('/api/getUnread', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ id: userId }),
-    });
-  
-    if (!response.ok) {
-      throw new Error(`Error fetching unread messages count: ${response.statusText}`);
-    }
-  
-    const data = await response.json();
-    
-    // console.log("the data you requested", data);
-    return data.conversations;
-  };
+import { getSupabaseClient } from "./supabaseClient";
 
-  export default getUnreadConversations;
+export default async function getUnreadConversations(userId: string) {
+  try {
+    const supabase = getSupabaseClient();
+
+    const { data: conversations, error } = await supabase
+      .from("conversations_new")
+      .select(
+        `
+        id,
+        last_message_at,
+        participants:conversation_participants(
+          user_id,
+          last_read_at
+        )
+      `
+      )
+      .contains("participants", [{ user_id: userId }]);
+
+    if (error) {
+      throw error;
+    }
+
+    const unreadConversations = conversations?.filter((conversation) => {
+      const userParticipant = conversation.participants.find(
+        (p: { user_id: string }) => p.user_id === userId
+      );
+
+      return (
+        userParticipant &&
+        conversation.last_message_at &&
+        (!userParticipant.last_read_at ||
+          new Date(conversation.last_message_at) >
+            new Date(userParticipant.last_read_at))
+      );
+    });
+
+    return unreadConversations || [];
+  } catch (error) {
+    console.error("Error getting unread conversations:", error);
+    return [];
+  }
+}
