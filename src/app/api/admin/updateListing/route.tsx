@@ -41,6 +41,7 @@ export async function PUT(request: Request) {
         main_or_second: home_info.main_or_second,
         city: home_info.city,
         how_many_sleep: home_info.how_many_sleep,
+        address: home_info.address,
       })
       .eq("id", home_info.id);
 

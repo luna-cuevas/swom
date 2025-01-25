@@ -1,6 +1,13 @@
 import { createClient } from "@supabase/supabase-js";
 import { NextResponse } from "next/server";
 
+type Listing = {
+  id: string;
+  user_info: {
+    email: string;
+  };
+};
+
 export async function GET() {
   const supabase = createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL as string,
@@ -8,7 +15,8 @@ export async function GET() {
   );
 
   try {
-    const { data, error } = await supabase
+    // First get all listings with their user info
+    const { data: listings, error: listingsError } = await supabase
       .from("listings")
       .select(
         `
@@ -21,7 +29,8 @@ export async function GET() {
         privacy_policy_date,
         slug,
         highlight_tag,
-        order_rank,
+        global_order_rank,
+        highlighted_order_rank,
         home_info:home_info_id!inner(
           id,
           title,
@@ -85,10 +94,27 @@ export async function GET() {
         )
       `
       )
-      .order("created_at", { ascending: false });
+      .order("global_order_rank", { ascending: true });
 
-    if (error) throw error;
-    return NextResponse.json(data);
+    if (listingsError) throw listingsError;
+
+    // Then get subscription status for each listing's user
+    const listingsWithSubs = await Promise.all(
+      listings!.map(async (listing: any) => {
+        const { data: appUser } = await supabase
+          .from("appUsers")
+          .select("subscribed")
+          .eq("email", listing.user_info.email)
+          .single();
+
+        return {
+          ...listing,
+          subscription_status: appUser?.subscribed || false,
+        };
+      })
+    );
+
+    return NextResponse.json(listingsWithSubs);
   } catch (error) {
     console.error("Error fetching listings:", error);
     return NextResponse.json(

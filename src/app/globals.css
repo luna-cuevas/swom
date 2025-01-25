@@ -34,6 +34,10 @@
   height: calc(100vh - 68px) !important;
 }
 
+.yarl__thumbnails.yarl__thumbnails_bottom {
+  width: 100%;
+}
+
 li {
   font-family: "Kanit" !important;
 }

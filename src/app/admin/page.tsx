@@ -12,31 +12,59 @@ const queryClient = new QueryClient();
 export default function AdminDashboard() {
   return (
     <QueryClientProvider client={queryClient}>
-      <div className="container mx-auto py-10">
-        <h1 className="text-3xl font-bold mb-8">Admin Dashboard</h1>
+      <div className="container min-h-[90vh] mx-auto py-10 space-y-8">
+        <div className="flex flex-col space-y-2">
+          <h1 className="text-3xl font-bold">Admin Dashboard</h1>
+          <p className="text-muted-foreground">
+            Manage listings, approvals, and highlighted content
+          </p>
+        </div>
 
         <Tabs defaultValue="all" className="w-full">
-          <TabsList>
-            <TabsTrigger value="all">Live Listings</TabsTrigger>
-            <TabsTrigger value="pending">Pending Approval</TabsTrigger>
-            <TabsTrigger value="highlighted">Highlighted Listings</TabsTrigger>
+          <TabsList className="w-full justify-start border-b">
+            <TabsTrigger value="all" className="flex-1 max-w-[200px]">
+              Live Listings
+            </TabsTrigger>
+            <TabsTrigger value="pending" className="flex-1 max-w-[200px]">
+              Pending Approval
+            </TabsTrigger>
+            <TabsTrigger value="highlighted" className="flex-1 max-w-[200px]">
+              Highlighted Listings
+            </TabsTrigger>
           </TabsList>
 
           <TabsContent value="all">
-            <Card className="p-6">
-              <ListingsTable />
+            <Card className="p-6 pt-4">
+              <div className="flex flex-col space-y-4">
+                <div className="flex items-center justify-between">
+                  <h2 className="text-lg font-semibold">Live Listings</h2>
+                </div>
+                <ListingsTable />
+              </div>
             </Card>
           </TabsContent>
 
           <TabsContent value="pending">
-            <Card className="p-6">
-              <PendingApprovals />
+            <Card className="p-6 pt-4">
+              <div className="flex flex-col space-y-4">
+                <div className="flex items-center justify-between">
+                  <h2 className="text-lg font-semibold">Pending Approval</h2>
+                </div>
+                <PendingApprovals />
+              </div>
             </Card>
           </TabsContent>
 
           <TabsContent value="highlighted">
-            <Card className="p-6">
-              <HighlightedListings />
+            <Card className="p-6 pt-4">
+              <div className="flex flex-col space-y-4">
+                <div className="flex items-center justify-between">
+                  <h2 className="text-lg font-semibold">
+                    Highlighted Listings
+                  </h2>
+                </div>
+                <HighlightedListings />
+              </div>
             </Card>
           </TabsContent>
         </Tabs>

@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
   Table,
   TableBody,
@@ -18,8 +19,35 @@ import {
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "react-toastify";
 import { ListingDetailsModal } from "./ListingDetailsModal";
-import { Mail, Star, StarOff, Key } from "lucide-react";
+import {
+  Mail,
+  Star,
+  StarOff,
+  Key,
+  GripVertical,
+  Save,
+  Plus,
+} from "lucide-react";
 import { cn } from "@/lib/utils";
+import { TableSkeleton } from "./TableSkeleton";
+import { Skeleton } from "@/components/ui/skeleton";
+import {
+  DndContext,
+  closestCenter,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  DragEndEvent,
+} from "@dnd-kit/core";
+import {
+  arrayMove,
+  SortableContext,
+  sortableKeyboardCoordinates,
+  verticalListSortingStrategy,
+} from "@dnd-kit/sortable";
+import { SortableListingRow } from "./SortableListingRow";
+import { AddListingModal } from "./AddListingModal";
 
 type HomeInfo = {
   id: string;
@@ -44,14 +72,35 @@ type Listing = {
   home_info: HomeInfo;
   user_info: UserInfo;
   is_highlighted: boolean;
-  wiki_mujeres_referral: boolean;
+  subscription_status: boolean;
+  global_order_rank: number;
+  highlighted_order_rank: number;
 };
+
+const columns = [
+  "Title",
+  "Email",
+  "Location",
+  "Status",
+  "Wiki Mujeres",
+  "Actions",
+];
 
 export default function ListingsTable() {
   const [filter, setFilter] = useState("");
   const [wikiFilter, setWikiFilter] = useState<boolean | null>(null);
   const queryClient = useQueryClient();
   const [selectedListing, setSelectedListing] = useState<Listing | null>(null);
+  const [isEditingOrder, setIsEditingOrder] = useState(false);
+  const [pendingOrder, setPendingOrder] = useState<Listing[]>([]);
+  const [isAddListingModalOpen, setIsAddListingModalOpen] = useState(false);
+
+  const sensors = useSensors(
+    useSensor(PointerSensor),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    })
+  );
 
   const {
     data: listings = [],
@@ -70,7 +119,11 @@ export default function ListingsTable() {
       if (!response.ok) {
         throw new Error("Failed to fetch listings");
       }
-      return response.json();
+      const data = await response.json();
+      return data.sort(
+        (a: Listing, b: Listing) =>
+          (a.global_order_rank || 0) - (b.global_order_rank || 0)
+      );
     },
     staleTime: 0,
     refetchOnMount: true,
@@ -85,7 +138,7 @@ export default function ListingsTable() {
       listing.slug.toLowerCase().includes(filter.toLowerCase());
 
     if (wikiFilter !== null) {
-      return matchesSearch && listing.wiki_mujeres_referral === wikiFilter;
+      return matchesSearch && listing.user_info.recommended === "wikimujeres";
     }
 
     return matchesSearch;
@@ -188,7 +241,93 @@ export default function ListingsTable() {
     }
   };
 
-  if (isLoading) return <div>Loading...</div>;
+  const handleDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event;
+
+    if (!over || active.id === over.id) {
+      return;
+    }
+
+    const oldIndex =
+      pendingOrder.length > 0
+        ? pendingOrder.findIndex((item) => item.id === active.id)
+        : filteredListings.findIndex((item) => item.id === active.id);
+    const newIndex =
+      pendingOrder.length > 0
+        ? pendingOrder.findIndex((item) => item.id === over.id)
+        : filteredListings.findIndex((item) => item.id === over.id);
+
+    const currentOrder =
+      pendingOrder.length > 0 ? pendingOrder : filteredListings;
+    const newOrder = arrayMove(currentOrder, oldIndex, newIndex);
+    setPendingOrder(newOrder);
+  };
+
+  const saveNewOrder = async () => {
+    if (pendingOrder.length === 0) return;
+
+    try {
+      // Update all items with their new ranks
+      await Promise.all(
+        pendingOrder.map((listing, index) =>
+          fetch("/api/admin/updateListingOrder", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              listingId: listing.id,
+              newRank: index,
+              isHighlighted: false,
+            }),
+          })
+        )
+      );
+
+      // Update the local cache
+      queryClient.setQueryData<Listing[]>(["listings"], (old) => {
+        if (!old) return pendingOrder;
+        const oldFiltered = old.filter(
+          (item) => !pendingOrder.find((f) => f.id === item.id)
+        );
+        return [...oldFiltered, ...pendingOrder].sort(
+          (a, b) => (a.global_order_rank || 0) - (b.global_order_rank || 0)
+        );
+      });
+
+      toast.success("Order updated successfully");
+      setIsEditingOrder(false);
+      setPendingOrder([]);
+    } catch (error) {
+      console.error("Error updating order:", error);
+      toast.error("Failed to update order");
+      // Revert the optimistic update
+      queryClient.invalidateQueries({ queryKey: ["listings"] });
+      setPendingOrder([]);
+    }
+  };
+
+  const cancelEditing = () => {
+    setIsEditingOrder(false);
+    setPendingOrder([]);
+  };
+
+  const startEditing = () => {
+    setIsEditingOrder(true);
+    setPendingOrder(filteredListings);
+  };
+
+  if (isLoading) {
+    return (
+      <div className="space-y-4">
+        <div className="flex items-center gap-4">
+          <Skeleton className="h-10 w-[384px]" />
+          <Skeleton className="h-10 w-[140px]" />
+        </div>
+        <TableSkeleton columns={columns} />
+      </div>
+    );
+  }
 
   if (!listings.length) {
     return (
@@ -202,168 +341,114 @@ export default function ListingsTable() {
     );
   }
 
+  const displayedListings =
+    pendingOrder.length > 0 ? pendingOrder : filteredListings;
+
   return (
     <div className="space-y-4">
-      <div className="flex items-center gap-4">
-        <Input
-          placeholder="Search listings..."
-          value={filter}
-          onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-            setFilter(e.target.value)
-          }
-          className="max-w-sm"
-        />
-        <Button
-          variant={wikiFilter === true ? "default" : "outline"}
-          onClick={() => setWikiFilter(wikiFilter === true ? null : true)}>
-          Wiki Mujeres Only
-        </Button>
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-4">
+          <Input
+            placeholder="Search listings..."
+            value={filter}
+            onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+              setFilter(e.target.value)
+            }
+            className="max-w-sm"
+          />
+          <Button
+            variant={wikiFilter === true ? "default" : "outline"}
+            onClick={() => setWikiFilter(wikiFilter === true ? null : true)}>
+            Wiki Mujeres Only
+          </Button>
+        </div>
+        <div className="flex items-center gap-2">
+          <Button
+            onClick={() => setIsAddListingModalOpen(true)}
+            variant="default"
+            className="gap-2">
+            <Plus className="h-4 w-4" />
+            Add Listing
+          </Button>
+          {!isEditingOrder ? (
+            <Button onClick={startEditing} variant="outline" className="gap-2">
+              <GripVertical className="h-4 w-4" />
+              Edit Order
+            </Button>
+          ) : (
+            <>
+              <Button
+                onClick={saveNewOrder}
+                variant="default"
+                className="gap-2">
+                <Save className="h-4 w-4" />
+                Save Order
+              </Button>
+              <Button onClick={cancelEditing} variant="outline">
+                Cancel
+              </Button>
+            </>
+          )}
+        </div>
       </div>
+
+      {isEditingOrder && (
+        <p className="text-sm text-gray-500">
+          Drag and drop listings to reorder them
+        </p>
+      )}
 
       <div className="border rounded-md">
         <Table>
           <TableHeader>
-            <TableRow className="border-b hover:bg-transparent">
-              <TableHead className="text-center border-r h-11 font-medium">
-                Title
-              </TableHead>
-              <TableHead className="text-center border-r h-11 font-medium">
-                Email
-              </TableHead>
-              <TableHead className="text-center border-r h-11 font-medium">
-                Location
-              </TableHead>
-              <TableHead className="text-center border-r h-11 font-medium">
-                Status
-              </TableHead>
-              <TableHead className="text-center border-r h-11 font-medium">
-                Wiki Mujeres
-              </TableHead>
-              <TableHead className="text-center h-11 font-medium">
-                Actions
-              </TableHead>
+            <TableRow className="hover:bg-transparent">
+              {columns.map((column) => (
+                <TableHead
+                  key={column}
+                  className="text-center border-r h-11 font-medium last:border-r-0">
+                  {column}
+                </TableHead>
+              ))}
             </TableRow>
           </TableHeader>
-          <TableBody>
-            {filteredListings.map((listing: Listing) => (
-              <TableRow
-                key={listing.id}
-                className="cursor-pointer hover:bg-gray-100"
-                onClick={() => setSelectedListing(listing)}>
-                <TableCell className="text-center border-r font-medium">
-                  {listing.home_info.title}
-                </TableCell>
-                <TableCell className="text-center border-r">
-                  {listing.user_info.email}
-                </TableCell>
-                <TableCell className="text-center border-r">
-                  {listing.home_info.city}
-                </TableCell>
-                <TableCell className="text-center border-r">
-                  <span
-                    className={cn(
-                      "px-2 py-1 rounded-full text-xs font-medium",
-                      {
-                        "bg-green-100 text-green-800":
-                          listing.status === "approved",
-                        "bg-yellow-100 text-yellow-800":
-                          listing.status === "pending",
-                        "bg-red-100 text-red-800":
-                          listing.status === "rejected",
-                        "bg-gray-100 text-gray-800": !listing.status,
-                      }
-                    )}>
-                    {listing.status || "N/A"}
-                  </span>
-                </TableCell>
-                <TableCell className="text-center border-r">
-                  <span
-                    className={cn(
-                      "px-2 py-1 rounded-full text-xs font-medium",
-                      listing.wiki_mujeres_referral
-                        ? "bg-purple-100 text-purple-800"
-                        : "bg-gray-100 text-gray-800"
-                    )}>
-                    {listing.wiki_mujeres_referral ? "Yes" : "No"}
-                  </span>
-                </TableCell>
-                <TableCell
-                  className="text-center"
-                  onClick={(e) => e.stopPropagation()}>
-                  <div className="flex justify-center gap-2">
-                    <TooltipProvider>
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={(e) =>
-                              handleToggleHighlight(
-                                listing.id,
-                                listing.is_highlighted,
-                                e
-                              )
-                            }
-                            className={
-                              listing.is_highlighted
-                                ? "text-yellow-500 hover:text-yellow-600"
-                                : "text-gray-400 hover:text-gray-500"
-                            }>
-                            {listing.is_highlighted ? (
-                              <Star className="h-4 w-4 fill-current" />
-                            ) : (
-                              <StarOff className="h-4 w-4" />
-                            )}
-                          </Button>
-                        </TooltipTrigger>
-                        <TooltipContent>
-                          <p>
-                            {listing.is_highlighted
-                              ? "Remove highlight"
-                              : "Highlight listing"}
-                          </p>
-                        </TooltipContent>
-                      </Tooltip>
-                    </TooltipProvider>
-
-                    <TooltipProvider>
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={(e) => handleResendWelcome(listing, e)}
-                            className="text-blue-500 hover:text-blue-600">
-                            <Mail className="h-4 w-4" />
-                          </Button>
-                        </TooltipTrigger>
-                        <TooltipContent>
-                          <p>Resend welcome email</p>
-                        </TooltipContent>
-                      </Tooltip>
-                    </TooltipProvider>
-
-                    <TooltipProvider>
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={(e) => handlePasswordReset(listing, e)}
-                            className="text-purple-500 hover:text-purple-600">
-                            <Key className="h-4 w-4" />
-                          </Button>
-                        </TooltipTrigger>
-                        <TooltipContent>
-                          <p>Send password reset email</p>
-                        </TooltipContent>
-                      </Tooltip>
-                    </TooltipProvider>
-                  </div>
-                </TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
+          {isEditingOrder ? (
+            <DndContext
+              sensors={sensors}
+              collisionDetection={closestCenter}
+              onDragEnd={handleDragEnd}>
+              <TableBody>
+                <SortableContext
+                  items={displayedListings}
+                  strategy={verticalListSortingStrategy}>
+                  {displayedListings.map((listing: Listing) => (
+                    <SortableListingRow
+                      key={listing.id}
+                      listing={listing}
+                      onSelect={() => setSelectedListing(listing)}
+                      onToggleHighlight={handleToggleHighlight}
+                      onResendWelcome={handleResendWelcome}
+                      onPasswordReset={handlePasswordReset}
+                      showDragHandle={true}
+                    />
+                  ))}
+                </SortableContext>
+              </TableBody>
+            </DndContext>
+          ) : (
+            <TableBody>
+              {displayedListings.map((listing: Listing) => (
+                <SortableListingRow
+                  key={listing.id}
+                  listing={listing}
+                  onSelect={() => setSelectedListing(listing)}
+                  onToggleHighlight={handleToggleHighlight}
+                  onResendWelcome={handleResendWelcome}
+                  onPasswordReset={handlePasswordReset}
+                  showDragHandle={false}
+                />
+              ))}
+            </TableBody>
+          )}
         </Table>
       </div>
 
@@ -377,6 +462,15 @@ export default function ListingsTable() {
             (l) => l.id === selectedListing?.id
           );
           setSelectedListing(updatedListing || null);
+        }}
+      />
+
+      <AddListingModal
+        isOpen={isAddListingModalOpen}
+        onClose={() => setIsAddListingModalOpen(false)}
+        onSuccess={() => {
+          setIsAddListingModalOpen(false);
+          refetch();
         }}
       />
     </div>

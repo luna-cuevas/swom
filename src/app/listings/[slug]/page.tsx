@@ -1,16 +1,13 @@
 "use client";
-import CarouselPage from "@/components/Carousel";
+import CarouselPage from "@/app/listings/components/Carousel";
 import Image from "next/image";
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname } from "next/navigation";
 import React, { useEffect, useState } from "react";
 import Link from "next/link";
-import { sanityClient } from "@/utils/sanityClient";
-import ImageUrlBuilder from "@sanity/image-url";
-import { ToastContainer, toast } from "react-toastify";
+import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { useAtom } from "jotai";
 import { globalStateAtom } from "@/context/atoms";
-import { getSupabaseClient } from "@/utils/supabaseClient";
 import dynamic from "next/dynamic";
 
 const GoogleMapComponent = dynamic(
@@ -21,135 +18,93 @@ const GoogleMapComponent = dynamic(
   }
 );
 
-type Props = {};
-
-const Page = (props: Props) => {
+const Page = () => {
   const pathName = usePathname();
   const slug = pathName.split("/listings/")[1];
-  const [state, setState] = useAtom(globalStateAtom);
-  const [imageFiles, setImageFiles] = useState<any[]>([]);
-  const [selectedImage, setSelectedImage] = useState(0); // Track selected image
+  const [state] = useAtom(globalStateAtom);
   const [isLoading, setIsLoading] = useState(true);
-  const [cities, setCities] = useState<any>([]);
   const [mapsActive, setMapsActive] = useState(true);
-  const [listings, setListings] = useState<any>([]);
-  const [contactedUser, setContactedUser] = useState(null);
+  const [listing, setListing] = useState<any>(null);
+  const [isFavorited, setIsFavorited] = useState(false);
+  console.log(slug);
 
-  const builder = ImageUrlBuilder(sanityClient);
-
-  function urlFor(source: any) {
-    return builder.image(source);
-  }
-
-  const supabase = getSupabaseClient();
-
-  const fetchUserByEmail = async (email: string) => {
-    const { data, error } = await supabase
-      .from("appUsers")
-      .select("id")
-      .eq("email", email);
-
-    if (error) {
-      console.error("Error fetching user:", error);
-    } else {
-      return data;
-    }
-  };
-
-  useEffect(() => {
-    const fetchCities = async () => {
-      const query = `*[_type == "city"]`; // Adjust the query to fit your needs
-      const data = await sanityClient.fetch(query);
-      setCities(data);
-    };
-
-    fetchCities();
-
-    if (listings.length > 0) {
-      const fetchContactedUser = async () => {
-        const user = await fetchUserByEmail(listings[0]?.userInfo.email);
-        console.log("user", user);
-        if (user) {
-          setContactedUser(user[0]?.id);
-        }
-      };
-      fetchContactedUser();
-    }
-  }, [listings]);
-
-  const fetchListings = async () => {
+  const fetchListing = async () => {
     try {
-      const query = `*[_type == "listing" && _id == $slug]{
-        ...,
-      "imageUrl": image.asset->url
-    }`;
-      const data = await sanityClient.fetch(query, { slug });
-
-      const userInfo = data[0]?.userInfo;
-      const dob = new Date(userInfo?.dob);
-      const today = new Date();
-      const age =
-        today.getFullYear() -
-        dob.getFullYear() -
-        (today < new Date(today.getFullYear(), dob.getMonth(), dob.getDate())
-          ? 1
-          : 0);
-
-      console.log("dob", age);
-
-      const updatedData = data.map((item: any) => ({
-        ...item,
-        userInfo: {
-          ...item.userInfo,
-          age: age,
-        },
-      }));
-
-      if (data[0].homeInfo.listingImages) {
-        const updatedImages = data[0].homeInfo.listingImages
-          .slice(0, 10)
-          .map((image: any, index: number) => {
-            const imageUrl = urlFor(image).url();
-            setImageFiles((prev) => [...prev, imageUrl]);
-            return { src: imageUrl, key: index };
-          });
-
-        data[0].homeInfo.listingImages = updatedImages;
+      const url = new URL(
+        "/api/members/my-listing/getListing",
+        window.location.origin
+      );
+      url.searchParams.append("id", slug);
+      if (state?.user?.email) {
+        url.searchParams.append("email", state.user.email);
       }
 
-      console.log("setting profile image");
-
-      if (data[0].userInfo.profileImage !== undefined) {
-        const imageUrl = urlFor(data[0]?.userInfo.profileImage).url();
-        console.log("imageUrl", imageUrl);
-        data[0].userInfo.profileImage.src = imageUrl;
+      const response = await fetch(url);
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
       }
-
-      setListings(updatedData);
+      const data = await response.json();
+      setListing(data);
+      setIsFavorited(data.favorite || false);
       setIsLoading(false);
     } catch (error: any) {
-      toast.error("Error fetching data:", error.message);
-      console.error("Error fetching data:", error.message);
+      toast.error(`Error fetching data: ${error.message}`);
+      console.error("Error fetching data:", error);
+      setIsLoading(false);
     }
   };
 
-  const cityDescription = cities.filter((city: any) => {
-    return city.city
-      .toLowerCase()
-      .includes(listings[0]?.homeInfo?.city?.split(",")[0].toLowerCase());
-  });
+  const toggleFavorite = async () => {
+    if (!state?.user?.id) {
+      toast.error("Please log in to favorite listings");
+      return;
+    }
+
+    try {
+      const response = await fetch("/api/members/toggleFavorite", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          listingId: slug,
+          userId: state.user.id,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to toggle favorite");
+      }
+
+      const data = await response.json();
+      setIsFavorited(data.favorite);
+      toast.success(
+        data.favorite ? "Added to favorites" : "Removed from favorites"
+      );
+    } catch (error) {
+      toast.error("Failed to update favorite status");
+      console.error("Error toggling favorite:", error);
+    }
+  };
 
   useEffect(() => {
-    fetchListings();
-  }, []);
+    fetchListing();
+  }, [slug]);
 
-  console.log("listing", listings[0]);
+  useEffect(() => {
+    if (state?.user?.id && listing?.favorites) {
+      const isLiked = listing.favorites.some(
+        (fav: { listingId: string }) => fav.listingId === slug
+      );
+      setIsFavorited(isLiked);
+    }
+  }, [state?.user?.id, listing?.favorites, slug]);
 
   if (isLoading) {
     return (
       <div
         role="status"
-        className=" flex min-h-screen m-auto h-fit w-fit my-auto mx-auto px-3 py-2 text-white rounded-xl">
+        className=" flex m-auto min-h-screen align-middle w-fit my-auto mx-auto px-3 py-2 text-white rounded-xl">
         <svg
           aria-hidden="true"
           className="m-auto w-[100px] h-[100px] text-gray-200 animate-spin dark:text-gray-600 fill-[#7F8119]"
@@ -168,345 +123,393 @@ const Page = (props: Props) => {
         <span className="sr-only">Loading...</span>
       </div>
     );
-  } else {
+  }
+
+  if (!listing) {
     return (
-      <main className="px-[5%] py-[2%] bg-[#F7F1EE] ">
-        <div className="max-w-[1200px] mx-auto">
-          {/* title section */}
-          <div className="m-auto border-y-[1px] py-4 border-[#172544] justify-between flex">
-            <h1 className="text-2xl font-thin">
-              {listings[0]?.homeInfo?.title} <br />
-              <span className="font-bold"> {listings[0]?.homeInfo?.city}</span>
-            </h1>
-            <div className="relative w-[30px] flex align-middle my-auto object-contain h-[30px]">
-              <Image
-                fill
-                className="h-full m-auto"
-                src="/logo-icons.png"
-                alt=""
-              />
-            </div>
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <h1 className="text-2xl font-medium text-gray-900 mb-2">
+            Listing not found
+          </h1>
+          <Link href="/listings" className="text-[#172544] hover:underline">
+            Return to listings
+          </Link>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <main className="min-h-screen bg-white">
+      {/* Navigation */}
+      <nav className="sticky top-0 z-[100] bg-white border-b">
+        <div className="max-w-screen-2xl mx-auto px-6 py-4">
+          <div className="flex items-center justify-between">
+            <Link
+              href="/listings"
+              className="text-gray-800 hover:text-gray-600">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                fill="none"
+                viewBox="0 0 24 24"
+                strokeWidth={2}
+                stroke="currentColor"
+                className="w-5 h-5">
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18"
+                />
+              </svg>
+            </Link>
+            <button
+              onClick={toggleFavorite}
+              className="flex items-center gap-2 px-4 py-2 rounded-lg border border-gray-200 hover:border-gray-300 transition-colors">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                fill={isFavorited ? "currentColor" : "none"}
+                viewBox="0 0 24 24"
+                strokeWidth={1.5}
+                stroke="currentColor"
+                className={`w-5 h-5 ${isFavorited ? "text-red-500" : "text-gray-600"}`}>
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12z"
+                />
+              </svg>
+              <span
+                className={`text-sm font-medium ${isFavorited ? "text-red-500" : "text-gray-600"}`}>
+                {isFavorited ? "Favorited" : "Favorite"}
+              </span>
+            </button>
           </div>
+        </div>
+      </nav>
 
-          {/* Listing Info Above Fold */}
-          <div className="flex flex-col md:flex-row my-8 justify-between">
-            {/* User Info - Left Section */}
-            <div className="md:w-[25%]  flex flex-col">
-              {/* <h1 className="font-sans mx-auto mb-8 font-light text-2xl border border-[#172544] py-2 px-8 rounded-xl w-fit">
-                Listing{' '}
-                <span className="font-bold">
-                  {' '}
-                  No.{' '}
-                  {listings[0]?.listingNumber || listings[0]?._id.slice(0, 5)}
-                </span>
-              </h1> */}
+      {/* Full-width Image Gallery */}
+      <div className="w-full bg-gray-100">
+        <div className="max-w-screen-2xl mx-auto justify-center flex">
+          <div className="lg:aspect-video h-[50vh] lg:h-full flex justify-center max-h-[600px] w-full">
+            <CarouselPage
+              overlay={false}
+              thumbnails={true}
+              images={
+                listing.home_info.listing_images?.length > 0
+                  ? listing.home_info.listing_images.map(
+                      (url: string, index: number) => ({
+                        key: index,
+                        src: url,
+                      })
+                    )
+                  : [1, 2, 3].map((file) => ({
+                      key: file,
+                      src: "/placeholder.png",
+                    }))
+              }
+            />
+          </div>
+        </div>
+      </div>
 
-              <div className="mx-auto text-center">
-                <div className="relative m-auto  h-[100px] w-[100px]">
-                  <Image
-                    fill
-                    src={
-                      listings[0]?.userInfo?.profileImage?.src
-                        ? listings[0]?.userInfo?.profileImage.src
-                        : "/placeholder.png"
-                    }
-                    sizes="100px"
-                    priority
-                    className="rounded-full object-cover"
-                    alt=""
-                  />
-                </div>
-                <h1 className="text-xl">{listings[0]?.userInfo?.name}</h1>
-                <p className="font-bold font-sans">
-                  {listings[0]?.userInfo?.profession}
+      {/* Content */}
+      <div className="max-w-screen-xl mx-auto px-6 py-8">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-12">
+          {/* Left Column - Details */}
+          <div className="lg:col-span-2">
+            {/* Header */}
+            <div className="border-b pb-6 mb-8">
+              <h1 className="text-2xl font-semibold text-gray-900 mb-1 font-['EBGaramond']">
+                {listing.home_info.title}
+              </h1>
+              <p className="text-lg text-gray-600 font-['Noto']">
+                {listing.home_info.city}
+              </p>
+            </div>
+
+            {/* Quick Info */}
+            <div className="grid grid-cols-3 gap-6 pb-8 mb-8 border-b">
+              <div>
+                <h3 className="font-medium text-gray-900 mb-1 font-['EBGaramond']">
+                  Property type
+                </h3>
+                <p className="text-gray-500 capitalize font-['Noto']">
+                  {listing.home_info.property_type}
                 </p>
-                <p className="font-sans">
-                  {listings[0]?.userInfo?.age
-                    ? `${listings[0]?.userInfo?.age} years old`
-                    : ""}
+              </div>
+              <div>
+                <h3 className="font-medium text-gray-900 mb-1 font-['EBGaramond']">
+                  Bedrooms
+                </h3>
+                <p className="text-gray-500 font-['Noto']">
+                  {listing.home_info.how_many_sleep}
                 </p>
-
-                {/* Make sure user cant send themselves message from their own listing*/}
-                {contactedUser === state?.user?.id ? (
-                  <Link
-                    href="/profile"
-                    className="bg-[#E78426] w-fit hover:bg-[#e78326d8] text-[#fff] mx-auto my-2 px-3 py-1 rounded-xl">
-                    Profile
-                  </Link>
-                ) : (
-                  <Link
-                    href={`/messages?contactedUser=${contactedUser}&userId=${state?.user?.id}`}
-                    className="bg-[#E78426] w-fit hover:bg-[#e78326d8] text-[#fff] mx-auto my-2 px-3 py-1 rounded-xl">
-                    Contact me
-                  </Link>
-                )}
               </div>
-
-              <div className="my-2 break-all">
-                <h1 className="font-serif text-xl font-thin border-b border-[#172544] mb-2">
-                  About us
-                </h1>
-                <p className="break-all">{listings[0]?.userInfo?.about_me}</p>
+              <div>
+                <h3 className="font-medium text-gray-900 mb-1 font-['EBGaramond']">
+                  Bathrooms
+                </h3>
+                <p className="text-gray-500 font-['Noto']">
+                  {listing.home_info.bathrooms}
+                </p>
               </div>
+              <div>
+                <h3 className="font-medium text-gray-900 mb-1 font-['EBGaramond']">
+                  Area
+                </h3>
+                <p className="text-gray-500 font-['Noto']">
+                  {listing.home_info.area || "N/A"} m²
+                </p>
+              </div>
+              <div>
+                <h3 className="font-medium text-gray-900 mb-1 font-['EBGaramond']">
+                  Located in
+                </h3>
+                <p className="text-gray-500 font-['Noto']">
+                  {listing.home_info.located_in || "N/A"}
+                </p>
+              </div>
+              <div>
+                <h3 className="font-medium text-gray-900 mb-1 font-['EBGaramond']">
+                  Residence type
+                </h3>
+                <p className="text-gray-500 capitalize font-['Noto']">
+                  {listing.home_info.main_or_second || "N/A"}
+                </p>
+              </div>
+            </div>
 
-              {listings[0]?.userInfo?.citiesToGo && (
-                <div className="my-2">
-                  <h1 className="font-serif text-xl font-thin border-b border-[#172544] mb-2">
-                    We want to go to
-                  </h1>
-                  <ul>
-                    <li>City</li>
-                    <li>City</li>
-                    <li>City</li>
-                  </ul>
+            {/* About the City */}
+            <div className="pb-8 mb-8 border-b">
+              <h2 className="text-xl font-semibold mb-4 !font-['EBGaramond']">
+                About {listing.home_info.city}
+              </h2>
+              <p className="text-gray-600 leading-relaxed !font-['Noto']">
+                {listing.home_info.about_city ||
+                  "No information available about this city."}
+              </p>
+            </div>
+
+            {/* Description */}
+            <div className="pb-8 mb-8 border-b">
+              <h2 className="text-xl font-semibold mb-4 !font-['EBGaramond']">
+                About this home
+              </h2>
+              <p className="text-gray-600 leading-relaxed whitespace-pre-line font-['Noto']">
+                {listing.home_info.description || "No description available."}
+              </p>
+            </div>
+
+            {/* Amenities */}
+            {listing.amenities &&
+              Object.values(listing.amenities).some(
+                (value) => value === true
+              ) && (
+                <div className="pb-8 mb-8 border-b">
+                  <h2 className="text-xl font-semibold mb-6 !font-['EBGaramond']">
+                    What this place offers
+                  </h2>
+                  <div className="grid grid-cols-3 gap-4">
+                    {Object.entries(
+                      listing.amenities as Record<string, boolean | string>
+                    )
+                      .filter(
+                        ([key]) =>
+                          ![
+                            "id",
+                            "created_at",
+                            "updated_at",
+                            "submission_id",
+                          ].includes(key)
+                      )
+                      .map(
+                        ([key, value]) =>
+                          value === true && (
+                            <div key={key} className="flex items-center gap-3">
+                              <div className="w-6 h-6 flex items-center justify-center rounded-full bg-gray-100">
+                                <svg
+                                  xmlns="http://www.w3.org/2000/svg"
+                                  fill="none"
+                                  viewBox="0 0 24 24"
+                                  strokeWidth={2}
+                                  stroke="currentColor"
+                                  className="w-4 h-4 text-gray-600">
+                                  <path
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                    d="M4.5 12.75l6 6 9-13.5"
+                                  />
+                                </svg>
+                              </div>
+                              <span className="text-gray-700 capitalize font-['Noto']">
+                                {key.replace(/_/g, " ")}
+                              </span>
+                            </div>
+                          )
+                      )}
+                  </div>
                 </div>
               )}
 
-              <div className="my-2">
-                <h1 className="font-serif text-xl font-thin border-b border-[#172544] mb-2">
-                  Open to other destinations
-                </h1>
-                {listings[0]?.userInfo?.openToOtherCities &&
-                  Object.values(
-                    listings[0]?.userInfo?.openToOtherCities
-                  ).forEach(
-                    // @ts-ignore
-                    (city: string) => <p key={city}>{city}</p>
-                  )}
+            {/* Location */}
+            {mapsActive && listing.home_info.address && (
+              <div>
+                <h2 className="text-xl font-semibold mb-4 !font-['EBGaramond']">
+                  Location
+                </h2>
+                <div className="h-[400px] rounded-xl overflow-hidden">
+                  <GoogleMapComponent
+                    exactAddress={
+                      listing.home_info.address
+                        ? {
+                            lat: listing.home_info.address.lat,
+                            lng: listing.home_info.address.lng,
+                          }
+                        : undefined
+                    }
+                    listings={[
+                      {
+                        id: listing.id,
+                        user_info: {
+                          email: listing.user_info.email,
+                        },
+                        home_info: {
+                          address: {
+                            lat: listing.home_info.address.lat,
+                            lng: listing.home_info.address.lng,
+                          },
+                          description: listing.home_info.description,
+                          title: listing.home_info.title,
+                          located_in: listing.home_info.located_in,
+                          listing_images: listing.home_info.listing_images,
+                        },
+                      },
+                    ]}
+                    noSearch={true}
+                    radius={300}
+                    marker={false}
+                  />
+                </div>
               </div>
-            </div>
+            )}
+          </div>
 
-            {/* Listing Info - Right Section */}
-            <div className="md:w-2/3 flex flex-col">
-              {/* <div className="flex flex-col relative h-[40vh] w-full mx-auto">
+          {/* Right Column - Host Details */}
+          <div>
+            <div className="sticky top-24 bg-white rounded-xl border p-6">
+              <div className="flex items-center gap-4 mb-6">
+                <div className="relative w-16 h-16">
                   <Image
+                    fill
                     src={
-                      imageFiles[selectedImage]
-                        ? imageFiles[selectedImage]
-                        : '/placeholder.png'
+                      listing.user_info.profile_image_url || "/placeholder.png"
                     }
-                    alt=""
-                    className="rounded-3xl object-cover "
-                    fill
-                    sizes="100%"
-                    objectPosition="center"
+                    className="rounded-full object-cover"
+                    alt={listing.user_info.name}
+                    sizes="64px"
                   />
-                </div> */}
-
-              <div className="flex relative  h-[60vh] my-4">
-                <CarouselPage
-                  overlay={false}
-                  thumbnails={true}
-                  images={
-                    listings[0]?.homeInfo?.listingImages?.length > 0
-                      ? listings[0]?.homeInfo?.listingImages
-                      : [1, 2, 3].map((file) => ({
-                          key: file,
-                          src: "/placeholder.png",
-                        }))
-                  }
-                />
-              </div>
-
-              <div
-                className={`flex gap-4 ${
-                  cityDescription[0]?.description ||
-                  listings[0]?.homeInfo?.description
-                    ? "flex-col"
-                    : "flex-row"
-                } border-t border-[#172544]`}>
-                <div
-                  className={` mt-4 border-[#172544] ${
-                    cityDescription[0]?.description ||
-                    listings[0]?.homeInfo?.description
-                      ? "w-full border-b-2 pb-4"
-                      : "w-1/2 border-r-2 "
-                  }`}>
-                  <h1 className="font-bold text-xl">About the City</h1>
-                  <p>
-                    {cityDescription[0]?.description ||
-                      "No city description available."}
-                  </p>
                 </div>
-                <div
-                  className={`${
-                    cityDescription[0]?.description ||
-                    listings[0]?.homeInfo?.description
-                      ? "w-full"
-                      : "w-1/2"
-                  } mt-4 break-all`}>
-                  <h1 className="font-bold text-xl">About my home</h1>
-                  <p>
-                    {listings[0]?.homeInfo?.description ||
-                      "No home description available."}
+                <div>
+                  <h2 className="font-medium text-gray-900 !font-['EBGaramond']">
+                    Hosted by {listing.user_info.name}
+                  </h2>
+                  <p className="text-gray-500 !font-['Noto']">
+                    {listing.user_info.profession}
                   </p>
                 </div>
               </div>
-            </div>
-          </div>
 
-          {/* Below the Fold */}
-          <div className="py-2 border-y-[1px] border-[#172544]">
-            <div className=" border my-8 border-[#172544] rounded-xl grid grid-cols-3 text-center py-8 justify-evenly">
-              <div className="border-r border-[#172544]">
-                <div className="relative my-1 m-auto w-[40px] h-[40px] object-contain">
-                  <Image
-                    fill
-                    src="/listings/slug/apartments-icon.png"
-                    alt=""
-                    sizes="40px"
-                  />
-                </div>
-                <h1 className="font-bold">Type of property</h1>
-                <p className="capitalize text-base md:text-xl">
-                  {listings[0]?.homeInfo?.property}
-                </p>
-              </div>
-              <div className="border-r border-[#172544]">
-                <div className="relative my-1 m-auto w-[40px] h-[40px] object-contain">
-                  <Image
-                    fill
-                    src="/listings/slug/bedroom-icon.png"
-                    alt=""
-                    sizes="40px"
-                  />
-                </div>
-                <h1 className="font-bold">Bedrooms</h1>
-                <p className="text-base md:text-xl">
-                  {listings[0]?.homeInfo?.howManySleep}
-                </p>
-              </div>
-              <div className="">
-                <div className="relative my-1 m-auto w-[40px] h-[40px] object-contain">
-                  <Image
-                    fill
-                    src="/listings/slug/location-icon.png"
-                    alt=""
-                    sizes="40px"
-                  />
-                </div>
-                <h1 className="font-bold">Property located in</h1>
-                <p className="capitalize text-base md:text-xl">
-                  {listings[0]?.homeInfo?.locatedIn}
-                </p>
-              </div>
-            </div>
+              {listing.user_info.id === state?.user?.id ? (
+                <Link
+                  href="/profile"
+                  className="block w-full py-3 px-4 text-center border border-gray-300 rounded-lg text-gray-700 bg-white hover:bg-gray-50 transition-colors mb-6 font-['Noto']">
+                  View Profile
+                </Link>
+              ) : (
+                <Link
+                  href={`/messages?contactedUser=${listing.user_info.id}&userId=${state?.user?.id}`}
+                  className="block w-full py-3 px-4 text-center bg-[#172544] text-white rounded-lg hover:bg-[#0f1a2e] transition-colors mb-6 font-['Noto']">
+                  Contact Host
+                </Link>
+              )}
 
-            <div className=" border my-8 border-[#172544] rounded-xl grid grid-cols-3 text-center py-8 justify-evenly">
-              <div className="border-r border-[#172544]">
-                <div className="relative my-1 m-auto w-[40px] h-[40px] object-contain">
-                  <Image
-                    fill
-                    src="/listings/slug/finger-icon.png"
-                    alt=""
-                    sizes="40px"
-                  />
+              {listing.user_info.about_me && (
+                <div className="mb-6">
+                  <h3 className="text-sm font-medium text-gray-900 mb-2 !font-['EBGaramond']">
+                    About
+                  </h3>
+                  <p className="text-gray-600 text-sm leading-relaxed font-['Noto']">
+                    {listing.user_info.about_me}
+                  </p>
                 </div>
-                <h1 className="font-bold">Kind of property</h1>
-                <p className="capitalize text-base md:text-xl">
-                  {listings[0]?.homeInfo?.mainOrSecond}
-                </p>
-              </div>
-              <div className="border-r border-[#172544]">
-                <div className="relative my-1 m-auto w-[40px] object-contain h-[40px]">
-                  <Image
-                    fill
-                    src="/listings/slug/bathroom-icon.png"
-                    alt=""
-                    sizes="40px"
-                  />
-                </div>
-                <h1 className="font-bold">Bathrooms</h1>
-                <p className="text-base md:text-xl">
-                  {listings[0]?.homeInfo?.bathrooms}
-                </p>
-              </div>
-              <div className="">
-                <div className="relative my-1 m-auto w-[40px] object-contain h-[40px]">
-                  <Image
-                    fill
-                    src="/listings/slug/square-icon.png"
-                    alt=""
-                    sizes="40px"
-                  />
-                </div>
-                <h1 className="font-bold">Area</h1>
-                <p className="text-base md:text-xl">
-                  {listings[0]?.homeInfo?.area
-                    ? `${listings[0]?.homeInfo?.area} sqm`
-                    : ""}
-                </p>
-              </div>
-            </div>
-          </div>
+              )}
 
-          <div className="my-2">
-            <button
-              onClick={() => {
-                console.log("clicked");
-                setMapsActive(!mapsActive);
-              }}
-              className="text-2xl flex justify-between w-full text-left my-4 pb-4 border-b border-[#172544] font-serif">
-              <h1>Where is it?</h1>
-              {/* arrow down that switches to up when button active */}
-              <svg
-                className={`w-6 h-6 inline-block ${
-                  mapsActive && "rotate-180 transform"
-                }`}
-                viewBox="0 0 20 20">
-                <path
-                  fill="#172544"
-                  d="M10 12.586L4.707 7.293a1 1 0 011.414-1.414L10 9.758l4.879-4.879a1 1 0 111.414 1.414L10 12.586z"
-                />
-              </svg>
-            </button>
-            <div
-              className={`w-full p-4 h-[40vh] ${
-                mapsActive ? "block" : "hidden"
-              }`}>
-              <GoogleMapComponent
-                exactAddress={listings[0]?.homeInfo?.address}
-                noSearch={true}
-                radius={300}
-              />
-            </div>
-          </div>
+              {listing.user_info.cities_to_go?.length > 0 && (
+                <div className="mb-6">
+                  <h3 className="text-sm font-medium text-gray-900 mb-3 !font-['EBGaramond']">
+                    Would like to visit
+                  </h3>
+                  <div className="flex flex-wrap gap-2">
+                    {listing.user_info.cities_to_go.map((city: string) => (
+                      <span
+                        key={city}
+                        className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800 font-['Noto']">
+                        {city}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )}
 
-          <div className="mt-14 mb-6">
-            <h1 className="text-2xl flex justify-between w-full text-left my-4 py-4 border-y-[1px] border-[#172544] font-serif">
-              Amenities & advantages
-            </h1>
-            <div className="flex gap-[5%]">
-              <ul className="grid w-full flex-wrap break-all gap-4 text-center grid-cols-4">
-                {listings[0]?.amenities &&
-                  Object.entries(listings[0]?.amenities).map(([key, value]) => {
-                    if (value === true) {
-                      return (
-                        <li key={key} className="capitalize text-xl">
-                          {key}
-                        </li>
-                      );
-                    }
-                    return null;
-                  })}
-              </ul>
+              {/* Cities they'd like to visit */}
+              {listing.user_info.open_to_other_cities &&
+                Object.values(
+                  listing.user_info.open_to_other_cities as Record<
+                    string,
+                    string
+                  >
+                ).length > 0 && (
+                  <div className="mb-6">
+                    <h3 className="text-sm font-medium text-gray-900 mb-3 !font-['EBGaramond']">
+                      Would like to visit
+                    </h3>
+                    <div className="flex flex-wrap gap-2">
+                      {Object.values(
+                        listing.user_info.open_to_other_cities as Record<
+                          string,
+                          string
+                        >
+                      )
+                        .filter((city) => city && city.trim() !== "")
+                        .map((city: string, index) => (
+                          <span
+                            key={index}
+                            className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800 font-['Noto']">
+                            {city}
+                          </span>
+                        ))}
+                    </div>
+                  </div>
+                )}
+
+              {/* Open to other destinations */}
+              <div className="mb-6">
+                <h3 className="text-sm font-medium text-gray-900 mb-3 font-['EBGaramond']">
+                  Open to other destinations
+                </h3>
+                <p className="text-gray-600 text-sm leading-relaxed font-['Noto']">
+                  {listing.user_info.open_to_other_destinations
+                    ? "This host is open to exploring other destinations not listed above."
+                    : "This host prefers to stick to their listed destinations."}
+                </p>
+              </div>
             </div>
           </div>
         </div>
-        <ToastContainer
-          position="bottom-right"
-          autoClose={3000}
-          hideProgressBar={false}
-          newestOnTop={true}
-          closeOnClick={true}
-          rtl={false}
-          pauseOnFocusLoss={true}
-          draggable={true}
-          pauseOnHover={true}
-        />
-      </main>
-    );
-  }
+      </div>
+    </main>
+  );
 };
 
 export default Page;

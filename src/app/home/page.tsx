@@ -1,4 +1,4 @@
-import Carousel from "@/components/Carousel";
+import Carousel from "@/app/listings/components/Carousel";
 import Image from "next/image";
 import Link from "next/link";
 import React, { Suspense } from "react";

@@ -2,19 +2,13 @@
 import React, { useEffect } from "react";
 import { Auth } from "@supabase/auth-ui-react";
 import { getSupabaseClient } from "@/utils/supabaseClient";
-import { ToastContainer, toast } from "react-toastify";
+import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { useAtom } from "jotai";
 import { globalStateAtom } from "@/context/atoms";
-import { sanityClient } from "@/utils/sanityClient";
 
-type Props = {
-  setSignInActive: React.Dispatch<React.SetStateAction<boolean>>;
-};
-
-const SignIn = (props: Props) => {
+const SignIn = () => {
   const supabase = getSupabaseClient();
   const [state, setState] = useAtom(globalStateAtom);
 
@@ -99,20 +93,30 @@ const SignIn = (props: Props) => {
         activeNavButtons: true,
       });
 
-      props.setSignInActive(false);
+      setState({
+        ...state,
+        signInActive: false,
+      });
     } else if (event === "SIGNED_OUT") {
       console.log("session", event);
       console.log("SignIn Failed");
-      toast.error("Sign in failed");
     }
   };
+
+  if (!state.signInActive) {
+    return null;
+  }
+
   return (
     <div
       className={`fixed w-full h-full top-0 bottom-0 left-0 right-0     flex m-auto z-[200000000] `}>
       <div
         className="fixed w-full h-full bg-gray-600 opacity-50 top-0 bottom-0 left-0 right-0 z-[20000000]"
         onClick={() => {
-          props.setSignInActive(false);
+          setState({
+            ...state,
+            signInActive: false,
+          });
         }}
       />
 
@@ -124,18 +128,6 @@ const SignIn = (props: Props) => {
             </h2>
           </div>
           <div className="flex lg:w-[60%] w-[90%] m-auto ">
-            <ToastContainer
-              position="bottom-right"
-              autoClose={5000}
-              hideProgressBar={false}
-              newestOnTop={false}
-              closeOnClick
-              rtl={false}
-              pauseOnFocusLoss
-              draggable
-              pauseOnHover
-              theme="light"
-            />
             <div className="m-auto w-full">
               <Auth
                 redirectTo={
@@ -195,7 +187,10 @@ const SignIn = (props: Props) => {
             <p className="text-[#F7F1EE]">Don&apos;t have an account?</p>
             <Link
               onClick={() => {
-                props.setSignInActive(false);
+                setState({
+                  ...state,
+                  signInActive: false,
+                });
               }}
               className="font-sans text-sm text-blue-300"
               href="/become-member">

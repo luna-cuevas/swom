@@ -4,7 +4,7 @@ import Link from "next/link";
 import React, { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import generatePassword from "@/utils/generatePassword";
-import { ToastContainer, toast } from "react-toastify";
+import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 // import ReCAPTCHA from "react-google-recaptcha";
 import { sanityClient } from "@/utils/sanityClient";
@@ -953,18 +953,6 @@ export default function Page() {
           {/* <p className="text-lg">Someone will be in touch with you shortly.</p> */}
         </div>
       )}
-      <ToastContainer
-        position="bottom-right"
-        autoClose={5000}
-        hideProgressBar={false}
-        newestOnTop={false}
-        closeOnClick
-        rtl={false}
-        pauseOnFocusLoss
-        draggable
-        pauseOnHover
-        theme="light"
-      />
     </main>
   );
 }

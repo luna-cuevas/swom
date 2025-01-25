@@ -11,6 +11,8 @@ import Providers from "../context/providers";
 import { GoogleAnalytics } from "@next/third-parties/google";
 import HotjarInit from "@/components/HotjarInit";
 import { ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
+import SignIn from "@/components/SignIn";
 
 export const metadata: Metadata = {
   title: "SWOM - Swap your home.",
@@ -98,6 +100,8 @@ export default function RootLayout({
           <SpeedInsights />
           <Analytics />
           <Footer />
+          <SignIn />
+
           <ToastContainer
             position="bottom-right"
             autoClose={5000}

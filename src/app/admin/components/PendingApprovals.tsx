@@ -21,6 +21,8 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { TableSkeleton } from "./TableSkeleton";
+import { Skeleton } from "@/components/ui/skeleton";
 
 type HomeInfo = {
   id: string;
@@ -46,6 +48,8 @@ type PendingListing = {
   user_info: UserInfo;
 };
 
+const columns = ["Title", "Email", "Location", "Wiki Mujeres", "Actions"];
+
 export default function PendingApprovals() {
   const [filter, setFilter] = useState("");
   const queryClient = useQueryClient();
@@ -67,7 +71,13 @@ export default function PendingApprovals() {
     queryKey: ["pendingListings"],
     queryFn: async () => {
       try {
-        const response = await fetch("/api/admin/getPendingListings");
+        const response = await fetch("/api/admin/getPendingListings", {
+          cache: "no-store",
+          headers: {
+            "Cache-Control": "no-cache",
+            Pragma: "no-cache",
+          },
+        });
         if (!response.ok) {
           const error = await response.json();
           throw new Error(error.error || "Failed to fetch pending listings");
@@ -85,7 +95,6 @@ export default function PendingApprovals() {
       }
     },
     staleTime: 0,
-    retry: 2,
   });
 
   const handleApprove = async (listingId: string) => {
@@ -175,97 +184,107 @@ export default function PendingApprovals() {
     );
   }
 
-  if (isLoading) return <div>Loading...</div>;
+  if (isLoading) {
+    return (
+      <div className="space-y-4">
+        <div className="flex items-center gap-4">
+          <Skeleton className="h-10 w-[384px]" />
+        </div>
+        <TableSkeleton columns={columns} />
+      </div>
+    );
+  }
 
   if (!pendingListings.length) {
     return (
       <div className="text-center py-8">
-        <p className="text-lg text-gray-600">No pending listings available</p>
+        <p className="text-lg text-gray-600 mb-2">No pending listings</p>
+        <p className="text-sm text-gray-500">All listings have been reviewed</p>
       </div>
     );
   }
 
   return (
     <div className="space-y-4">
-      <Input
-        placeholder="Search pending listings..."
-        value={filter}
-        onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-          setFilter(e.target.value)
-        }
-        className="max-w-sm"
-      />
+      <div className="flex items-center gap-4">
+        <Input
+          placeholder="Search pending listings..."
+          value={filter}
+          onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+            setFilter(e.target.value)
+          }
+          className="max-w-sm"
+        />
+      </div>
 
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead>Title</TableHead>
-            <TableHead>Email</TableHead>
-            <TableHead>Location</TableHead>
-            <TableHead>Wiki Mujeres</TableHead>
-            <TableHead>Submitted</TableHead>
-            <TableHead>Highlight</TableHead>
-            <TableHead>Actions</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {filteredListings.map((listing: PendingListing) => (
-            <TableRow
-              key={listing.id}
-              className="cursor-pointer hover:bg-gray-100"
-              onClick={() => setSelectedListing(listing)}>
-              <TableCell>{listing.home_info.title}</TableCell>
-              <TableCell>{listing.user_info.email}</TableCell>
-              <TableCell>{listing.home_info.city}</TableCell>
-              <TableCell>
-                {listing.user_info.recommended === "wikimujeres" ? "Yes" : "No"}
-              </TableCell>
-              <TableCell>
-                {new Date(listing.created_at).toLocaleDateString()}
-              </TableCell>
-              <TableCell onClick={(e) => e.stopPropagation()}>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => handleToggleHighlight(listing.id)}
-                  className={
-                    listing.is_highlighted ? "text-yellow-500" : "text-gray-400"
-                  }>
-                  <Star className="h-5 w-5" />
-                </Button>
-              </TableCell>
-              <TableCell
-                className="space-x-2"
-                onClick={(e) => e.stopPropagation()}>
-                <Button
-                  variant="default"
-                  size="sm"
-                  onClick={() =>
-                    setConfirmDialog({
-                      isOpen: true,
-                      type: "approve",
-                      listing,
-                    })
-                  }>
-                  Approve
-                </Button>
-                <Button
-                  variant="destructive"
-                  size="sm"
-                  onClick={() =>
-                    setConfirmDialog({
-                      isOpen: true,
-                      type: "reject",
-                      listing,
-                    })
-                  }>
-                  Reject
-                </Button>
-              </TableCell>
+      <div className="border rounded-md">
+        <Table>
+          <TableHeader>
+            <TableRow className="hover:bg-transparent">
+              {columns.map((column) => (
+                <TableHead
+                  key={column}
+                  className="text-center border-r h-11 font-medium last:border-r-0">
+                  {column}
+                </TableHead>
+              ))}
             </TableRow>
-          ))}
-        </TableBody>
-      </Table>
+          </TableHeader>
+          <TableBody>
+            {filteredListings.map((listing: PendingListing) => (
+              <TableRow
+                key={listing.id}
+                className="cursor-pointer hover:bg-gray-100"
+                onClick={() => setSelectedListing(listing)}>
+                <TableCell className="text-center border-r">
+                  {listing.home_info.title}
+                </TableCell>
+                <TableCell className="text-center border-r">
+                  {listing.user_info.email}
+                </TableCell>
+                <TableCell className="text-center border-r">
+                  {listing.home_info.city}
+                </TableCell>
+                <TableCell className="text-center border-r">
+                  {listing.user_info.recommended === "wikimujeres"
+                    ? "Yes"
+                    : "No"}
+                </TableCell>
+                <TableCell
+                  className="text-center"
+                  onClick={(e) => e.stopPropagation()}>
+                  <div className="flex justify-center gap-2">
+                    <Button
+                      variant="default"
+                      size="sm"
+                      onClick={() =>
+                        setConfirmDialog({
+                          isOpen: true,
+                          type: "approve",
+                          listing,
+                        })
+                      }>
+                      Approve
+                    </Button>
+                    <Button
+                      variant="destructive"
+                      size="sm"
+                      onClick={() =>
+                        setConfirmDialog({
+                          isOpen: true,
+                          type: "reject",
+                          listing,
+                        })
+                      }>
+                      Reject
+                    </Button>
+                  </div>
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </div>
 
       <ListingDetailsModal
         listing={selectedListing}

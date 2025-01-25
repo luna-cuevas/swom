@@ -11,6 +11,7 @@ type State = {
   activeNavButtons: boolean;
   unreadCount: number;
   unreadConversations: any[];
+  signInActive: boolean;
   allListings: {
     listings: any[];
     lastFetched: number;
@@ -59,6 +60,7 @@ const initialState: State = {
   activeNavButtons: false,
   unreadCount: 0,
   unreadConversations: [],
+  signInActive: false,
   allListings: {
     listings: [],
     lastFetched: 0,

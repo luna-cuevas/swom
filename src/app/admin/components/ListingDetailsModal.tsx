@@ -1,4 +1,3 @@
-import { useState, useEffect } from "react";
 import {
   Dialog,
   DialogContent,
@@ -15,6 +14,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import Image from "next/image";
 import { DragDropContext, Droppable, Draggable } from "react-beautiful-dnd";
 import { Upload, X } from "lucide-react";
+import { useState, useEffect, useCallback } from "react";
 
 interface ListingDetailsModalProps {
   listing: any;
@@ -127,12 +127,81 @@ export function ListingDetailsModal({
   const [isEditing, setIsEditing] = useState(false);
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
   const [isDragging, setIsDragging] = useState(false);
+  const [addressInput, setAddressInput] = useState("");
+  const [isSearching, setIsSearching] = useState(false);
+
+  const searchAddress = useCallback(async (query: string) => {
+    if (!query) return;
+
+    setIsSearching(true);
+    try {
+      const response = await fetch(
+        `/api/geocode?address=${encodeURIComponent(query)}`
+      );
+      if (!response.ok) throw new Error("Failed to geocode address");
+
+      const data = await response.json();
+      if (data.results && data.results[0]) {
+        const result = data.results[0];
+
+        // Extract city from address components
+        const cityComponent = result.address_components?.find(
+          (component: any) => component.types.includes("locality")
+        );
+
+        setEditedListing((prev: any) => ({
+          ...prev,
+          home_info: {
+            ...prev.home_info,
+            city: cityComponent?.long_name || prev.home_info.city,
+            address: {
+              lat: result.geometry.location.lat,
+              lng: result.geometry.location.lng,
+              query: result.formatted_address,
+            },
+            location: {
+              lat: result.geometry.location.lat,
+              lng: result.geometry.location.lng,
+            },
+          },
+        }));
+        setAddressInput(result.formatted_address);
+      }
+    } catch (error) {
+      console.error("Error geocoding address:", error);
+      toast.error("Failed to find address");
+    } finally {
+      setIsSearching(false);
+    }
+  }, []);
 
   useEffect(() => {
     if (listing) {
-      setEditedListing(JSON.parse(JSON.stringify(listing)));
+      // Create a deep copy of the listing
+      const listingCopy = JSON.parse(JSON.stringify(listing));
+      setEditedListing(listingCopy);
+      // Set the address input based on the listing's address
+      setAddressInput(
+        typeof listing.home_info.address === "object"
+          ? listing.home_info.address.query
+          : listing.home_info.address || ""
+      );
     }
   }, [listing]);
+
+  // Add another useEffect to handle updates
+  useEffect(() => {
+    if (!isEditing && listing) {
+      // Reset to the current listing data when exiting edit mode
+      const listingCopy = JSON.parse(JSON.stringify(listing));
+      setEditedListing(listingCopy);
+      setAddressInput(
+        typeof listing.home_info.address === "object"
+          ? listing.home_info.address.query
+          : listing.home_info.address || ""
+      );
+    }
+  }, [isEditing, listing]);
 
   if (!listing || !editedListing) return null;
 
@@ -207,6 +276,9 @@ export function ListingDetailsModal({
           home_info: {
             id: editedListing.home_info.id,
             ...editedListing.home_info,
+            city: editedListing.home_info.city,
+            address: editedListing.home_info.address,
+            location: editedListing.home_info.location,
           },
           user_info: {
             id: editedListing.user_info.id,
@@ -450,15 +522,37 @@ export function ListingDetailsModal({
                   <div>
                     <p className="text-sm text-gray-500">Location</p>
                     {isEditing ? (
-                      <Input
-                        value={editedListing.home_info.city}
-                        onChange={(e) =>
-                          handleInputChange("home_info", "city", e.target.value)
-                        }
-                        className="text-sm"
-                      />
+                      <div className="relative">
+                        <Input
+                          value={addressInput}
+                          onChange={(e) => setAddressInput(e.target.value)}
+                          onBlur={() => {
+                            if (addressInput) {
+                              searchAddress(addressInput);
+                            }
+                          }}
+                          onKeyDown={(e) => {
+                            if (e.key === "Enter") {
+                              e.preventDefault();
+                              searchAddress(addressInput);
+                            }
+                          }}
+                          placeholder="Search location"
+                          className="w-full text-sm"
+                        />
+                        {isSearching && (
+                          <div className="absolute right-2 top-1/2 transform -translate-y-1/2">
+                            <div className="animate-spin h-5 w-5 border-2 border-primary border-t-transparent rounded-full" />
+                          </div>
+                        )}
+                      </div>
                     ) : (
-                      <p className="text-sm">{listing.home_info.city}</p>
+                      <p className="text-sm">
+                        {typeof listing?.home_info?.address === "object"
+                          ? listing.home_info.address.query
+                          : listing?.home_info?.address ||
+                            "No location provided"}
+                      </p>
                     )}
                   </div>
                   <div>

@@ -4,7 +4,7 @@ import { getSupabaseClient } from "@/utils/supabaseClient";
 import Image from "next/image";
 import React, { ChangeEvent, use, useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
-import { ToastContainer, toast } from "react-toastify";
+import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { sanityClient } from "@/utils/sanityClient";
 import ImageUrlBuilder from "@sanity/image-url";
@@ -363,18 +363,7 @@ const Page = (props: Props) => {
           </div>
         </form>
       </div>
-      <ToastContainer
-        position="bottom-right"
-        autoClose={5000}
-        hideProgressBar={false}
-        newestOnTop={false}
-        closeOnClick
-        rtl={false}
-        pauseOnFocusLoss
-        draggable
-        pauseOnHover
-        theme="light"
-      />
+
       <div className=" md:block hidden  h-[45vh]  w-1/4 z-10 right-0 bottom-0 absolute">
         <Image
           src="/profile/profile-bg.png"
