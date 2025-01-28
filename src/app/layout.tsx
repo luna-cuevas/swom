@@ -15,7 +15,7 @@ import "react-toastify/dist/ReactToastify.css";
 import SignIn from "@/components/SignIn";
 
 export const metadata: Metadata = {
-  title: "SWOM - Swap your home.",
+  title: `SWOM - Swap your home. - ${process.env.NEXT_PUBLIC_VERCEL_ENV === "dev" && "[Development]"}`,
   description:
     "BE PART OF A HARMONIOUS COOPERATIVE GLOBAL COMMUNITY. Opening your home to others fosters your capacity for trust and generosity.",
   icons: [
@@ -37,11 +37,12 @@ export const metadata: Metadata = {
     "generosity",
   ].join(", "),
   robots: {
-    index: true,
-    follow: true,
+    index: process.env.NEXT_PUBLIC_VERCEL_ENV !== "dev" ? true : false,
+    follow: process.env.NEXT_PUBLIC_VERCEL_ENV === "production" ? true : false,
     googleBot: {
-      index: true,
-      follow: true,
+      index: process.env.NEXT_PUBLIC_VERCEL_ENV === "production" ? true : false,
+      follow:
+        process.env.NEXT_PUBLIC_VERCEL_ENV === "production" ? true : false,
     },
   },
   category: "Travel",
