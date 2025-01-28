@@ -27,6 +27,9 @@ import {
   GripVertical,
   Save,
   Plus,
+  Archive,
+  Upload,
+  Trash2,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { TableSkeleton } from "./TableSkeleton";
@@ -48,6 +51,7 @@ import {
 } from "@dnd-kit/sortable";
 import { SortableListingRow } from "./SortableListingRow";
 import { AddListingModal } from "./AddListingModal";
+import { DeleteListingModal } from "./DeleteListingModal";
 
 type HomeInfo = {
   id: string;
@@ -81,6 +85,7 @@ const columns = [
   "Title",
   "Email",
   "Location",
+  "Slug",
   "Status",
   "Wiki Mujeres",
   "Actions",
@@ -89,11 +94,13 @@ const columns = [
 export default function ListingsTable() {
   const [filter, setFilter] = useState("");
   const [wikiFilter, setWikiFilter] = useState<boolean | null>(null);
+  const [statusFilter, setStatusFilter] = useState<string | null>(null);
   const queryClient = useQueryClient();
   const [selectedListing, setSelectedListing] = useState<Listing | null>(null);
   const [isEditingOrder, setIsEditingOrder] = useState(false);
   const [pendingOrder, setPendingOrder] = useState<Listing[]>([]);
   const [isAddListingModalOpen, setIsAddListingModalOpen] = useState(false);
+  const [listingToDelete, setListingToDelete] = useState<Listing | null>(null);
 
   const sensors = useSensors(
     useSensor(PointerSensor),
@@ -137,11 +144,17 @@ export default function ListingsTable() {
       listing.home_info.city.toLowerCase().includes(filter.toLowerCase()) ||
       listing.slug.toLowerCase().includes(filter.toLowerCase());
 
+    const matchesStatus = statusFilter ? listing.status === statusFilter : true;
+
     if (wikiFilter !== null) {
-      return matchesSearch && listing.user_info.recommended === "wikimujeres";
+      return (
+        matchesSearch &&
+        listing.user_info.recommended === "wikimujeres" &&
+        matchesStatus
+      );
     }
 
-    return matchesSearch;
+    return matchesSearch && matchesStatus;
   });
 
   const handleToggleHighlight = async (
@@ -241,6 +254,41 @@ export default function ListingsTable() {
     }
   };
 
+  const handleTogglePublish = async (
+    listingId: string,
+    currentStatus: string | null,
+    e: React.MouseEvent
+  ) => {
+    e.stopPropagation();
+
+    try {
+      const response = await fetch("/api/admin/publishListing", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          listingId,
+          status: currentStatus === "published" ? "archive" : "publish",
+        }),
+      });
+
+      if (!response.ok) throw new Error("Failed to toggle publish status");
+
+      const data = await response.json();
+      toast.success(
+        `Listing ${data.status === "published" ? "published" : "archived"} successfully`
+      );
+
+      // Force a complete refetch
+      queryClient.removeQueries({ queryKey: ["listings"] });
+      await refetch();
+    } catch (error) {
+      console.error("Error toggling publish status:", error);
+      toast.error("Failed to toggle publish status");
+    }
+  };
+
   const handleDragEnd = (event: DragEndEvent) => {
     const { active, over } = event;
 
@@ -317,6 +365,18 @@ export default function ListingsTable() {
     setPendingOrder(filteredListings);
   };
 
+  const handleDelete = async () => {
+    await refetch();
+    setListingToDelete(null);
+  };
+
+  const statusOptions = [
+    { label: "All", value: null },
+    { label: "Published", value: "published" },
+    { label: "Approved", value: "approved" },
+    { label: "Archived", value: "archived" },
+  ];
+
   if (isLoading) {
     return (
       <div className="space-y-4">
@@ -361,6 +421,17 @@ export default function ListingsTable() {
             onClick={() => setWikiFilter(wikiFilter === true ? null : true)}>
             Wiki Mujeres Only
           </Button>
+          <div className="flex items-center gap-2">
+            {statusOptions.map((option) => (
+              <Button
+                key={option.value || "all"}
+                variant={statusFilter === option.value ? "default" : "outline"}
+                onClick={() => setStatusFilter(option.value)}
+                size="sm">
+                {option.label}
+              </Button>
+            ))}
+          </div>
         </div>
         <div className="flex items-center gap-2">
           <Button
@@ -428,6 +499,10 @@ export default function ListingsTable() {
                       onToggleHighlight={handleToggleHighlight}
                       onResendWelcome={handleResendWelcome}
                       onPasswordReset={handlePasswordReset}
+                      onTogglePublish={handleTogglePublish}
+                      onDelete={(listing: Listing) =>
+                        setListingToDelete(listing)
+                      }
                       showDragHandle={true}
                     />
                   ))}
@@ -444,6 +519,8 @@ export default function ListingsTable() {
                   onToggleHighlight={handleToggleHighlight}
                   onResendWelcome={handleResendWelcome}
                   onPasswordReset={handlePasswordReset}
+                  onTogglePublish={handleTogglePublish}
+                  onDelete={(listing: Listing) => setListingToDelete(listing)}
                   showDragHandle={false}
                 />
               ))}
@@ -472,6 +549,13 @@ export default function ListingsTable() {
           setIsAddListingModalOpen(false);
           refetch();
         }}
+      />
+
+      <DeleteListingModal
+        isOpen={!!listingToDelete}
+        onClose={() => setListingToDelete(null)}
+        onConfirm={handleDelete}
+        listing={listingToDelete}
       />
     </div>
   );

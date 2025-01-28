@@ -22,6 +22,7 @@ type Props = {
   exactAddress?: { lat: number; lng: number };
   radius?: number;
   hideMap?: boolean;
+  onCityChange?: (city: string) => void;
   listings?: Array<{
     id: string;
     user_info: { email: string };
@@ -46,6 +47,7 @@ function GoogleMapComponent(props: Props) {
     lat: 0,
     lng: 0,
   });
+  const [currentCity, setCurrentCity] = useState<string>("");
   const [autocomplete, setAutocomplete] = useState<any>(null);
   const [addressString, setAddressString] = useState<string>("");
   const [listingsLocations, setListingsLocations] = useState<any>([]);
@@ -183,25 +185,17 @@ function GoogleMapComponent(props: Props) {
           id: listing.id,
           homeInfo: {
             address: listing.home_info.address,
-            description: listing.home_info.description || "",
-            title: listing.home_info.title || "",
-            listingImages: listing.home_info.listing_images || [],
-            locatedIn: listing.home_info.located_in || "",
+            description: listing.home_info.description,
+            title: listing.home_info.title,
+            listingImages: listing.home_info.listing_images,
+            locatedIn: listing.home_info.located_in,
           },
           userInfo: {
-            email: listing.user_info?.email || "",
+            email: listing.user_info.email,
           },
-        }))
-        .filter((location) => location.lat && location.lng);
+        }));
 
       setListingsLocations(newLocations);
-
-      if (newLocations.length > 0 && !props.exactAddress) {
-        setCenter({
-          lat: newLocations[0].lat,
-          lng: newLocations[0].lng,
-        });
-      }
     }
   }, [props.exactAddress, isLoaded, props.listings, isMounted]);
 
@@ -224,11 +218,7 @@ function GoogleMapComponent(props: Props) {
         <div className="relative z-10" id="autocomplete-container">
           <Autocomplete
             onLoad={setAutocomplete}
-            onPlaceChanged={onPlaceChanged}
-            options={{
-              fields: ["formatted_address", "geometry"],
-              types: ["address"],
-            }}>
+            onPlaceChanged={onPlaceChanged}>
             <div className="relative">
               <input
                 className="w-full rounded-xl p-4 outline-none mb-4 shadow-sm border border-gray-200 pl-12 transition-all focus:border-[#F28A38] focus:ring-2 focus:ring-[#F28A38] focus:ring-opacity-20"

@@ -1,6 +1,6 @@
 "use client";
 import ListingCard from "@/app/listings/components/ListingCard";
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import dynamic from "next/dynamic";
 import { useQuery } from "@tanstack/react-query";
 import { useAtom } from "jotai";
@@ -8,6 +8,8 @@ import { globalStateAtom } from "@/context/atoms";
 import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import FilterModal from "./components/FilterModal";
+import { useSearchParams, useRouter } from "next/navigation";
+import debounce from "lodash/debounce";
 
 const GoogleMapComponent = dynamic(
   () => import("@/components/GoogleMapComponent"),
@@ -127,8 +129,21 @@ interface Filters {
   };
 }
 
-const fetchListings = async () => {
-  const response = await fetch("/api/members/getListings");
+interface ListingsResponse {
+  listings: Listing[];
+  totalCount: number;
+  currentPage: number;
+  totalPages: number;
+}
+
+const fetchListings = async (
+  page: number = 1,
+  limit: number = 9,
+  search: string = ""
+) => {
+  const response = await fetch(
+    `/api/members/getListings?page=${page}&limit=${limit}&search=${encodeURIComponent(search)}`
+  );
   if (!response.ok) {
     throw new Error("Failed to fetch listings");
   }
@@ -143,6 +158,19 @@ const ListingsPage = () => {
   const [showMap, setShowMap] = useState(false);
   const [showFavorites, setShowFavorites] = useState(false);
   const [showFilters, setShowFilters] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalCount, setTotalCount] = useState(0);
+  const [whereIsIt, setWhereIsIt] = useState<{
+    lat: number;
+    lng: number;
+    query: string;
+  }>({
+    lat: 0,
+    lng: 0,
+    query: "",
+  });
+  const [inputValue, setInputValue] = useState("");
   const [filters, setFilters] = useState<Filters>({
     propertyType: "",
     bedrooms: "",
@@ -181,10 +209,39 @@ const ListingsPage = () => {
     },
   });
   const [searchQuery, setSearchQuery] = useState("");
+  const [debouncedSearchQuery, setDebouncedSearchQuery] = useState("");
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const [isFiltered, setIsFiltered] = useState(false);
 
-  const { data: fetchedListings = [], isLoading: queryLoading } = useQuery({
-    queryKey: ["listings"],
-    queryFn: fetchListings,
+  // Create a debounced search function
+  const debouncedSetSearch = useCallback(
+    debounce((value: string) => {
+      setDebouncedSearchQuery(value);
+      setCurrentPage(1); // Reset to first page when search changes
+    }, 500), // 500ms delay
+    []
+  );
+
+  // Cleanup the debounced function on component unmount
+  useEffect(() => {
+    return () => {
+      debouncedSetSearch.cancel();
+    };
+  }, [debouncedSetSearch]);
+
+  const {
+    data: listingsData = {
+      listings: [],
+      totalCount: 0,
+      currentPage: 1,
+      totalPages: 1,
+      isFiltered: false,
+    },
+    isLoading: queryLoading,
+  } = useQuery<ListingsResponse & { isFiltered: boolean }>({
+    queryKey: ["listings", currentPage, debouncedSearchQuery],
+    queryFn: () => fetchListings(currentPage, 9, debouncedSearchQuery),
     refetchOnWindowFocus: true,
   });
 
@@ -241,49 +298,57 @@ const ListingsPage = () => {
   };
 
   useEffect(() => {
-    setListings(fetchedListings);
-    setFilteredListings(fetchedListings);
+    setListings(listingsData.listings);
+    setFilteredListings(listingsData.listings);
+    setTotalPages(listingsData.totalPages);
+    setTotalCount(listingsData.totalCount);
+    setIsFiltered(listingsData.isFiltered);
     setIsLoading(false);
-  }, [fetchedListings]);
+  }, [listingsData]);
 
+  // Separate effect for filtering
   useEffect(() => {
-    let result = [...listings];
+    if (!listings.length) return;
 
-    // Apply search filter
-    if (searchQuery) {
-      const query = searchQuery.toLowerCase();
-      result = result.filter(
-        (listing) =>
-          listing.home_info.title.toLowerCase().includes(query) ||
-          listing.home_info.city.toLowerCase().includes(query) ||
-          listing.home_info.description.toLowerCase().includes(query)
-      );
-    }
+    let result = [...listings];
 
     // Apply property filters
     if (filters.propertyType) {
       result = result.filter(
         (listing) =>
-          listing.home_info.property_type.toLowerCase() ===
+          listing?.home_info?.property_type?.toLowerCase() ===
           filters.propertyType.toLowerCase()
       );
     }
     if (filters.mainOrSecond) {
       result = result.filter(
         (listing) =>
-          listing.home_info.main_or_second.toLowerCase() ===
+          listing?.home_info?.main_or_second?.toLowerCase() ===
           filters.mainOrSecond.toLowerCase()
       );
     }
     if (filters.bedrooms) {
       result = result.filter(
         (listing) =>
-          listing.home_info.how_many_sleep === parseInt(filters.bedrooms)
+          listing?.home_info?.how_many_sleep === parseInt(filters.bedrooms)
       );
     }
     if (filters.bathrooms) {
       result = result.filter(
-        (listing) => listing.home_info.bathrooms === parseInt(filters.bathrooms)
+        (listing) =>
+          listing?.home_info?.bathrooms === parseInt(filters.bathrooms)
+      );
+    }
+
+    // Apply search filter
+    if (searchQuery) {
+      const query = searchQuery.toLowerCase();
+      result = result.filter(
+        (listing) =>
+          (listing?.home_info?.title?.toLowerCase()?.includes(query) ||
+            listing?.home_info?.city?.toLowerCase()?.includes(query) ||
+            listing?.home_info?.description?.toLowerCase()?.includes(query)) ??
+          false
       );
     }
 
@@ -304,6 +369,30 @@ const ListingsPage = () => {
     setFilteredListings(result);
   }, [listings, filters, showFavorites, searchQuery]);
 
+  // Handle whereIsIt changes
+  useEffect(() => {
+    console.log("whereIsIt", whereIsIt);
+    if (!whereIsIt || !whereIsIt.lat || !whereIsIt.lng || !listings.length)
+      return;
+
+    const geocoder = new window.google.maps.Geocoder();
+    geocoder.geocode(
+      { location: { lat: whereIsIt.lat, lng: whereIsIt.lng } },
+      (results, status) => {
+        if (status === "OK" && results?.[0]) {
+          const cityComponent = results[0].address_components?.find(
+            (component) =>
+              component.types.includes("locality") ||
+              component.types.includes("administrative_area_level_1")
+          );
+          if (cityComponent) {
+            setInputValue(cityComponent.long_name);
+          }
+        }
+      }
+    );
+  }, [whereIsIt?.lat, whereIsIt?.lng, listings.length]);
+
   // Update map focus when filtered listings change
   useEffect(() => {
     if (showMap && filteredListings.length > 0) {
@@ -317,6 +406,94 @@ const ListingsPage = () => {
       }
     }
   }, [showMap, filteredListings]);
+
+  const handlePageChange = (newPage: number) => {
+    setCurrentPage(newPage);
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
+  const renderPaginationControls = () => {
+    if (totalPages <= 1) return null;
+
+    const maxVisiblePages = isFiltered ? totalPages : Math.min(5, totalPages);
+    let startPage = 1;
+    let endPage = maxVisiblePages;
+
+    if (currentPage > 3 && !isFiltered) {
+      startPage = currentPage - 2;
+      endPage = Math.min(currentPage + 2, totalPages);
+    }
+
+    return (
+      <div className="flex justify-center items-center gap-4 mt-8">
+        <button
+          onClick={() => handlePageChange(currentPage - 1)}
+          disabled={currentPage === 1}
+          className={`px-4 py-2 rounded-lg border border-[#172544] ${
+            currentPage === 1
+              ? "bg-gray-100 text-gray-400 cursor-not-allowed"
+              : "bg-white text-[#172544] hover:bg-[#172544] hover:text-white"
+          }`}>
+          Previous
+        </button>
+
+        <div className="flex items-center gap-2">
+          {currentPage > 3 && !isFiltered && (
+            <>
+              <button
+                onClick={() => handlePageChange(1)}
+                className="w-10 h-10 rounded-lg border border-[#172544] bg-white text-[#172544] hover:bg-[#172544] hover:text-white">
+                1
+              </button>
+              {currentPage > 4 && (
+                <span className="px-2 text-gray-500">...</span>
+              )}
+            </>
+          )}
+
+          {Array.from(
+            { length: endPage - startPage + 1 },
+            (_, i) => startPage + i
+          ).map((page) => (
+            <button
+              key={page}
+              onClick={() => handlePageChange(page)}
+              className={`w-10 h-10 rounded-lg border border-[#172544] ${
+                currentPage === page
+                  ? "bg-[#172544] text-white"
+                  : "bg-white text-[#172544] hover:bg-[#172544] hover:text-white"
+              }`}>
+              {page}
+            </button>
+          ))}
+
+          {endPage < totalPages && !isFiltered && (
+            <>
+              {endPage < totalPages - 1 && (
+                <span className="px-2 text-gray-500">...</span>
+              )}
+              <button
+                onClick={() => handlePageChange(totalPages)}
+                className="w-10 h-10 rounded-lg border border-[#172544] bg-white text-[#172544] hover:bg-[#172544] hover:text-white">
+                {totalPages}
+              </button>
+            </>
+          )}
+        </div>
+
+        <button
+          onClick={() => handlePageChange(currentPage + 1)}
+          disabled={currentPage === totalPages}
+          className={`px-4 py-2 rounded-lg border border-[#172544] ${
+            currentPage === totalPages
+              ? "bg-gray-100 text-gray-400 cursor-not-allowed"
+              : "bg-white text-[#172544] hover:bg-[#172544] hover:text-white"
+          }`}>
+          Next
+        </button>
+      </div>
+    );
+  };
 
   if (isLoading || queryLoading) {
     return (
@@ -365,7 +542,10 @@ const ListingsPage = () => {
                 type="text"
                 placeholder="Search by city, title, or description..."
                 value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
+                onChange={(e) => {
+                  setSearchQuery(e.target.value);
+                  debouncedSetSearch(e.target.value);
+                }}
                 className="w-full px-4 py-3 rounded-xl border border-[#172544] bg-white pl-12 focus:outline-none focus:ring-2 focus:ring-[#172544] focus:border-transparent"
               />
               <div className="absolute left-4 top-1/2 transform -translate-y-1/2">
@@ -382,6 +562,27 @@ const ListingsPage = () => {
                   />
                 </svg>
               </div>
+              {searchQuery && (
+                <button
+                  onClick={() => {
+                    setSearchQuery("");
+                    debouncedSetSearch("");
+                  }}
+                  className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600">
+                  <svg
+                    className="w-5 h-5"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24">
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M6 18L18 6M6 6l12 12"
+                    />
+                  </svg>
+                </button>
+              )}
             </div>
           </div>
 
@@ -429,6 +630,26 @@ const ListingsPage = () => {
         </div>
       </div>
 
+      <div className="max-w-[1200px] mx-auto px-4">
+        <div className="flex pb-8">
+          {/* Debug logs */}
+          <div style={{ display: "none" }}>
+            {JSON.stringify({ whereIsIt, inputValue })}
+          </div>
+          <div
+            className={`m-auto ${whereIsIt.lat && whereIsIt.lng ? "flex flex-col w-fit" : "hidden"}`}>
+            <p className="text-2xl">Say hello to</p>
+            <h2 className="text-3xl capitalize">
+              {whereIsIt.lat && whereIsIt.lng ? inputValue : "the world."}
+            </h2>
+          </div>
+          <h1
+            className={`text-3xl m-auto ${whereIsIt.lat && whereIsIt.lng ? "text-right" : "text-center"}`}>
+            Let&apos;s discover your <br /> new adventure.
+          </h1>
+        </div>
+      </div>
+
       <div className="max-w-[1200px] mx-auto px-4 py-8">
         {filteredListings.length === 0 ? (
           <div className="text-center py-12">
@@ -448,6 +669,18 @@ const ListingsPage = () => {
                     }
                   : undefined
               }
+              setWhereIsIt={(newState) => {
+                if (typeof newState === "function") {
+                  setWhereIsIt(newState);
+                  return;
+                }
+                console.log("Setting whereIsIt to:", newState);
+                setWhereIsIt(newState);
+                if (newState.query) {
+                  setInputValue(newState.query);
+                  console.log("Setting inputValue to:", newState.query);
+                }
+              }}
               listings={filteredListings.map((listing) => ({
                 id: listing.id,
                 user_info: {
@@ -466,15 +699,19 @@ const ListingsPage = () => {
             />
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {filteredListings.map((listing) => (
-              <ListingCard
-                key={listing.id}
-                listing={listing}
-                setListings={setListings}
-              />
-            ))}
-          </div>
+          <>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+              {filteredListings.map((listing) => (
+                <ListingCard
+                  key={listing.id}
+                  listing={listing}
+                  setListings={setListings}
+                />
+              ))}
+            </div>
+
+            {renderPaginationControls()}
+          </>
         )}
       </div>
     </main>

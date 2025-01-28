@@ -1,5 +1,5 @@
 "use client";
-import CarouselPage from "@/app/listings/components/Carousel";
+import CarouselPage from "@/components/Carousel";
 import React, { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "react-toastify";
@@ -191,6 +191,31 @@ export default function Page() {
                     : "Archive Listing"}
                 </button>
               )}
+              {/* Add Listing Button - Only show if user has less than 2 active listings */}
+              {listings.filter(
+                (listing) =>
+                  listing.status === "approved" ||
+                  listing.status === "published"
+              ).length < 2 && (
+                <button
+                  onClick={() =>
+                    setState({ ...state, addListingModalOpen: true })
+                  }
+                  className="px-4 py-2 rounded-lg bg-[#7F8119] hover:bg-[#5F6115] text-white transition-colors flex items-center gap-2">
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    className="h-5 w-5"
+                    viewBox="0 0 20 20"
+                    fill="currentColor">
+                    <path
+                      fillRule="evenodd"
+                      d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z"
+                      clipRule="evenodd"
+                    />
+                  </svg>
+                  Add Listing
+                </button>
+              )}
             </div>
           </div>
         </div>
@@ -261,28 +286,6 @@ export default function Page() {
                     {listing.home_info.title || `Listing ${index + 1}`}
                   </button>
                 ))}
-                {listings &&
-                  listings.filter((listing) => listing.status === "approved")
-                    .length < 2 && (
-                    <button
-                      onClick={() =>
-                        setState({ ...state, addListingModalOpen: true })
-                      }
-                      className="px-4 py-2 rounded-full whitespace-nowrap transition-colors flex items-center gap-2 bg-gray-100 hover:bg-gray-200">
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        className="h-4 w-4"
-                        viewBox="0 0 20 20"
-                        fill="currentColor">
-                        <path
-                          fillRule="evenodd"
-                          d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z"
-                          clipRule="evenodd"
-                        />
-                      </svg>
-                      Add Listing
-                    </button>
-                  )}
               </div>
             </div>
 

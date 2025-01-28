@@ -324,9 +324,7 @@ export function AddListingModal({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent
-        className="max-w-4xl max-h-[90vh] overflow-y-auto"
-        style={{ zIndex: 49 }}>
+      <DialogContent className="max-w-4xl max-h-[90vh] " style={{ zIndex: 49 }}>
         <DialogHeader>
           <DialogTitle>Add New Listing</DialogTitle>
         </DialogHeader>
@@ -787,16 +785,16 @@ export function AddListingModal({
           {/* Admin Options */}
           <div className="space-y-4">
             <h3 className="text-lg font-semibold">Admin Options</h3>
-            <RadioGroup
-              {...register("adminOption", {
-                required: "Please select an option",
-              })}
-              className="space-y-4"
-              defaultValue="sendWelcomeEmail">
+            <div className="space-y-4">
               <div className="flex items-center space-x-2">
-                <RadioGroupItem
-                  value="sendWelcomeEmail"
+                <input
+                  type="radio"
                   id="sendWelcomeEmail"
+                  value="sendWelcomeEmail"
+                  {...register("adminOption", {
+                    required: "Please select an option",
+                  })}
+                  className="h-4 w-4 border-gray-300 text-primary focus:ring-primary"
                 />
                 <Label htmlFor="sendWelcomeEmail">
                   Send welcome email with sign up link (user will need to
@@ -804,12 +802,20 @@ export function AddListingModal({
                 </Label>
               </div>
               <div className="flex items-center space-x-2">
-                <RadioGroupItem value="setSubscribed" id="setSubscribed" />
+                <input
+                  type="radio"
+                  id="setSubscribed"
+                  value="setSubscribed"
+                  {...register("adminOption", {
+                    required: "Please select an option",
+                  })}
+                  className="h-4 w-4 border-gray-300 text-primary focus:ring-primary"
+                />
                 <Label htmlFor="setSubscribed">
                   Mark as subscribed (skip payment and registration)
                 </Label>
               </div>
-            </RadioGroup>
+            </div>
             {errors.adminOption && (
               <p className="text-sm text-red-500">
                 {errors.adminOption.message}

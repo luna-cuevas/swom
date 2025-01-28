@@ -188,7 +188,7 @@ export async function GET(request: Request) {
         amenities:amenities_id(*)
       `
       )
-      .in("status", ["archived", "approved"]);
+      .in("status", ["archived", "approved", "published"]);
 
     if (id) {
       query = query.eq("id", id);

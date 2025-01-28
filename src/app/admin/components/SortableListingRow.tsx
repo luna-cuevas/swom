@@ -8,7 +8,16 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { GripVertical, Star, StarOff, Mail, Key } from "lucide-react";
+import {
+  GripVertical,
+  Star,
+  StarOff,
+  Mail,
+  Key,
+  Archive,
+  Upload,
+  Trash2,
+} from "lucide-react";
 import { cn } from "@/lib/utils";
 
 type HomeInfo = {
@@ -43,12 +52,18 @@ type Props = {
   listing: Listing;
   onSelect: () => void;
   onToggleHighlight: (
-    id: string,
+    listingId: string,
     currentState: boolean,
     e: React.MouseEvent
   ) => void;
   onResendWelcome: (listing: Listing, e: React.MouseEvent) => void;
   onPasswordReset: (listing: Listing, e: React.MouseEvent) => void;
+  onTogglePublish: (
+    listingId: string,
+    currentStatus: string | null,
+    e: React.MouseEvent
+  ) => void;
+  onDelete: (listing: Listing) => void;
   showDragHandle?: boolean;
 };
 
@@ -58,6 +73,8 @@ export function SortableListingRow({
   onToggleHighlight,
   onResendWelcome,
   onPasswordReset,
+  onTogglePublish,
+  onDelete,
   showDragHandle = false,
 }: Props) {
   const {
@@ -104,11 +121,14 @@ export function SortableListingRow({
         {listing.home_info.city}
       </TableCell>
       <TableCell className="text-center border-r" onClick={onSelect}>
+        {listing.slug}
+      </TableCell>
+      <TableCell className="text-center border-r" onClick={onSelect}>
         <div className="flex flex-col gap-1 items-center">
           <span
             className={cn(
               "px-1 py-1 capitalize text-[10px] font-medium",
-              listing.status === "approved"
+              listing.status === "approved" || listing.status === "published"
                 ? "bg-green-100 text-green-800"
                 : listing.status === "pending"
                   ? "bg-yellow-100 text-yellow-800"
@@ -141,28 +161,28 @@ export function SortableListingRow({
               <TooltipTrigger asChild>
                 <Button
                   variant="ghost"
-                  size="sm"
+                  size="icon"
+                  className={cn(
+                    "h-8 w-8",
+                    listing.status === "published" &&
+                      "text-green-600 hover:text-green-700",
+                    listing.status === "archived" &&
+                      "text-gray-400 hover:text-gray-500"
+                  )}
                   onClick={(e) =>
-                    onToggleHighlight(listing.id, listing.is_highlighted, e)
-                  }
-                  className={
-                    listing.is_highlighted
-                      ? "text-yellow-500 hover:text-yellow-600"
-                      : "text-gray-400 hover:text-gray-500"
+                    onTogglePublish(listing.id, listing.status, e)
                   }>
-                  {listing.is_highlighted ? (
-                    <Star className="h-4 w-4 fill-current" />
+                  {listing.status === "published" ? (
+                    <Archive className="h-4 w-4" />
                   ) : (
-                    <StarOff className="h-4 w-4" />
+                    <Upload className="h-4 w-4" />
                   )}
                 </Button>
               </TooltipTrigger>
               <TooltipContent>
-                <p>
-                  {listing.is_highlighted
-                    ? "Remove highlight"
-                    : "Highlight listing"}
-                </p>
+                {listing.status === "published"
+                  ? "Archive Listing"
+                  : "Publish Listing"}
               </TooltipContent>
             </Tooltip>
           </TooltipProvider>
@@ -172,9 +192,38 @@ export function SortableListingRow({
               <TooltipTrigger asChild>
                 <Button
                   variant="ghost"
-                  size="sm"
-                  onClick={(e) => onResendWelcome(listing, e)}
-                  className="text-blue-500 hover:text-blue-600">
+                  size="icon"
+                  className={cn(
+                    "h-8 w-8",
+                    listing.is_highlighted &&
+                      "text-yellow-600 hover:text-yellow-700"
+                  )}
+                  onClick={(e) =>
+                    onToggleHighlight(listing.id, listing.is_highlighted, e)
+                  }>
+                  {listing.is_highlighted ? (
+                    <Star className="h-4 w-4 fill-current" />
+                  ) : (
+                    <StarOff className="h-4 w-4" />
+                  )}
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>
+                {listing.is_highlighted
+                  ? "Remove Highlight"
+                  : "Highlight Listing"}
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-8 w-8"
+                  onClick={(e) => onResendWelcome(listing, e)}>
                   <Mail className="h-4 w-4" />
                 </Button>
               </TooltipTrigger>
@@ -189,15 +238,33 @@ export function SortableListingRow({
               <TooltipTrigger asChild>
                 <Button
                   variant="ghost"
-                  size="sm"
-                  onClick={(e) => onPasswordReset(listing, e)}
-                  className="text-purple-500 hover:text-purple-600">
+                  size="icon"
+                  className="h-8 w-8"
+                  onClick={(e) => onPasswordReset(listing, e)}>
                   <Key className="h-4 w-4" />
                 </Button>
               </TooltipTrigger>
               <TooltipContent>
                 <p>Send password reset email</p>
               </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-8 w-8 text-red-600 hover:text-red-700"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onDelete(listing);
+                  }}>
+                  <Trash2 className="h-4 w-4" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>Delete Listing</TooltipContent>
             </Tooltip>
           </TooltipProvider>
         </div>

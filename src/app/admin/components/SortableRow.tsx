@@ -87,6 +87,9 @@ export function SortableRow({
         {listing.home_info.city}
       </TableCell>
       <TableCell className="text-center border-r" onClick={onSelect}>
+        {listing.highlight_tag || "No tagline set"}
+      </TableCell>
+      <TableCell className="text-center border-r" onClick={onSelect}>
         {listing.user_info.recommended === "wikimujeres" ? "Yes" : "No"}
       </TableCell>
       <TableCell className="text-center" onClick={(e) => e.stopPropagation()}>

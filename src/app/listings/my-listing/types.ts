@@ -55,7 +55,7 @@ export interface Listing {
   id: string;
   created_at: string;
   updated_at: string;
-  status: "pending" | "approved" | "archived";
+  status: "pending" | "approved" | "archived" | "published";
   home_info: HomeInfo;
   user_info: UserInfo;
   amenities: Amenities & { id: string };

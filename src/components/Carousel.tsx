@@ -13,6 +13,7 @@ import Counter from "yet-another-react-lightbox/plugins/counter";
 import "yet-another-react-lightbox/plugins/counter.css";
 import Slideshow from "yet-another-react-lightbox/plugins/slideshow";
 import "yet-another-react-lightbox/styles.css";
+import { usePathname } from "next/navigation";
 
 type Props = {
   images: {
@@ -33,6 +34,8 @@ const CarouselPage = (props: Props) => {
   const [selectedImage, setSelectedImage] = useState(0); // Updated
   const slideshowRef = useRef(null);
   const [isMounted, setIsMounted] = useState(false);
+  const pathname = usePathname();
+  console.log(pathname);
 
   useEffect(() => {
     setIsMounted(true);
@@ -65,7 +68,8 @@ const CarouselPage = (props: Props) => {
 
   return (
     <div className="relative w-full h-full flex justify-center mx-auto ">
-      <div className="h-full w-full max-w-[1140px] mx-auto">
+      <div
+        className={`h-full w-full mx-auto ${pathname !== "/home" && "max-w-[1140px]"}`}>
         <Lightbox
           index={selectedImage}
           slides={[
@@ -81,7 +85,7 @@ const CarouselPage = (props: Props) => {
               backgroundColor: "#fff",
               height: "100%",
               width: "100%",
-              maxWidth: "1140px",
+              maxWidth: pathname !== "/home" ? "1140px" : "100%",
               margin: "0 auto",
               display: "flex",
               alignItems: "center",
@@ -135,7 +139,7 @@ const CarouselPage = (props: Props) => {
           }}
           plugins={[
             Inline,
-            ...(props.thumbnails ? [Thumbnails] : []),
+            // ...(props.thumbnails ? [Thumbnails] : []),
             ...(props.thumbnails ? [Counter] : []),
             Slideshow,
           ]}
@@ -285,7 +289,7 @@ const CarouselPage = (props: Props) => {
             backgroundColor: "rgba(0, 0, 0, 0.95)",
           },
           thumbnailsContainer: {
-            backgroundColor: "#2A4074",
+            backgroundColor: "#000000c0",
             padding: "12px",
           },
           thumbnail: {

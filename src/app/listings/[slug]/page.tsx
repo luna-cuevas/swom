@@ -1,5 +1,5 @@
 "use client";
-import CarouselPage from "@/app/listings/components/Carousel";
+import CarouselPage from "@/components/Carousel";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
 import React, { useEffect, useState } from "react";

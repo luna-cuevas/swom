@@ -113,13 +113,21 @@ interface ListingWithFavorite extends TransformedListing {
   favorite: boolean;
 }
 
-export async function GET() {
+export async function GET(request: Request) {
   const supabase = createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL as string,
     process.env.SUPABASE_SERVICE_ROLE_KEY as string
   );
 
   try {
+    // Get pagination and search parameters from URL
+    const url = new URL(request.url);
+    const page = parseInt(url.searchParams.get("page") || "1");
+    const limit = parseInt(url.searchParams.get("limit") || "9");
+    const searchQuery = url.searchParams.get("search") || "";
+    const start = (page - 1) * limit;
+
+    // First get all listings to apply search filter
     const { data: listings, error: listingsError } = await supabase
       .from("listings")
       .select(
@@ -177,7 +185,7 @@ export async function GET() {
         amenities:amenities_id(*)
       `
       )
-      .eq("status", "approved")
+      .eq("status", "published")
       .order("global_order_rank", { ascending: true })
       .returns<Listing[]>();
 
@@ -193,9 +201,22 @@ export async function GET() {
       },
     }));
 
+    // Filter listings based on search query
+    let filteredBySearch = transformedListings;
+    if (searchQuery) {
+      const query = searchQuery.toLowerCase();
+      filteredBySearch = transformedListings.filter(
+        (listing) =>
+          listing.home_info.title?.toLowerCase().includes(query) ||
+          listing.home_info.city?.toLowerCase().includes(query) ||
+          listing.home_info.description?.toLowerCase().includes(query) ||
+          listing.home_info.located_in?.toLowerCase().includes(query)
+      );
+    }
+
     // Filter listings to only include those where the user has an active subscription
     const listingsWithActiveSubs = await Promise.all(
-      transformedListings.map(async (listing) => {
+      filteredBySearch.map(async (listing) => {
         const { data: appUser } = await supabase
           .from("appUsers")
           .select("subscribed, favorites")
@@ -216,11 +237,22 @@ export async function GET() {
     );
 
     // Remove null entries (listings without active subscriptions)
-    const filteredListings = listingsWithActiveSubs.filter(
+    const finalFilteredListings = listingsWithActiveSubs.filter(
       (listing): listing is ListingWithFavorite => listing !== null
     );
 
-    return NextResponse.json(filteredListings);
+    // Calculate pagination for filtered results
+    const totalFilteredCount = finalFilteredListings.length;
+    const totalPages = Math.ceil(totalFilteredCount / limit);
+    const paginatedListings = finalFilteredListings.slice(start, start + limit);
+
+    return NextResponse.json({
+      listings: paginatedListings,
+      totalCount: totalFilteredCount,
+      currentPage: page,
+      totalPages,
+      isFiltered: searchQuery !== "",
+    });
   } catch (error) {
     console.error("Error fetching listings:", error);
     return NextResponse.json(

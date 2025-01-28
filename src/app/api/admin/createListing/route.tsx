@@ -17,9 +17,9 @@ export async function POST(req: Request) {
       .replace(/[^a-z0-9]+/g, "-")
       .replace(/(^-|-$)/g, "");
 
-    // Start with user info
+    // Always look up the user first to get their ID
     const { data: existingUser } = await supabase
-      .from("users")
+      .from("appUsers")
       .select("id")
       .eq("email", user_info.email)
       .single();
@@ -28,8 +28,8 @@ export async function POST(req: Request) {
 
     if (existingUser) {
       userId = existingUser.id;
-    } else {
-      // Create user in auth system
+    } else if (!options.setSubscribed) {
+      // Only create new user if not setting as subscribed
       const { data: userData, error: userError } =
         await supabase.auth.admin.createUser({
           email: user_info.email,
@@ -50,6 +50,10 @@ export async function POST(req: Request) {
       }
 
       userId = userData.user.id;
+    } else {
+      throw new Error(
+        "User does not exist. Cannot create listing without a user."
+      );
     }
 
     // Insert user info
@@ -137,7 +141,7 @@ export async function POST(req: Request) {
     const { data: listingData, error: listingError } = await supabase
       .from("listings")
       .insert({
-        user_id: userId,
+        user_id: userId, // Now we always have a user ID
         email: user_info.email,
         user_info_id: userInfoData.id,
         home_info_id: homeInfoData.id,
@@ -156,80 +160,83 @@ export async function POST(req: Request) {
 
     if (listingError) throw listingError;
 
-    // Create entry in appUsers table
-    const { error: appUserError } = await supabase.from("appUsers").insert({
-      id: userId,
-      name: user_info.name,
-      email: user_info.email,
-      role: "member",
-      profession: user_info.profession || "",
-      age: user_info.age || "",
-      profileImage: "",
-      favorites: [],
-      privacyPolicy: "accepted",
-      privacyPolicyDate: new Date().toISOString(),
-      created_at: new Date().toISOString(),
-      subscribed: options.setSubscribed,
-    });
+    // Only create appUser and send emails if not setSubscribed
+    if (!options.setSubscribed) {
+      // Create entry in appUsers table
+      const { error: appUserError } = await supabase.from("appUsers").insert({
+        id: userId,
+        name: user_info.name,
+        email: user_info.email,
+        role: "member",
+        profession: user_info.profession || "",
+        age: user_info.age || "",
+        profileImage: "",
+        favorites: [],
+        privacyPolicy: "accepted",
+        privacyPolicyDate: new Date().toISOString(),
+        created_at: new Date().toISOString(),
+        subscribed: options.setSubscribed,
+      });
 
-    if (appUserError) throw appUserError;
+      if (appUserError) throw appUserError;
 
-    // Send welcome email if requested
-    if (options.sendWelcomeEmail) {
-      // Send template 1 (approval email)
-      const approvalEmailResponse = await fetch(
-        `${process.env.BASE_URL}/api/admin/sendBrevoTemplate`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            email: user_info.email,
-            templateId: 1,
-            params: {
-              name: user_info.name,
+      // Send welcome email if requested
+      if (options.sendWelcomeEmail) {
+        // Send template 1 (approval email)
+        const approvalEmailResponse = await fetch(
+          `${process.env.BASE_URL}/api/admin/sendBrevoTemplate`,
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
             },
-          }),
-        }
-      );
-
-      if (!approvalEmailResponse.ok) {
-        console.error(
-          "Failed to send approval email:",
-          await approvalEmailResponse.json()
+            body: JSON.stringify({
+              email: user_info.email,
+              templateId: 1,
+              params: {
+                name: user_info.name,
+              },
+            }),
+          }
         );
-      }
 
-      // Send template 3 (sign-up email)
-      const resetUrl =
-        process.env.NODE_ENV === "development"
-          ? `http://localhost:3000/sign-up?email=${user_info.email}`
-          : `https://swom.travel/sign-up?email=${user_info.email}`;
+        if (!approvalEmailResponse.ok) {
+          console.error(
+            "Failed to send approval email:",
+            await approvalEmailResponse.json()
+          );
+        }
 
-      const signupEmailResponse = await fetch(
-        `${process.env.BASE_URL}/api/admin/sendBrevoTemplate`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            email: user_info.email,
-            templateId: 3,
-            params: {
-              name: user_info.name,
-              url: resetUrl,
+        // Send template 3 (sign-up email)
+        const resetUrl =
+          process.env.NODE_ENV === "development"
+            ? `http://localhost:3000/sign-up?email=${user_info.email}`
+            : `https://swom.travel/sign-up?email=${user_info.email}`;
+
+        const signupEmailResponse = await fetch(
+          `${process.env.BASE_URL}/api/admin/sendBrevoTemplate`,
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
             },
-          }),
-        }
-      );
-
-      if (!signupEmailResponse.ok) {
-        console.error(
-          "Failed to send signup email:",
-          await signupEmailResponse.json()
+            body: JSON.stringify({
+              email: user_info.email,
+              templateId: 3,
+              params: {
+                name: user_info.name,
+                url: resetUrl,
+              },
+            }),
+          }
         );
+
+        if (!signupEmailResponse.ok) {
+          console.error(
+            "Failed to send signup email:",
+            await signupEmailResponse.json()
+          );
+        }
       }
     }
 

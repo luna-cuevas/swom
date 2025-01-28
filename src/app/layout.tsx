@@ -113,6 +113,7 @@ export default function RootLayout({
             draggable
             pauseOnHover
             theme="light"
+            limit={5}
           />
         </body>
       </Providers>

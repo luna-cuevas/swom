@@ -56,7 +56,14 @@ type HighlightedListing = {
   global_order_rank: number;
 };
 
-const columns = ["Title", "Email", "Location", "Wiki Mujeres", "Actions"];
+const columns = [
+  "Title",
+  "Email",
+  "Location",
+  "Tagline",
+  "Wiki Mujeres",
+  "Actions",
+];
 
 export default function HighlightedListings() {
   const queryClient = useQueryClient();
