@@ -1,5 +1,5 @@
 "use client";
-import React, { useEffect } from "react";
+import React, { useEffect, useRef } from "react";
 import { Auth } from "@supabase/auth-ui-react";
 import { getSupabaseClient } from "@/utils/supabaseClient";
 import { toast } from "react-toastify";
@@ -11,6 +11,7 @@ import { globalStateAtom } from "@/context/atoms";
 const SignIn = () => {
   const supabase = getSupabaseClient();
   const [state, setState] = useAtom(globalStateAtom);
+  const hasShownToast = useRef(false);
 
   async function isUserSubscribed(email: string): Promise<boolean> {
     console.log("checking subscription status");
@@ -78,18 +79,25 @@ const SignIn = () => {
   };
 
   const handleAuthChange = async (event: any, session: any) => {
-    console.log("session", session);
+    console.log("=== Auth Change Debug ===");
+    console.log("Event:", event);
+    console.log("Session user ID:", session?.user?.id);
+    console.log("Current state user ID:", state.user.id);
+    console.log("Full state:", state);
+    
     if (event === "SIGNED_IN" && session !== null) {
-      console.log("session", session);
-      toast.success("Signed in successfully");
       const loggedInUser = await fetchLoggedInUser(session.user);
       const subbed = await isUserSubscribed(session.user.email);
+      
+      if (!hasShownToast.current) {
+        toast.success("Signed in successfully");
+        hasShownToast.current = true;
+      }
 
       setState((prevState) => ({
         ...prevState,
         session,
         user: {
-          ...prevState.user,
           email: session.user.email,
           id: session.user.id,
           name: loggedInUser?.name || "",
@@ -108,6 +116,7 @@ const SignIn = () => {
         signInActive: false,
       }));
     } else if (event === "SIGNED_OUT") {
+      hasShownToast.current = false;  // Reset the ref when user signs out
       setState((prevState) => ({
         ...prevState,
         session: null,
