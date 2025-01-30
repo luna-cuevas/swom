@@ -1,12 +1,12 @@
-import { supabaseClient } from '@/utils/supabaseClient';
-import { NextResponse } from 'next/server';
+import { getSupabaseClient } from "@/utils/supabaseClient";
+import { NextResponse } from "next/server";
 
 export async function POST(req: Request, res: Response) {
-  const supabase = supabaseClient();
+  const supabase = getSupabaseClient();
 
   const body = await req.json();
   const { data: user, error: userError } = await supabase
-    .from('listings')
+    .from("listings")
     .upsert(
       {
         user_id: body.id,
@@ -18,11 +18,11 @@ export async function POST(req: Request, res: Response) {
         ignoreDuplicates: false,
       }
     )
-    .eq('user_id', body.id)
-    .select('*');
+    .eq("user_id", body.id)
+    .select("*");
 
   const { data: appUserData, error: appUserDataError } = await supabase
-    .from('appUsers')
+    .from("appUsers")
     .upsert({
       id: body.id,
       name: body.data.userInfo.name,
@@ -30,7 +30,7 @@ export async function POST(req: Request, res: Response) {
       age: body.data.userInfo.age,
       profileImage: body.data.userInfo.profileImage,
     })
-    .eq('id', body.id);
+    .eq("id", body.id);
 
   if (userError || appUserDataError) {
     return NextResponse.json({ res, error: userError || appUserDataError });

@@ -1,16 +1,16 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { supabaseClient } from "@/utils/supabaseClient";
+import { getSupabaseClient } from "@/utils/supabaseClient";
 import { useRouter, useSearchParams } from "next/navigation";
-import { ToastContainer, toast } from "react-toastify";
+import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { useAtom } from "jotai";
 import { globalStateAtom } from "@/context/atoms";
-import Stripe from "stripe";
+import { stripe } from "@/utils/stripe";
 
 const ResetPassword = () => {
-  const supabase = supabaseClient();
+  const supabase = getSupabaseClient();
   const router = useRouter();
   const searchParams = useSearchParams();
   const [password, setPassword] = useState("");
@@ -18,13 +18,6 @@ const ResetPassword = () => {
 
   const accessToken = searchParams.get("access_token");
   const type = searchParams.get("type");
-
-  const stripeActivation = new Stripe(
-    process.env.NEXT_PUBLIC_STRIPE_SECRET_KEY!,
-    {
-      apiVersion: "2023-08-16",
-    }
-  );
 
   const [state, setState] = useAtom(globalStateAtom);
 
@@ -117,10 +110,7 @@ const ResetPassword = () => {
       console.log("session", session);
       toast.success("Signed in successfully");
       const loggedInUser = await fetchLoggedInUser(session.user);
-      const subbed = await isUserSubscribed(
-        session.user.email,
-        stripeActivation
-      );
+      const subbed = await isUserSubscribed(session.user.email, stripe);
       setState({
         ...state,
         session,

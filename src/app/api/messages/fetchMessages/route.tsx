@@ -1,32 +1,36 @@
-import { supabaseClient } from '@/utils/supabaseClient';
-import { NextResponse } from 'next/server';
+import { getSupabaseClient } from "@/utils/supabaseClient";
+import { NextResponse } from "next/server";
 
 export async function POST(req: Request, res: Response) {
-  const supabase = supabaseClient();
+  const supabase = getSupabaseClient();
   const body = await req.json();
   const { data, error } = await supabase
-    .from('messages')
-    .select('*')
-    .eq('conversation_id', body.id);
+    .from("messages")
+    .select("*")
+    .eq("conversation_id", body.id);
 
-
-    // Delete all read receipts for the given conversation ID and user ID
-    const { error: deleteError } = await supabase
-    .from('read_receipts')
+  // Delete all read receipts for the given conversation ID and user ID
+  const { error: deleteError } = await supabase
+    .from("read_receipts")
     .delete()
-    .eq('conversation_id', body.id)
-    .eq('user_id', body.user);
+    .eq("conversation_id", body.id)
+    .eq("user_id", body.user);
 
   if (deleteError) {
-    console.error('Error deleting read receipts:', deleteError);
+    console.error("Error deleting read receipts:", deleteError);
     return NextResponse.json({ error: deleteError.message }, { status: 500 });
   }
 
-  console.log('Deleted read receipts for conversation:', body.id, 'user:', body.user);
+  console.log(
+    "Deleted read receipts for conversation:",
+    body.id,
+    "user:",
+    body.user
+  );
 
   if (error) {
     throw error;
   }
-  console.log('messages', data);
+  console.log("messages", data);
   return NextResponse.json(data);
 }

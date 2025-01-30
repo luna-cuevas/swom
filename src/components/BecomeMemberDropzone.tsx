@@ -1,7 +1,7 @@
 "use client";
 import React, { useEffect, useState } from "react";
 import { useDropzone } from "react-dropzone";
-import { ToastContainer, toast } from "react-toastify";
+import { toast } from "react-toastify";
 import SortableList, { SortableItem } from "react-easy-sort";
 import { arrayMoveImmutable } from "array-move";
 import "react-toastify/dist/ReactToastify.css";
@@ -21,6 +21,13 @@ const BecomeMemberDropzone: React.FC<Props> = (props) => {
   const [orderedImageFiles, setOrderedImageFiles] = useState<File[]>(
     props.imageFiles
   );
+
+  const handleClose = () => {
+    setState({
+      ...state,
+      imgUploadPopUp: false,
+    });
+  };
 
   const { getRootProps, getInputProps } = useDropzone({
     onDropRejected: (fileRejections) => {
@@ -141,78 +148,117 @@ const BecomeMemberDropzone: React.FC<Props> = (props) => {
   };
 
   return (
-    <div className="flex bg-[#d2d2d244] z-0 rounded-lg flex-col h-fit w-full top-0 bottom-0 left-0 right-0 m-auto">
+    <div className="flex relative bg-white shadow-xl rounded-xl flex-col h-fit w-full top-0 bottom-0 left-0 right-0 m-auto p-4">
       <button
         type="button"
-        className=" ml-auto z-10 w-fit mr-2 text-sm bg-red-300 text-white px-1 h-fit rounded-full cursor-pointer"
-        onClick={() => {
-          setState({
-            ...state,
-            imgUploadPopUp: false,
-          });
-        }}>
-        X
+        className="ml-auto text-gray-500 hover:text-gray-700 transition-colors"
+        onClick={handleClose}>
+        <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+          <path
+            fillRule="evenodd"
+            d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
+            clipRule="evenodd"
+          />
+        </svg>
       </button>
+
       <div
         {...getRootProps({
           className:
-            "w-full flex h-full m-auto cursor-pointer p-4 text-center ",
+            "w-full relative flex h-full m-auto cursor-pointer p-8 text-center border-2 border-dashed border-gray-300 bg-gray-50 hover:bg-gray-100 transition-colors rounded-lg my-4",
         })}>
         <input {...getInputProps()} />
-        <p className="text-[#000000] m-auto text-base border-2 border-[#939393] p-4">
-          Drag and drop image(s) here, or click to select files
-        </p>
+        <div className="m-auto space-y-4">
+          <svg
+            className="w-12 h-12 text-gray-400 mx-auto"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24">
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
+            />
+          </svg>
+          <p className="text-gray-600">
+            Drag and drop image(s) here, or click to select files
+          </p>
+        </div>
       </div>
 
-      <div className="border-y-2 border-gray-400 py-2">
-        <p className="text-center text-base">
+      <div className="bg-gray-50 px-4 py-3 border-t border-b">
+        <p className="text-center text-sm text-gray-600">
           You can upload up to 15 images. Drag to rearrange the order. The first
           image will be the cover image.
         </p>
       </div>
-      <div className=" max-h-[50vh]  overflow-y-auto border-[#939393] pt-4">
+
+      <div className="max-h-[50vh] overflow-y-auto p-4">
+        <style jsx global>{`
+          .dragged {
+            cursor: grabbing !important;
+            background: white;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+            transform: scale(1.02);
+            z-index: 50;
+            height: 200px !important;
+            width: 200px !important;
+          }
+          .dragged > div {
+            height: 100% !important;
+            padding-top: 0 !important;
+          }
+          .dragged img {
+            object-fit: cover !important;
+            height: 100% !important;
+            width: 100% !important;
+          }
+        `}</style>
         <SortableList
           onSortEnd={onSortEnd}
           draggedItemClassName="dragged"
-          className="grid grid-cols-1 md:grid-cols-3 select-none gap-4 z-0">
+          className="grid grid-cols-1 md:grid-cols-3 gap-4">
           {items.map(({ image, name, index }) => (
             <div
               key={name}
-              className={` flex ${
-                index == items[0].index && "border-4 border-blue-500"
-              }   justify-center  m-auto`}>
+              className={`relative group cursor-grab active:cursor-grabbing h-[200px] w-full ${
+                index === items[0].index
+                  ? "ring-2 ring-blue-500 ring-offset-2"
+                  : ""
+              } rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-shadow`}>
               <SortableItem>
-                <div className="drag-item relative w-[200px] h-[200px] pointer-events-none">
-                  <Image
-                    className="m-auto object-cover"
-                    fill
-                    alt={name}
-                    src={image}
-                  />
-                  <button
-                    type="button"
-                    onClick={() => handleRemoveImage(index)}
-                    className="absolute pointer-events-auto z-[1000] text-sm top-2 right-2 bg-red-300 text-white px-1 h-fit rounded-full cursor-pointer">
-                    X
-                  </button>
+                <div className="relative h-full">
+                  <div className="absolute inset-0">
+                    <Image
+                      className="object-cover w-full h-full select-none"
+                      fill
+                      alt={name}
+                      src={image}
+                      draggable={false}
+                    />
+                    <button
+                      type="button"
+                      onClick={() => handleRemoveImage(index)}
+                      className="absolute top-2 right-2 bg-white bg-opacity-75 hover:bg-opacity-100 text-gray-600 hover:text-red-500 p-1.5 rounded-full transition-all transform opacity-0 group-hover:opacity-100 z-10">
+                      <svg
+                        className="w-4 h-4"
+                        fill="currentColor"
+                        viewBox="0 0 20 20">
+                        <path
+                          fillRule="evenodd"
+                          d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
+                          clipRule="evenodd"
+                        />
+                      </svg>
+                    </button>
+                  </div>
                 </div>
               </SortableItem>
             </div>
           ))}
         </SortableList>
       </div>
-      <ToastContainer
-        position="bottom-right"
-        autoClose={5000}
-        hideProgressBar={false}
-        newestOnTop={false}
-        closeOnClick
-        rtl={false}
-        pauseOnFocusLoss
-        draggable
-        pauseOnHover
-        theme="light"
-      />
     </div>
   );
 };

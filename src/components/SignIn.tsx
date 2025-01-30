@@ -1,61 +1,38 @@
 "use client";
-import React, { useEffect } from "react";
+import React, { useEffect, useRef } from "react";
 import { Auth } from "@supabase/auth-ui-react";
-import { supabaseClient } from "@/utils/supabaseClient";
-import { ToastContainer, toast } from "react-toastify";
+import { getSupabaseClient } from "@/utils/supabaseClient";
+import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
-import Stripe from "stripe";
 import { useAtom } from "jotai";
 import { globalStateAtom } from "@/context/atoms";
-import { sanityClient } from "@/utils/sanityClient";
 
-type Props = {
-  setSignInActive: React.Dispatch<React.SetStateAction<boolean>>;
-};
-
-const SignIn = (props: Props) => {
-  const supabase = supabaseClient();
-  const stripeActivation = new Stripe(
-    process.env.NEXT_PUBLIC_STRIPE_SECRET_KEY!,
-    {
-      apiVersion: "2023-08-16",
-    }
-  );
-
+const SignIn = () => {
+  const supabase = getSupabaseClient();
   const [state, setState] = useAtom(globalStateAtom);
+  const hasShownToast = useRef(false);
 
-  async function isUserSubscribed(
-    email: string,
-    stripe: any
-  ): Promise<boolean> {
+  async function isUserSubscribed(email: string): Promise<boolean> {
     console.log("checking subscription status");
     try {
-      if (!stripe) {
-        console.log("Stripe.js has not loaded yet.");
-        return false;
-      }
-      // Retrieve the customer by email
-      const customers = await stripe.customers.list({ email: email });
-      const customer = customers.data[0]; // Assuming the first customer is the desired one
+      const response = await fetch("/api/subscription/checkSubscription", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ email }),
+      });
 
-      if (customer) {
-        // Retrieve the customer's subscriptions
-        const subscriptions = await stripe.subscriptions.list({
-          customer: customer.id,
-          limit: 1, // Assuming only checking the latest subscription
-        });
-
-        return subscriptions.data.length > 0; // User is subscribed if there's at least one subscription
-      } else {
-        // Customer not found
-        console.log("Customer not found");
-        return false;
+      if (!response.ok) {
+        throw new Error("Failed to check subscription status");
       }
+
+      const data = await response.json();
+      return data.isSubscribed;
     } catch (error) {
       console.error("Error checking subscription status:", error);
-      throw error;
+      return false;
     }
   }
 
@@ -102,39 +79,81 @@ const SignIn = (props: Props) => {
   };
 
   const handleAuthChange = async (event: any, session: any) => {
-    console.log("session", session);
+    console.log("=== Auth Change Debug ===");
+    console.log("Event:", event);
+    console.log("Session user ID:", session?.user?.id);
+    console.log("Current state user ID:", state.user.id);
+    console.log("Full state:", state);
+    
     if (event === "SIGNED_IN" && session !== null) {
-      console.log("session", session);
-      toast.success("Signed in successfully");
       const loggedInUser = await fetchLoggedInUser(session.user);
-      const subbed = await isUserSubscribed(
-        session.user.email,
-        stripeActivation
-      );
-      setState({
-        ...state,
+      const subbed = await isUserSubscribed(session.user.email);
+      
+      if (!hasShownToast.current) {
+        toast.success("Signed in successfully");
+        hasShownToast.current = true;
+      }
+
+      setState((prevState) => ({
+        ...prevState,
         session,
-        user: session.user,
-        loggedInUser: loggedInUser,
+        user: {
+          email: session.user.email,
+          id: session.user.id,
+          name: loggedInUser?.name || "",
+          role: loggedInUser?.role || "",
+          profileImage: loggedInUser?.profileImage || "",
+          favorites: loggedInUser?.favorites || [],
+          privacyPolicy: loggedInUser?.privacyPolicy || "",
+          privacyPolicyDate: loggedInUser?.privacyPolicyDate || "",
+          subscribed: loggedInUser?.subscribed || false,
+          subscription_id: loggedInUser?.subscription_id || "",
+          stripe_customer_id: loggedInUser?.stripe_customer_id || "",
+        },
+        loggedInUser,
         isSubscribed: subbed,
         activeNavButtons: true,
-      });
-
-      props.setSignInActive(false);
+        signInActive: false,
+      }));
     } else if (event === "SIGNED_OUT") {
-      console.log("session", event);
-      console.log("SignIn Failed");
-
-      toast.error("Sign in failed");
+      hasShownToast.current = false;  // Reset the ref when user signs out
+      setState((prevState) => ({
+        ...prevState,
+        session: null,
+        user: {
+          email: "",
+          id: "",
+          name: "",
+          role: "",
+          profileImage: "",
+          favorites: [],
+          privacyPolicy: "",
+          privacyPolicyDate: "",
+          subscribed: false,
+          subscription_id: "",
+          stripe_customer_id: "",
+        },
+        loggedInUser: null,
+        activeNavButtons: false,
+        isSubscribed: false,
+      }));
     }
   };
+
+  if (!state.signInActive) {
+    return null;
+  }
+
   return (
     <div
       className={`fixed w-full h-full top-0 bottom-0 left-0 right-0     flex m-auto z-[200000000] `}>
       <div
         className="fixed w-full h-full bg-gray-600 opacity-50 top-0 bottom-0 left-0 right-0 z-[20000000]"
         onClick={() => {
-          props.setSignInActive(false);
+          setState({
+            ...state,
+            signInActive: false,
+          });
         }}
       />
 
@@ -146,18 +165,6 @@ const SignIn = (props: Props) => {
             </h2>
           </div>
           <div className="flex lg:w-[60%] w-[90%] m-auto ">
-            <ToastContainer
-              position="bottom-right"
-              autoClose={5000}
-              hideProgressBar={false}
-              newestOnTop={false}
-              closeOnClick
-              rtl={false}
-              pauseOnFocusLoss
-              draggable
-              pauseOnHover
-              theme="light"
-            />
             <div className="m-auto w-full">
               <Auth
                 redirectTo={
@@ -217,7 +224,10 @@ const SignIn = (props: Props) => {
             <p className="text-[#F7F1EE]">Don&apos;t have an account?</p>
             <Link
               onClick={() => {
-                props.setSignInActive(false);
+                setState({
+                  ...state,
+                  signInActive: false,
+                });
               }}
               className="font-sans text-sm text-blue-300"
               href="/become-member">

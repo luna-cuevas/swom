@@ -1,11 +1,11 @@
 import { sanityClient } from './client'
-import { supabaseClient } from '../../src/utils/supabaseClient'
+import { getSupabaseClient } from '../../src/utils/supabaseClient'
 import privacyPolicy from '../schemas/privacyPolicy';
 // @ts-ignore
 
 export function approveDocumentAction(props: any) {
   const isDev = process.env.NODE_ENV === 'development';
-  const supabase = supabaseClient();
+  const supabase = getSupabaseClient();
 
   return {
     label: 'Approve listing',
@@ -183,10 +183,10 @@ export function improvedDelete(props: any) {
         const documentToDelete = await sanityClient.fetch(query, { id });
 
         if (documentToDelete) {
-          const supabase = supabaseClient();
+          const supabase = getSupabaseClient();
 
           const { data: userData, error: userDataError } = await supabase.from('appUsers').select('id').eq('email', documentToDelete.userInfo.email);
-          
+
           if (!userData || userData.length === 0) {
             await sanityClient.delete(documentToDelete._id);
 

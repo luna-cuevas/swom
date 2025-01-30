@@ -1,11 +1,7 @@
-import { NextResponse } from 'next/server';
-import Stripe from 'stripe';
+import { NextResponse } from "next/server";
+import { stripe } from "@/utils/stripe";
 
 export async function POST(req: Request, res: Response) {
-  const stripe = new Stripe(process.env.NEXT_PUBLIC_STRIPE_SECRET_KEY!, {
-    apiVersion: '2023-08-16',
-  });
-
   try {
     const body = await req.json();
     const customers = await stripe.customers.list({ email: body.email });
@@ -19,7 +15,7 @@ export async function POST(req: Request, res: Response) {
 
       return NextResponse.json(subscriptions.data[0]);
     } else {
-      return NextResponse.json({ message: 'No customer found' });
+      return NextResponse.json({ message: "No customer found" });
     }
   } catch (error) {
     console.error(error);

@@ -13,6 +13,7 @@ import Counter from "yet-another-react-lightbox/plugins/counter";
 import "yet-another-react-lightbox/plugins/counter.css";
 import Slideshow from "yet-another-react-lightbox/plugins/slideshow";
 import "yet-another-react-lightbox/styles.css";
+import { usePathname } from "next/navigation";
 
 type Props = {
   images: {
@@ -33,6 +34,8 @@ const CarouselPage = (props: Props) => {
   const [selectedImage, setSelectedImage] = useState(0); // Updated
   const slideshowRef = useRef(null);
   const [isMounted, setIsMounted] = useState(false);
+  const pathname = usePathname();
+  console.log(pathname);
 
   useEffect(() => {
     setIsMounted(true);
@@ -64,8 +67,9 @@ const CarouselPage = (props: Props) => {
   }
 
   return (
-    <div className=" overflow-hidden !h-full  w-full gap-4 flex flex-col">
-      <div className={`!h-full gap-4 md:gap-8 flex w-full`}>
+    <div className="relative w-full h-full flex justify-center mx-auto ">
+      <div
+        className={`h-full w-full mx-auto ${pathname !== "/home" && "max-w-[1140px]"}`}>
         <Lightbox
           index={selectedImage}
           slides={[
@@ -78,29 +82,54 @@ const CarouselPage = (props: Props) => {
           ]}
           styles={{
             container: {
-              borderRadius: props.homePage ? "" : "20px 20px 0 0",
+              backgroundColor: "#fff",
               height: "100%",
               width: "100%",
-              backgroundColor: "#fff",
+              maxWidth: pathname !== "/home" ? "1140px" : "100%",
+              margin: "0 auto",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
             },
             slide: {
               objectFit: "cover",
               objectPosition: "center",
+              width: "100%",
+              height: "100%",
             },
             thumbnailsContainer: {
-              backgroundColor: "#7F8119",
-              borderRadius: "0 0 20px 20px",
+              backgroundColor: "#000000c0",
+              padding: "12px",
+              borderRadius: "0",
+              width: "100%",
             },
             thumbnail: {
               border: "none",
-              borderRadius: "10px",
-              backgroundColor: "#ffffff77",
+              borderRadius: "8px",
+              backgroundColor: "rgba(0, 0, 0, 0.1)",
+              transition: "all 0.2s ease",
+              opacity: 0.8,
+            },
+            thumbnailsTrack: {
+              gap: "8px",
             },
             navigationNext: {
-              zIndex: 10000000,
+              backgroundColor: "rgba(255, 255, 255, 0.375)",
+              backdropFilter: "blur(4px)",
+              borderRadius: "50%",
+              padding: "4px",
+              color: "#000000",
+              zIndex: 50,
+              boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
             },
             navigationPrev: {
-              zIndex: 10000000,
+              backgroundColor: "rgba(255, 255, 255, 0.375)",
+              backdropFilter: "blur(4px)",
+              borderRadius: "50%",
+              padding: "4px",
+              color: "#000000",
+              zIndex: 50,
+              boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
             },
           }}
           slideshow={{
@@ -110,7 +139,7 @@ const CarouselPage = (props: Props) => {
           }}
           plugins={[
             Inline,
-            ...(props.thumbnails ? [Thumbnails] : []),
+            // ...(props.thumbnails ? [Thumbnails] : []),
             ...(props.thumbnails ? [Counter] : []),
             Slideshow,
           ]}
@@ -125,10 +154,16 @@ const CarouselPage = (props: Props) => {
           counter={{
             container: {
               style: {
+                width: "fit-content",
                 top: "unset",
-                bottom: 0,
-                right: 0,
                 left: "unset",
+                bottom: "16px",
+                right: "16px",
+                backgroundColor: "rgba(255, 255, 255, 0.9)",
+                padding: "6px 12px",
+                borderRadius: "16px",
+                fontSize: "14px",
+                color: "#172544",
               },
             },
           }}
@@ -147,15 +182,12 @@ const CarouselPage = (props: Props) => {
             spacing: 0,
             imageFit: "cover",
             imageProps: {
-              height: "100%",
-              width: "100%",
               style: {
                 objectFit: "cover",
                 objectPosition: "center",
                 width: "100%",
                 height: "100%",
-                maxHeight: "100%",
-                maxWidth: "100%",
+                aspectRatio: props.homePage ? "3/2" : "16/9",
               },
             },
             preload: 2,
@@ -163,10 +195,10 @@ const CarouselPage = (props: Props) => {
           inline={{
             style: {
               width: "100%",
-              maxWidth: "100%",
               height: "100%",
-              aspectRatio: "3 / 2",
-              margin: "0 auto",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
             },
           }}
           render={{
@@ -181,44 +213,36 @@ const CarouselPage = (props: Props) => {
                     setSelectedImage(index);
                     setOpenLightbox(true);
                   }}
-                  className=" !h-full my-auto w-full relative">
-                  <div className="absolute w-screen h-screen bg-black opacity-20  z-10"></div>
+                  className="h-full w-full relative">
+                  {props.overlay && (
+                    <div className="absolute inset-0 bg-black/20 z-10" />
+                  )}
                   <div
-                    className={`${props.overlay ? "opacity-100" : ""} ${
-                      !props.homePage && "cursor-pointer"
-                    } !h-full  w-full z-10`}>
+                    className={`${!props.homePage && "cursor-pointer"} h-full w-full`}>
                     {slideProps.children}
                   </div>
-                  <div
-                    className={`absolute z-50 top-[10%] -right-4 text-md ${
-                      !props.homePage && "hidden"
-                    }`}>
-                    <div className="absolute z-0 inset-0 transform skew-x-[10deg]  bg-[#f4ece7b3]" />
-                    {state.session == null ? (
-                      <div className="relative z-50  py-4 px-8 !text-[#172544]">
-                        {slideProps.slide.highlightTag
-                          ? `${slideProps.slide.highlightTag}`
-                          : "Let's meet your new favorite home."}{" "}
-                        <br />
-                        <strong>Listing No. {slideProps.slide.slug} </strong>
-                      </div>
-                    ) : (
-                      <>
+                  {props.homePage && (
+                    <div className="absolute z-50 top-[10%] -right-4 text-md">
+                      <div className="absolute z-0 inset-0 transform skew-x-[10deg] bg-[#f4ece7b3]" />
+                      {state.session == null ? (
+                        <div className="relative z-50 py-4 px-8 text-[#172544]">
+                          {slideProps.slide.highlightTag ||
+                            "Let's meet your new favorite home."}
+                          <br />
+                          <strong>Listing No. {slideProps.slide.slug}</strong>
+                        </div>
+                      ) : (
                         <Link href={`/listings/${slideProps.slide.listingNum}`}>
-                          <div className="z-50  py-4 px-8 text-[#172544]">
-                            {slideProps.slide.highlightTag
-                              ? `${slideProps.slide.highlightTag}`
-                              : "Let's meet your new favorite home."}{" "}
+                          <div className="relative z-50 py-4 px-8 text-[#172544]">
+                            {slideProps.slide.highlightTag ||
+                              "Let's meet your new favorite home."}
                             <br />
-                            <strong>
-                              Listing No.
-                              {slideProps.slide.slug}
-                            </strong>
+                            <strong>Listing No. {slideProps.slide.slug}</strong>
                           </div>
                         </Link>
-                      </>
-                    )}
-                  </div>
+                      )}
+                    </div>
+                  )}
                 </div>
               );
             },
@@ -239,7 +263,7 @@ const CarouselPage = (props: Props) => {
                     alt={`Image ${slide.src}`}
                     fill
                     priority
-                    sizes="(max-width: 768px) 50vw, (max-width: 1024px) 100vw, 100vw"
+                    sizes="(max-width: 768px) 100vw, (max-width: 1200px) 100vw, 100vw"
                     className="h-full w-full object-cover object-center"
                   />
                 </div>
@@ -250,10 +274,10 @@ const CarouselPage = (props: Props) => {
       </div>
 
       <Lightbox
-        className="!z-[20000000] "
+        className="!z-[20000000]"
         open={openLightbox}
         close={() => setOpenLightbox(false)}
-        index={selectedImage} // Use the selectedImage state
+        index={selectedImage}
         slides={[
           ...props.images.map((image) => ({
             src: image.src,
@@ -261,13 +285,38 @@ const CarouselPage = (props: Props) => {
           })),
         ]}
         styles={{
+          container: {
+            backgroundColor: "rgba(0, 0, 0, 0.95)",
+          },
           thumbnailsContainer: {
-            backgroundColor: "#7F8119",
+            backgroundColor: "#000000c0",
+            padding: "12px",
           },
           thumbnail: {
             border: "none",
-            borderRadius: "10px",
-            backgroundColor: "#ffffff77",
+            borderRadius: "8px",
+            backgroundColor: "rgba(255, 255, 255, 0.1)",
+            transition: "all 0.2s ease",
+            opacity: 0.7,
+          },
+          thumbnailsTrack: {
+            gap: "8px",
+          },
+          navigationNext: {
+            backgroundColor: "rgba(255, 255, 255, 0.8)",
+            backdropFilter: "blur(4px)",
+            borderRadius: "50%",
+            padding: "8px",
+            color: "#2A4074",
+            boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
+          },
+          navigationPrev: {
+            backgroundColor: "rgba(255, 255, 255, 0.8)",
+            backdropFilter: "blur(4px)",
+            borderRadius: "50%",
+            padding: "8px",
+            color: "#2A4074",
+            boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
           },
         }}
         plugins={[Thumbnails, Counter]}
@@ -282,10 +331,16 @@ const CarouselPage = (props: Props) => {
         counter={{
           container: {
             style: {
+              width: "fit-content",
               top: "unset",
-              bottom: 0,
-              right: 0,
+              bottom: "16px",
               left: "unset",
+              right: "16px",
+              backgroundColor: "rgba(255, 255, 255, 0.9)",
+              padding: "6px 12px",
+              borderRadius: "16px",
+              fontSize: "14px",
+              color: "#172544",
             },
           },
         }}
