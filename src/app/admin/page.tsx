@@ -5,6 +5,7 @@ import { Card } from "@/components/ui/card";
 import ListingsTable from "./components/ListingsTable";
 import PendingApprovals from "./components/PendingApprovals";
 import HighlightedListings from "./components/HighlightedListings";
+import CityDescriptions from "./components/CityDescriptions";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 
 const queryClient = new QueryClient();
@@ -30,6 +31,9 @@ export default function AdminDashboard() {
             </TabsTrigger>
             <TabsTrigger value="highlighted" className="flex-1 max-w-[200px]">
               Highlighted Listings
+            </TabsTrigger>
+            <TabsTrigger value="cities" className="flex-1 max-w-[200px]">
+              City Descriptions
             </TabsTrigger>
           </TabsList>
 
@@ -64,6 +68,17 @@ export default function AdminDashboard() {
                   </h2>
                 </div>
                 <HighlightedListings />
+              </div>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="cities">
+            <Card className="p-6 pt-4">
+              <div className="flex flex-col space-y-4">
+                <div className="flex items-center justify-between">
+                  <h2 className="text-lg font-semibold">City Descriptions</h2>
+                </div>
+                <CityDescriptions />
               </div>
             </Card>
           </TabsContent>
