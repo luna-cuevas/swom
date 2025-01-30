@@ -18,6 +18,12 @@ const GoogleMapComponent = dynamic(
   }
 );
 
+interface CityDescription {
+  id: string;
+  city: string;
+  description: string;
+}
+
 const Page = () => {
   const pathName = usePathname();
   const slug = pathName.split("/listings/")[1];
@@ -26,7 +32,33 @@ const Page = () => {
   const [mapsActive, setMapsActive] = useState(true);
   const [listing, setListing] = useState<any>(null);
   const [isFavorited, setIsFavorited] = useState(false);
+  const [cityDescription, setCityDescription] = useState<string | null>(null);
   console.log(slug);
+
+  const fetchCityDescription = async (city: string) => {
+    try {
+      const response = await fetch("/api/admin/getCityDescriptions");
+      if (!response.ok) {
+        throw new Error("Failed to fetch city descriptions");
+      }
+      const descriptions: CityDescription[] = await response.json();
+
+      // Find the matching city description
+      const cityName = city.split(",")[0].trim().toLowerCase();
+      const matchingDescription = descriptions.find(
+        (desc) => desc.city.toLowerCase() === cityName
+      );
+
+      if (matchingDescription) {
+        setCityDescription(matchingDescription.description);
+      } else {
+        setCityDescription(null);
+      }
+    } catch (error) {
+      console.error("Error fetching city description:", error);
+      setCityDescription(null);
+    }
+  };
 
   const fetchListing = async () => {
     try {
@@ -46,6 +78,12 @@ const Page = () => {
       const data = await response.json();
       setListing(data);
       setIsFavorited(data.favorite || false);
+
+      // Fetch city description when listing is loaded
+      if (data.home_info.city) {
+        fetchCityDescription(data.home_info.city);
+      }
+
       setIsLoading(false);
     } catch (error: any) {
       toast.error(`Error fetching data: ${error.message}`);
@@ -283,11 +321,10 @@ const Page = () => {
             {/* About the City */}
             <div className="pb-8 mb-8 border-b">
               <h2 className="text-xl font-semibold mb-4 !font-['EBGaramond']">
-                About {listing.home_info.city}
+                About {listing.home_info.city.split(",")[0]}
               </h2>
               <p className="text-gray-600 leading-relaxed !font-['Noto']">
-                {listing.home_info.about_city ||
-                  "No information available about this city."}
+                {cityDescription || "No information available about this city."}
               </p>
             </div>
 
