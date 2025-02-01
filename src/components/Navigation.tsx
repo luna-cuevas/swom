@@ -49,16 +49,22 @@ const Navigation = () => {
           .on(
             "postgres_changes",
             {
-              event: "INSERT",
+              event: "*",
               schema: "public",
               table: "read_receipts",
-              filter: `user_id=eq.${user.id}`,
+              // filter: `user_id=eq.${user.id}`,
             },
             (payload) => {
+              console.log("Table Event Received:", {
+                event: payload.eventType,
+                payload,
+                userId: user.id
+              });
               const fetchUnreadCount = async () => {
                 try {
-                  await new Promise((resolve) => setTimeout(resolve, 100));
+                  console.log("Fetching unread count after table change");
                   const count = await getUnreadMessageCount(user.id);
+                  console.log("New count:", count);
                   const unreadConverstaions = await getUnreadConversations(
                     state.user.id
                   );
@@ -68,34 +74,7 @@ const Navigation = () => {
                     unreadConversations: unreadConverstaions,
                   }));
                 } catch (err) {
-                  console.error(err);
-                }
-              };
-              fetchUnreadCount();
-            }
-          )
-          .on(
-            "postgres_changes",
-            {
-              event: "DELETE",
-              schema: "public",
-              table: "read_receipts",
-              filter: `user_id=eq.${user.id}`,
-            },
-            (payload) => {
-              const fetchUnreadCount = async () => {
-                try {
-                  const count = await getUnreadMessageCount(user.id);
-                  const unreadConverstaions = await getUnreadConversations(
-                    state.user.id
-                  );
-                  setState((prevState) => ({
-                    ...prevState,
-                    unreadCount: count,
-                    unreadConversations: unreadConverstaions,
-                  }));
-                } catch (err) {
-                  console.error(err);
+                  console.error("Error fetching count:", err);
                 }
               };
               fetchUnreadCount();
@@ -103,10 +82,11 @@ const Navigation = () => {
           )
           .subscribe();
 
+        console.log("Subscribed to channel with user ID:", user.id);
+
         if (!subscription) {
           throw new Error("Failed to subscribe to channel");
         }
-        console.log("Subscribed to channel:", subscription);
       } catch (error) {
         console.error("Error subscribing to channel:", error);
       }

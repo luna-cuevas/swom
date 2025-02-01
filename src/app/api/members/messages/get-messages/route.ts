@@ -55,6 +55,27 @@ export async function GET(req: Request) {
       console.log('Updated last_read_at for user:', userId);
     }
 
+    console.log("deleting read receipt",conversationId, userId);
+
+    // Delete all read receipts for the given conversation ID and user ID
+    const { error: deleteError } = await supabase
+    .from("read_receipts")
+    .delete()
+    .eq("conversation_id", conversationId)
+    .eq("user_id", userId);
+
+  if (deleteError) {
+    console.error("Error deleting read receipts:", deleteError);
+    return NextResponse.json({ error: deleteError.message }, { status: 500 });
+  }
+
+  // console.log(
+  //   "Deleted read receipts for conversation:",
+  //   conversationId,
+  //   "user:",
+  //   userId
+  // );
+
     // Transform the messages to match the expected format
     const formattedMessages = messages?.map(message => ({
       id: message.id,

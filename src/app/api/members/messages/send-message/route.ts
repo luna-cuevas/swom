@@ -19,6 +19,31 @@ export async function POST(req: Request) {
       );
     }
 
+    // First get both participants from the conversation
+    const { data: participants, error: participantsError } = await supabase
+      .from('conversation_participants')
+      .select('user_id')
+      .eq('conversation_id', conversation_id);
+
+    if (participantsError) {
+      console.error('Error fetching participants:', participantsError);
+      return NextResponse.json(
+        { error: 'Failed to fetch participants' },
+        { status: 500 }
+      );
+    }
+
+    // Get partner ID
+    const partner_id = participants?.find(p => p.user_id !== sender_id)?.user_id;
+
+    if (!sender_id || !partner_id) {
+      console.error('Could not identify both participants');
+      return NextResponse.json(
+        { error: 'Could not identify conversation participants' },
+        { status: 500 }
+      );
+    }
+
     // First get the conversation and sender info
     const [{ data: conversation, error: convError }, { data: sender, error: senderError }] = await Promise.all([
       supabase
@@ -32,6 +57,8 @@ export async function POST(req: Request) {
         .eq('id', sender_id)
         .single()
     ]);
+
+    
 
     if (convError || senderError) {
       console.error('Error fetching data:', { convError, senderError });
@@ -117,6 +144,28 @@ export async function POST(req: Request) {
         avatar_url: message.sender.profileImage
       }
     };
+
+    // Insert into read_receipts table
+    const { data: readReceiptData, error: readReceiptError } = await supabase
+    .from("read_receipts")
+    .insert([
+      {
+        conversation_id: conversation_id,
+        user_id: partner_id,
+      },
+    ])
+    .select("*");
+
+    if (readReceiptError) {
+      console.error('Read Receipt Error:', readReceiptError);
+      console.error('Failed for conversation:', conversation_id, 'partner:', partner_id);
+    } else {
+      console.log('Read Receipt Created Successfully:', {
+        conversation_id,
+        partner_id,
+        receipt: readReceiptData
+      });
+    }
 
     return NextResponse.json({ message: formattedMessage });
   } catch (error) {
