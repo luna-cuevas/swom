@@ -1,6 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
-import { Message, ListingInfo } from "../types";
+import { Message, ListingInfo, FileAttachment } from "../types";
 
 interface UseMessagesProps {
   conversationId: string | null;
@@ -22,6 +22,7 @@ export function useMessages({
   userEmail,
 }: UseMessagesProps) {
   const [newMessage, setNewMessage] = useState("");
+  const [attachments, setAttachments] = useState<FileAttachment[]>([]);
   const queryClient = useQueryClient();
 
   // Fetch messages for the current conversation
@@ -44,10 +45,12 @@ export function useMessages({
       content,
       conversation_id,
       sender_id,
+      attachments,
     }: {
       content: string;
       conversation_id: string;
       sender_id: string;
+      attachments?: FileAttachment[];
     }) => {
       const response = await fetch("/api/members/messages/send-message", {
         method: "POST",
@@ -59,6 +62,7 @@ export function useMessages({
           listing_id: listingInfo?.id,
           user_email: userEmail,
           host_email: contactingHostEmail,
+          attachments,
         }),
       });
       return response.json();
@@ -72,18 +76,20 @@ export function useMessages({
         queryKey: ["conversations", userId],
       });
       setNewMessage("");
+      setAttachments([]);
     },
   });
 
   // Handler for sending messages
-  const sendMessage = async (e: React.FormEvent) => {
+  const sendMessage = async (e: React.FormEvent & { attachments?: FileAttachment[] }) => {
     e.preventDefault();
-    if (!newMessage.trim() || !conversationId || !userId) return;
+    if ((!newMessage.trim() && (!e.attachments || e.attachments.length === 0)) || !conversationId || !userId) return;
 
     sendMessageMutation.mutate({
       conversation_id: conversationId,
       content: newMessage,
       sender_id: userId,
+      attachments: e.attachments
     });
   };
 

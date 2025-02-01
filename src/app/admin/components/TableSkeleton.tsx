@@ -1,3 +1,4 @@
+import { Skeleton } from "@/components/ui/skeleton";
 import {
   Table,
   TableBody,
@@ -6,34 +7,44 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Skeleton } from "@/components/ui/skeleton";
 
-type Props = {
-  columns: string[];
-  rows?: number;
-};
+interface TableSkeletonProps {
+  columns: number;
+}
 
-export function TableSkeleton({ columns, rows = 5 }: Props) {
+export function TableSkeleton({ columns }: TableSkeletonProps) {
   return (
-    <Table>
-      <TableHeader>
-        <TableRow>
-          {columns.map((column) => (
-            <TableHead key={column}>{column}</TableHead>
-          ))}
-        </TableRow>
-      </TableHeader>
-      <TableBody>
-        {Array.from({ length: rows }).map((_, i) => (
-          <TableRow key={i}>
-            {columns.map((_, j) => (
-              <TableCell key={j}>
-                <Skeleton className="h-6 w-full" />
-              </TableCell>
-            ))}
+    <div className="border rounded-md">
+      <Table>
+        <TableHeader>
+          <TableRow className="hover:bg-transparent">
+            {Array(columns)
+              .fill(0)
+              .map((_, i) => (
+                <TableHead
+                  key={i}
+                  className="text-center border-r h-11 font-medium last:border-r-0">
+                  <Skeleton className="h-4 w-20 mx-auto" />
+                </TableHead>
+              ))}
           </TableRow>
-        ))}
-      </TableBody>
-    </Table>
+        </TableHeader>
+        <TableBody>
+          {Array(5)
+            .fill(0)
+            .map((_, rowIndex) => (
+              <TableRow key={rowIndex}>
+                {Array(columns)
+                  .fill(0)
+                  .map((_, colIndex) => (
+                    <TableCell key={colIndex} className="text-center">
+                      <Skeleton className="h-4 w-20 mx-auto" />
+                    </TableCell>
+                  ))}
+              </TableRow>
+            ))}
+        </TableBody>
+      </Table>
+    </div>
   );
 }

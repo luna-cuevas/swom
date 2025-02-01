@@ -190,7 +190,7 @@ export default function PendingApprovals() {
         <div className="flex items-center gap-4">
           <Skeleton className="h-10 w-[384px]" />
         </div>
-        <TableSkeleton columns={columns} />
+        <TableSkeleton columns={columns.length} />
       </div>
     );
   }

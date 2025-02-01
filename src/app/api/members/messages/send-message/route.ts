@@ -1,6 +1,15 @@
 import { createClient } from '@supabase/supabase-js';
 import { NextResponse } from 'next/server';
 
+interface FileAttachment {
+  id: string;
+  filename: string;
+  fileType: string;
+  fileSize: number;
+  url: string;
+  thumbnailUrl?: string;
+}
+
 export const dynamic = 'force-dynamic';
 
 export async function POST(req: Request) {
@@ -10,9 +19,9 @@ export async function POST(req: Request) {
       process.env.SUPABASE_SERVICE_ROLE_KEY as string
     );
 
-    const { conversation_id, content, sender_id, listing_id, user_email, host_email } = await req.json();
+    const { conversation_id, content, sender_id, listing_id, user_email, host_email, attachments } = await req.json();
 
-    if (!conversation_id || !content || !sender_id) {
+    if (!conversation_id || !sender_id || (!content && (!attachments || attachments.length === 0))) {
       return NextResponse.json(
         { error: 'Missing required fields' },
         { status: 400 }
@@ -58,8 +67,6 @@ export async function POST(req: Request) {
         .single()
     ]);
 
-    
-
     if (convError || senderError) {
       console.error('Error fetching data:', { convError, senderError });
       return NextResponse.json(
@@ -73,7 +80,7 @@ export async function POST(req: Request) {
       .from('messages_new')
       .insert({
         conversation_id,
-        content,
+        content: content || '',  // Use empty string if no content (attachment only)
         sender_id,
       })
       .select(`
@@ -95,6 +102,32 @@ export async function POST(req: Request) {
       );
     }
 
+    // If there are attachments, link them to the message
+    if (attachments && attachments.length > 0) {
+      console.log('Attempting to link attachments:', {
+        messageId: message.id,
+        attachmentIds: attachments.map((att: FileAttachment) => att.id)
+      });
+
+      const { data: updateData, error: attachmentError } = await supabase
+        .from('message_attachments')
+        .update({ message_id: message.id })
+        .in('id', attachments.map((att: FileAttachment) => att.id))
+        .select();
+
+      if (attachmentError) {
+        console.error('Error linking attachments:', {
+          error: attachmentError,
+          details: attachmentError.details,
+          message: attachmentError.message,
+          hint: attachmentError.hint
+        });
+        // Don't fail the whole request, but log the error
+      } else {
+        console.log('Successfully linked attachments:', updateData);
+      }
+    }
+
     // Update conversation with the message and emails
     interface UpdateData {
       last_message: string;
@@ -105,7 +138,7 @@ export async function POST(req: Request) {
     }
 
     const updateData: UpdateData = {
-      last_message: content,
+      last_message: content || (attachments?.length ? 'Sent an attachment' : ''),
       last_message_at: new Date().toISOString(),
     };
 
@@ -133,6 +166,26 @@ export async function POST(req: Request) {
       // Don't return error here as the message was already created
     }
 
+    // Get the message with its attachments
+    const { data: messageWithAttachments, error: fetchError } = await supabase
+      .from('messages_new')
+      .select(`
+        *,
+        sender:appUsers(
+          id,
+          name,
+          profileImage,
+          email
+        ),
+        attachments:message_attachments(*)
+      `)
+      .eq('id', message.id)
+      .single();
+
+    if (fetchError) {
+      console.error('Error fetching message with attachments:', fetchError);
+    }
+
     // Format the message to match the frontend's expected structure
     const formattedMessage = {
       id: message.id,
@@ -142,19 +195,20 @@ export async function POST(req: Request) {
         id: message.sender.id,
         name: message.sender.name,
         avatar_url: message.sender.profileImage
-      }
+      },
+      attachments: messageWithAttachments?.attachments || []
     };
 
     // Insert into read_receipts table
     const { data: readReceiptData, error: readReceiptError } = await supabase
-    .from("read_receipts")
-    .insert([
-      {
-        conversation_id: conversation_id,
-        user_id: partner_id,
-      },
-    ])
-    .select("*");
+      .from("read_receipts")
+      .insert([
+        {
+          conversation_id: conversation_id,
+          user_id: partner_id,
+        },
+      ])
+      .select("*");
 
     if (readReceiptError) {
       console.error('Read Receipt Error:', readReceiptError);

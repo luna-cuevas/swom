@@ -230,7 +230,7 @@ export default function HighlightedListings() {
   };
 
   if (isLoading) {
-    return <TableSkeleton columns={columns} />;
+    return <TableSkeleton columns={columns.length} />;
   }
 
   if (!highlightedListings.length) {

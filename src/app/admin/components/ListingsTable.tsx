@@ -384,7 +384,7 @@ export default function ListingsTable() {
           <Skeleton className="h-10 w-[384px]" />
           <Skeleton className="h-10 w-[140px]" />
         </div>
-        <TableSkeleton columns={columns} />
+        <TableSkeleton columns={columns.length} />
       </div>
     );
   }

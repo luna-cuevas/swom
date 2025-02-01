@@ -4,11 +4,14 @@ import { useEffect, useRef } from "react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { cn } from "@/lib/utils";
 import { format } from "date-fns";
+import { FileAttachmentView } from "./FileAttachment";
+import { FileAttachment } from "../types";
 
 interface Message {
   id: string;
   content: string;
   created_at: string;
+  attachments?: FileAttachment[];
   sender: {
     id: string;
     name: string;
@@ -76,6 +79,16 @@ export function MessageList({ messages, currentUserId }: MessageListProps) {
                       }
                     )}>
                     {message.content}
+                    {message.attachments && message.attachments.length > 0 && (
+                      <div className="flex flex-col gap-2 mt-2">
+                        {message.attachments.map((attachment) => (
+                          <FileAttachmentView
+                            key={attachment.id}
+                            attachment={attachment}
+                          />
+                        ))}
+                      </div>
+                    )}
                   </div>
                 </li>
               );
