@@ -14,6 +14,8 @@ import { toast } from "react-toastify";
 import { useForm } from "react-hook-form";
 import { Upload, X } from "lucide-react";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { useAtom } from "jotai";
+import { globalStateAtom } from "@/context/atoms";
 
 type AddListingModalProps = {
   isOpen: boolean;
@@ -179,6 +181,7 @@ export function AddListingModal({
   const [isUploading, setIsUploading] = useState(false);
   const [addressInput, setAddressInput] = useState("");
   const [isSearching, setIsSearching] = useState(false);
+  const [state] = useAtom(globalStateAtom);
 
   const {
     register,
@@ -196,6 +199,7 @@ export function AddListingModal({
     Array.from(e.target.files).forEach((file) => {
       formData.append("files", file);
     });
+    formData.append("adminId", state.user.id);
 
     try {
       const response = await fetch("/api/admin/uploadImages", {
@@ -248,7 +252,7 @@ export function AddListingModal({
         }
       } catch (error) {
         console.error("Error geocoding address:", error);
-        toast.error("Failed to find address");
+        toast.error("Failed to geocode address");
       } finally {
         setIsSearching(false);
       }
@@ -261,7 +265,13 @@ export function AddListingModal({
   };
 
   const onSubmit = async (data: FormData) => {
+    if (!data.privacyPolicy) {
+      toast.error("Please accept the privacy policy");
+      return;
+    }
+
     setIsSubmitting(true);
+
     try {
       const response = await fetch("/api/admin/createListing", {
         method: "POST",
@@ -269,7 +279,8 @@ export function AddListingModal({
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          user_info: {
+          adminId: state.user.id,
+          userInfo: {
             name: data.name,
             email: data.email,
             phone: data.phone,
@@ -278,19 +289,17 @@ export function AddListingModal({
             dob: data.dob,
             about_me: data.about_me,
             children: data.children,
-            open_to_other_cities: Object.values(
-              data.open_to_other_cities
-            ).filter(Boolean),
+            open_to_other_cities: data.open_to_other_cities,
             open_to_other_destinations: data.open_to_other_destinations,
             recommended: data.recommended,
           },
-          home_info: {
+          homeInfo: {
             title: data.title,
             city: data.city,
             description: data.description,
             property_type: data.property_type,
-            how_many_sleep: parseInt(data.how_many_sleep),
-            bathrooms: parseInt(data.bathrooms),
+            how_many_sleep: data.how_many_sleep,
+            bathrooms: data.bathrooms,
             area: data.area,
             located_in: data.located_in,
             main_or_second: data.main_or_second,
@@ -299,8 +308,9 @@ export function AddListingModal({
           },
           amenities: {
             ...data.amenities,
+            other: data.other,
           },
-          options: {
+          adminOptions: {
             sendWelcomeEmail: data.adminOption === "sendWelcomeEmail",
             setSubscribed: data.adminOption === "setSubscribed",
           },
@@ -308,15 +318,15 @@ export function AddListingModal({
       });
 
       if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.message || "Failed to create listing");
+        throw new Error("Failed to create listing");
       }
 
       toast.success("Listing created successfully");
       onSuccess();
-    } catch (error: any) {
+      onClose();
+    } catch (error) {
       console.error("Error creating listing:", error);
-      toast.error(error.message || "Failed to create listing");
+      toast.error("Failed to create listing");
     } finally {
       setIsSubmitting(false);
     }

@@ -1,5 +1,6 @@
 import { createClient } from '@supabase/supabase-js';
 import { NextResponse } from 'next/server';
+import { logMemberAction } from '@/lib/logging';
 
 export const dynamic = 'force-dynamic';
 
@@ -147,6 +148,14 @@ export async function POST(req: Request) {
     }
 
     console.log('Successfully created conversation:', fullConversation);
+
+    // Log the conversation creation
+    await logMemberAction(supabase, userIds[0], 'create_conversation', {
+      conversation_id: fullConversation.id,
+      participants: [hostEmail, userEmail],
+      listing_id: listingId
+    });
+
     return NextResponse.json({ conversation: fullConversation });
   } catch (error) {
     console.error('Error in create-conversation:', error);

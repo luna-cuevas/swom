@@ -1,6 +1,7 @@
 import { createClient } from "@supabase/supabase-js";
 import { NextResponse } from "next/server";
 import crypto from "crypto";
+import { logAdminAction } from "@/lib/logging";
 
 export async function POST(req: Request) {
   const supabase = createClient(
@@ -9,7 +10,12 @@ export async function POST(req: Request) {
   );
 
   try {
-    const { user_info, home_info, amenities, options } = await req.json();
+    const { user_info, home_info, amenities, options, adminId } =
+      await req.json();
+
+    if (!adminId) {
+      return NextResponse.json({ error: "Missing admin ID" }, { status: 400 });
+    }
 
     // Generate a slug from the title
     const slug = home_info.title
@@ -25,6 +31,7 @@ export async function POST(req: Request) {
       .single();
 
     let userId;
+    let isNewUser = false;
 
     if (existingUser) {
       userId = existingUser.id;
@@ -50,6 +57,7 @@ export async function POST(req: Request) {
       }
 
       userId = userData.user.id;
+      isNewUser = true;
     } else {
       throw new Error(
         "User does not exist. Cannot create listing without a user."
@@ -141,7 +149,7 @@ export async function POST(req: Request) {
     const { data: listingData, error: listingError } = await supabase
       .from("listings")
       .insert({
-        user_id: userId, // Now we always have a user ID
+        user_id: userId,
         email: user_info.email,
         user_info_id: userInfoData.id,
         home_info_id: homeInfoData.id,
@@ -159,6 +167,19 @@ export async function POST(req: Request) {
       .single();
 
     if (listingError) throw listingError;
+
+    // Log the listing creation
+    await logAdminAction(supabase, adminId, "create_listing", {
+      listing_id: listingData.id,
+      listing_title: home_info.title,
+      user_email: user_info.email,
+      user_id: userId,
+      is_new_user: isNewUser,
+      city: home_info.city,
+      status: "approved",
+      send_welcome_email: options.sendWelcomeEmail,
+      set_subscribed: options.setSubscribed,
+    });
 
     // Only create appUser and send emails if not setSubscribed
     if (!options.setSubscribed) {

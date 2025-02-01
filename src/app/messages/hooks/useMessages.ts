@@ -23,6 +23,7 @@ export function useMessages({
 }: UseMessagesProps) {
   const [newMessage, setNewMessage] = useState("");
   const [attachments, setAttachments] = useState<FileAttachment[]>([]);
+  const [error, setError] = useState<string | null>(null);
   const queryClient = useQueryClient();
 
   // Fetch messages for the current conversation
@@ -65,7 +66,12 @@ export function useMessages({
           attachments,
         }),
       });
-      return response.json();
+
+      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(data.error || "Failed to send message");
+      }
+      return data;
     },
     onSuccess: () => {
       // Invalidate and refetch messages and conversations
@@ -77,20 +83,30 @@ export function useMessages({
       });
       setNewMessage("");
       setAttachments([]);
+      setError(null);
+    },
+    onError: (error: Error) => {
+      setError(error.message);
+      console.error("Error sending message:", error);
     },
   });
 
   // Handler for sending messages
-  const sendMessage = async (e: React.FormEvent & { attachments?: FileAttachment[] }) => {
-    e.preventDefault();
-    if ((!newMessage.trim() && (!e.attachments || e.attachments.length === 0)) || !conversationId || !userId) return;
+  const sendMessage = async (content: string, messageAttachments?: FileAttachment[]) => {
+    if ((!content.trim() && (!messageAttachments || messageAttachments.length === 0)) || !conversationId || !userId) {
+      return;
+    }
 
-    sendMessageMutation.mutate({
-      conversation_id: conversationId,
-      content: newMessage,
-      sender_id: userId,
-      attachments: e.attachments
-    });
+    try {
+      await sendMessageMutation.mutate({
+        conversation_id: conversationId,
+        content,
+        sender_id: userId,
+        attachments: messageAttachments
+      });
+    } catch (err) {
+      console.error("Error in sendMessage:", err);
+    }
   };
 
   return {
@@ -98,5 +114,7 @@ export function useMessages({
     newMessage,
     setNewMessage,
     sendMessage,
+    error,
+    isLoading: sendMessageMutation.isPending
   };
 } 

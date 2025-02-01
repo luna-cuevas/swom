@@ -10,6 +10,8 @@ import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useState } from "react";
 import { toast } from "react-toastify";
+import { useAtom } from "jotai";
+import { globalStateAtom } from "@/context/atoms";
 
 type Props = {
   isOpen: boolean;
@@ -35,6 +37,7 @@ export function DeleteListingModal({
 }: Props) {
   const [deleteUser, setDeleteUser] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [state] = useAtom(globalStateAtom);
 
   const handleDelete = async () => {
     if (!listing) return;
@@ -47,6 +50,7 @@ export function DeleteListingModal({
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
+          adminId: state.user.id,
           listingId: listing.id,
           deleteUser,
           userId: listing.user_info.id,

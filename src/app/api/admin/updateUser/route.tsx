@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
 import { createClient } from "@supabase/supabase-js";
+import { logAdminAction } from "@/lib/logging";
 
 export async function PUT(request: Request) {
   try {
@@ -9,6 +10,16 @@ export async function PUT(request: Request) {
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
       process.env.SUPABASE_SERVICE_ROLE_KEY!
     );
+
+    // Get admin session
+    const {
+      data: { session },
+    } = await supabase.auth.getSession();
+
+    if (!session?.user.id) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
     const user = await request.json();
     const now = new Date().toISOString();
 
@@ -55,6 +66,17 @@ export async function PUT(request: Request) {
       console.error("Error updating appUsers:", appUsersError);
       throw new Error(appUsersError.message);
     }
+
+    // Log the admin action
+    await logAdminAction(supabase, session.user.id, "update_user", {
+      user_email: user.email,
+      updated_fields: {
+        name: user.name,
+        profession: user.profession,
+        age: user.age,
+        recommended: user.recommended,
+      },
+    });
 
     return NextResponse.json({
       message: "User updated successfully",

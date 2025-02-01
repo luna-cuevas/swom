@@ -89,7 +89,14 @@ export default function MessagesPage() {
   });
 
   // Manage messages and sending
-  const { messages, newMessage, setNewMessage, sendMessage } = useMessages({
+  const {
+    messages,
+    newMessage,
+    setNewMessage,
+    sendMessage,
+    error: sendError,
+    isLoading: isSending,
+  } = useMessages({
     conversationId: selectedConversationId,
     userId: state.user?.id,
     listingInfo,
@@ -361,24 +368,17 @@ export default function MessagesPage() {
                   <div className="flex-1 overflow-y-auto">
                     <MessageList
                       messages={messages}
-                      currentUserId={state.user.id}
+                      currentUserId={state.user?.id}
+                      typingUsers={typingUsers}
                     />
                   </div>
-                  {selectedConversationId && (
-                    <MessageInput
-                      onSendMessage={(content, attachments) => {
-                        setNewMessage(content);
-                        sendMessage({
-                          preventDefault: () => {},
-                          attachments: attachments,
-                        } as React.FormEvent & {
-                          attachments?: FileAttachment[];
-                        });
-                      }}
-                      conversationId={selectedConversationId}
-                      senderId={state.user.id}
-                    />
-                  )}
+                  <MessageInput
+                    onSendMessage={sendMessage}
+                    conversationId={selectedConversationId || ""}
+                    senderId={state.user?.id || ""}
+                    isLoading={isSending}
+                    error={sendError}
+                  />
                   {Object.values(typingUsers).length > 0 && (
                     <div className="px-4 py-2 text-sm text-gray-500 italic">
                       {Object.values(typingUsers)

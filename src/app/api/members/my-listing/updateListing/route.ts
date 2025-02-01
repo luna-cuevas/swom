@@ -1,5 +1,6 @@
 import { createClient } from "@supabase/supabase-js";
 import { NextResponse } from "next/server";
+import { logMemberAction } from "@/lib/logging";
 
 export async function PUT(request: Request) {
   const supabase = createClient(
@@ -80,6 +81,17 @@ export async function PUT(request: Request) {
       .select();
 
     if (listingError) throw listingError;
+
+    // Log the update action
+    await logMemberAction(supabase, ids.user_id, "update_listing", {
+      listing_id: ids.listing_id,
+      listing_title: home_info.title,
+      updated_fields: {
+        user_info: Object.keys(user_info).filter(key => user_info[key] !== undefined),
+        home_info: Object.keys(home_info).filter(key => home_info[key] !== undefined),
+        amenities: Object.keys(amenities).filter(key => amenities[key] !== undefined),
+      }
+    });
 
     return NextResponse.json({
       success: true,

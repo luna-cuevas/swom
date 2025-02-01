@@ -8,12 +8,16 @@ interface MessageInputProps {
   onSendMessage: (content: string, attachments?: FileAttachment[]) => void;
   conversationId: string;
   senderId: string;
+  isLoading?: boolean;
+  error?: string | null;
 }
 
 export function MessageInput({
   onSendMessage,
   conversationId,
   senderId,
+  isLoading = false,
+  error,
 }: MessageInputProps) {
   const [message, setMessage] = useState("");
   const [isUploading, setIsUploading] = useState(false);
@@ -23,8 +27,8 @@ export function MessageInput({
   const handleSend = () => {
     if (message.trim() || attachments.length > 0) {
       onSendMessage(message, attachments);
-      setMessage("");
-      setAttachments([]);
+      // Don't clear the message and attachments here
+      // They will be cleared when the mutation succeeds
     }
   };
 
@@ -85,6 +89,7 @@ export function MessageInput({
 
   return (
     <div className="p-4 border-t">
+      {error && <div className="mb-2 text-sm text-red-600">{error}</div>}
       {attachments.length > 0 && (
         <div className="flex flex-wrap gap-2 mb-4">
           {attachments.map((attachment) => (
@@ -117,17 +122,25 @@ export function MessageInput({
           variant="ghost"
           size="icon"
           onClick={() => fileInputRef.current?.click()}
-          disabled={isUploading || !conversationId}>
+          disabled={isUploading || !conversationId || isLoading}>
           <Paperclip className="w-5 h-5" />
         </Button>
         <Input
           placeholder="Type a message..."
           value={message}
           onChange={(e) => setMessage(e.target.value)}
-          onKeyPress={(e) => e.key === "Enter" && handleSend()}
+          onKeyPress={(e) => e.key === "Enter" && !isLoading && handleSend()}
+          disabled={isLoading}
         />
-        <Button onClick={handleSend} disabled={isUploading}>
-          <Send className="w-5 h-5" />
+        <Button
+          onClick={handleSend}
+          disabled={isUploading || isLoading}
+          className="relative">
+          {isLoading ? (
+            <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white" />
+          ) : (
+            <Send className="w-5 h-5" />
+          )}
         </Button>
       </div>
     </div>

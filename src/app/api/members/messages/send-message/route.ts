@@ -1,5 +1,6 @@
 import { createClient } from '@supabase/supabase-js';
 import { NextResponse } from 'next/server';
+import { logMemberAction } from '@/lib/logging';
 
 interface FileAttachment {
   id: string;
@@ -198,6 +199,15 @@ export async function POST(req: Request) {
       },
       attachments: messageWithAttachments?.attachments || []
     };
+
+    // Log the message sending
+    await logMemberAction(supabase, sender_id, 'send_message', {
+      conversation_id,
+      message_id: message.id,
+      content: content || 'Sent an attachment',
+      has_attachments: attachments?.length > 0,
+      recipient_id: partner_id
+    });
 
     // Insert into read_receipts table
     const { data: readReceiptData, error: readReceiptError } = await supabase

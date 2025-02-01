@@ -29,6 +29,8 @@ import {
 } from "@dnd-kit/sortable";
 import { SortableRow } from "./SortableRow";
 import { GripVertical, Save } from "lucide-react";
+import { useAtom } from "jotai";
+import { globalStateAtom } from "@/context/atoms";
 
 type HomeInfo = {
   id: string;
@@ -71,6 +73,7 @@ export default function HighlightedListings() {
     useState<HighlightedListing | null>(null);
   const [isEditingOrder, setIsEditingOrder] = useState(false);
   const [pendingOrder, setPendingOrder] = useState<HighlightedListing[]>([]);
+  const [state] = useAtom(globalStateAtom);
 
   const sensors = useSensors(
     useSensor(PointerSensor),
@@ -129,33 +132,33 @@ export default function HighlightedListings() {
   const saveNewOrder = async () => {
     if (pendingOrder.length === 0) return;
 
-    try {
-      // Update all items with their new ranks
-      await Promise.all(
-        pendingOrder.map((listing, index) =>
-          fetch("/api/admin/updateListingOrder", {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-            },
-            body: JSON.stringify({
-              listingId: listing.id,
-              newRank: index,
-              isHighlighted: true,
-            }),
-          })
-        )
-      );
+    if (!state.user?.id) {
+      toast.error("Admin ID not found");
+      return;
+    }
 
-      // Update the local cache
-      queryClient.setQueryData<HighlightedListing[]>(
-        ["highlightedListings"],
-        pendingOrder
-      );
+    try {
+      const response = await fetch("/api/admin/updateListingOrder", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          adminId: state.user.id,
+          listings: pendingOrder.map((listing, index) => ({
+            id: listing.id,
+            global_order_rank: listing.global_order_rank,
+            highlighted_order_rank: index + 1,
+          })),
+        }),
+      });
+
+      if (!response.ok) throw new Error("Failed to update listing order");
 
       toast.success("Order updated successfully");
       setIsEditingOrder(false);
       setPendingOrder([]);
+      queryClient.invalidateQueries({ queryKey: ["highlightedListings"] });
     } catch (error) {
       console.error("Error updating order:", error);
       toast.error("Failed to update order");
@@ -176,13 +179,21 @@ export default function HighlightedListings() {
   };
 
   const removeHighlight = async (listingId: string) => {
+    if (!state.user?.id) {
+      toast.error("Admin ID not found");
+      return;
+    }
+
     try {
       const response = await fetch("/api/admin/toggleHighlight", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ listingId }),
+        body: JSON.stringify({
+          listingId,
+          adminId: state.user.id,
+        }),
       });
 
       if (!response.ok) {

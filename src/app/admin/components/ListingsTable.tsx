@@ -52,6 +52,8 @@ import {
 import { SortableListingRow } from "./SortableListingRow";
 import { AddListingModal } from "./AddListingModal";
 import { DeleteListingModal } from "./DeleteListingModal";
+import { useAtom } from "jotai";
+import { globalStateAtom } from "@/context/atoms";
 
 type HomeInfo = {
   id: string;
@@ -101,6 +103,7 @@ export default function ListingsTable() {
   const [pendingOrder, setPendingOrder] = useState<Listing[]>([]);
   const [isAddListingModalOpen, setIsAddListingModalOpen] = useState(false);
   const [listingToDelete, setListingToDelete] = useState<Listing | null>(null);
+  const [state] = useAtom(globalStateAtom);
 
   const sensors = useSensors(
     useSensor(PointerSensor),
@@ -170,7 +173,7 @@ export default function ListingsTable() {
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ listingId }),
+        body: JSON.stringify({ listingId, adminId: state.user.id }),
       });
 
       if (!response.ok) throw new Error("Failed to toggle highlight status");
@@ -203,6 +206,7 @@ export default function ListingsTable() {
           params: {
             name: listing.user_info.name,
           },
+          adminId: state.user.id,
         }),
       });
 
@@ -228,6 +232,7 @@ export default function ListingsTable() {
           params: {
             name: listing.user_info.name,
           },
+          adminId: state.user.id,
         }),
       });
 
@@ -241,6 +246,7 @@ export default function ListingsTable() {
         },
         body: JSON.stringify({
           email: listing.user_info.email,
+          adminId: state.user.id,
         }),
       });
 
@@ -270,6 +276,7 @@ export default function ListingsTable() {
         body: JSON.stringify({
           listingId,
           status: currentStatus === "published" ? "archive" : "publish",
+          adminId: state.user.id,
         }),
       });
 
@@ -289,69 +296,43 @@ export default function ListingsTable() {
     }
   };
 
-  const handleDragEnd = (event: DragEndEvent) => {
+  const handleDragEnd = async (event: DragEndEvent) => {
     const { active, over } = event;
+    if (!over || active.id === over.id) return;
 
-    if (!over || active.id === over.id) {
-      return;
-    }
+    const oldIndex = pendingOrder.findIndex((item) => item.id === active.id);
+    const newIndex = pendingOrder.findIndex((item) => item.id === over.id);
 
-    const oldIndex =
-      pendingOrder.length > 0
-        ? pendingOrder.findIndex((item) => item.id === active.id)
-        : filteredListings.findIndex((item) => item.id === active.id);
-    const newIndex =
-      pendingOrder.length > 0
-        ? pendingOrder.findIndex((item) => item.id === over.id)
-        : filteredListings.findIndex((item) => item.id === over.id);
-
-    const currentOrder =
-      pendingOrder.length > 0 ? pendingOrder : filteredListings;
-    const newOrder = arrayMove(currentOrder, oldIndex, newIndex);
+    const newOrder = arrayMove(pendingOrder, oldIndex, newIndex);
     setPendingOrder(newOrder);
   };
 
-  const saveNewOrder = async () => {
-    if (pendingOrder.length === 0) return;
-
+  const handleSaveOrder = async () => {
     try {
-      // Update all items with their new ranks
-      await Promise.all(
-        pendingOrder.map((listing, index) =>
-          fetch("/api/admin/updateListingOrder", {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-            },
-            body: JSON.stringify({
-              listingId: listing.id,
-              newRank: index,
-              isHighlighted: false,
-            }),
-          })
-        )
-      );
-
-      // Update the local cache
-      queryClient.setQueryData<Listing[]>(["listings"], (old) => {
-        if (!old) return pendingOrder;
-        const oldFiltered = old.filter(
-          (item) => !pendingOrder.find((f) => f.id === item.id)
-        );
-        return [...oldFiltered, ...pendingOrder].sort(
-          (a, b) => (a.global_order_rank || 0) - (b.global_order_rank || 0)
-        );
+      const response = await fetch("/api/admin/updateListingOrder", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          adminId: state.user.id,
+          listings: pendingOrder.map((listing, index) => ({
+            id: listing.id,
+            global_order_rank: index + 1,
+            highlighted_order_rank: listing.is_highlighted ? index + 1 : null,
+          })),
+        }),
       });
 
-      toast.success("Order updated successfully");
+      if (!response.ok) throw new Error("Failed to update listing order");
+
+      toast.success("Listing order updated successfully");
       setIsEditingOrder(false);
-      setPendingOrder([]);
+      queryClient.removeQueries({ queryKey: ["listings"] });
+      await refetch();
     } catch (error) {
-      console.error("Error updating order:", error);
-      toast.error("Failed to update order");
-      // Revert the optimistic update
-      queryClient.invalidateQueries({ queryKey: ["listings"] });
-      setPendingOrder([]);
+      console.error("Error updating listing order:", error);
+      toast.error("Failed to update listing order");
     }
   };
 
@@ -449,7 +430,7 @@ export default function ListingsTable() {
           ) : (
             <>
               <Button
-                onClick={saveNewOrder}
+                onClick={handleSaveOrder}
                 variant="default"
                 className="gap-2">
                 <Save className="h-4 w-4" />

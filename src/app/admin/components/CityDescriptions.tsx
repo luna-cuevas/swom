@@ -14,6 +14,8 @@ import { toast } from "react-toastify";
 import { TableSkeleton } from "./TableSkeleton";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Trash2, Search, Plus } from "lucide-react";
+import { useAtom } from "jotai";
+import { globalStateAtom } from "@/context/atoms";
 
 interface CityDescription {
   id: string;
@@ -29,6 +31,7 @@ export default function CityDescriptions() {
   const [newDescription, setNewDescription] = useState("");
   const [loading, setLoading] = useState(false);
   const queryClient = useQueryClient();
+  const [state] = useAtom(globalStateAtom);
 
   const {
     data: descriptions = [],
@@ -37,12 +40,20 @@ export default function CityDescriptions() {
   } = useQuery<CityDescription[]>({
     queryKey: ["cityDescriptions"],
     queryFn: async () => {
+      if (!state.user?.id) {
+        throw new Error("Admin ID not found");
+      }
+
       const response = await fetch("/api/admin/getCityDescriptions", {
-        cache: "no-store",
+        method: "POST",
         headers: {
+          "Content-Type": "application/json",
           "Cache-Control": "no-cache",
           Pragma: "no-cache",
         },
+        body: JSON.stringify({
+          adminId: state.user.id,
+        }),
       });
       if (!response.ok) {
         throw new Error("Failed to fetch city descriptions");
@@ -64,6 +75,11 @@ export default function CityDescriptions() {
       return;
     }
 
+    if (!state.user?.id) {
+      toast.error("Admin ID not found");
+      return;
+    }
+
     setLoading(true);
     try {
       const response = await fetch("/api/admin/createCityDescription", {
@@ -72,6 +88,7 @@ export default function CityDescriptions() {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
+          adminId: state.user.id,
           city: newCity.trim(),
           description: newDescription.trim(),
         }),
@@ -92,13 +109,22 @@ export default function CityDescriptions() {
   };
 
   const handleDelete = async (id: string) => {
+    if (!state.user?.id) {
+      toast.error("Admin ID not found");
+      return;
+    }
+
     try {
-      const response = await fetch(
-        `/api/admin/deleteCityDescription?id=${id}`,
-        {
-          method: "DELETE",
-        }
-      );
+      const response = await fetch(`/api/admin/deleteCityDescription`, {
+        method: "DELETE",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          adminId: state.user.id,
+          id,
+        }),
+      });
 
       if (!response.ok) {
         throw new Error("Failed to delete city description");

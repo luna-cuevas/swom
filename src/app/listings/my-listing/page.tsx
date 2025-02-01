@@ -86,7 +86,7 @@ export default function Page() {
   };
 
   const handleArchiveListing = async () => {
-    if (!listings[activeListingIndex]) return;
+    if (!listings[activeListingIndex] || !state.user?.id) return;
 
     const currentStatus = listings[activeListingIndex].status;
     const action = currentStatus === "archived" ? "publish" : "archive";
@@ -100,6 +100,7 @@ export default function Page() {
         body: JSON.stringify({
           listingId: listings[activeListingIndex].id,
           userEmail: state.user?.email,
+          userId: state.user?.id,
           currentStatus,
         }),
       });

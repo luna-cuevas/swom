@@ -7,6 +7,8 @@ import PendingApprovals from "./components/PendingApprovals";
 import HighlightedListings from "./components/HighlightedListings";
 import CityDescriptions from "./components/CityDescriptions";
 import UsersTable from "./components/UsersTable";
+import AdminLogsTable from "./components/AdminLogsTable";
+import MemberLogsTable from "./components/MemberLogsTable";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 
 const queryClient = new QueryClient();
@@ -38,6 +40,12 @@ export default function AdminDashboard() {
             </TabsTrigger>
             <TabsTrigger value="users" className="flex-1 max-w-[200px]">
               Users
+            </TabsTrigger>
+            <TabsTrigger value="admin-logs" className="flex-1 max-w-[200px]">
+              Admin Logs
+            </TabsTrigger>
+            <TabsTrigger value="member-logs" className="flex-1 max-w-[200px]">
+              Member Logs
             </TabsTrigger>
           </TabsList>
 
@@ -94,6 +102,30 @@ export default function AdminDashboard() {
                   <h2 className="text-lg font-semibold">Users</h2>
                 </div>
                 <UsersTable />
+              </div>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="admin-logs">
+            <Card className="p-6 pt-4">
+              <div className="flex flex-col space-y-4">
+                <div className="flex items-center justify-between">
+                  <h2 className="text-lg font-semibold">Admin Activity Logs</h2>
+                </div>
+                <AdminLogsTable />
+              </div>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="member-logs">
+            <Card className="p-6 pt-4">
+              <div className="flex flex-col space-y-4">
+                <div className="flex items-center justify-between">
+                  <h2 className="text-lg font-semibold">
+                    Member Activity Logs
+                  </h2>
+                </div>
+                <MemberLogsTable />
               </div>
             </Card>
           </TabsContent>

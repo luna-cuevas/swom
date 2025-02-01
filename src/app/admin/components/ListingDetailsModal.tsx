@@ -15,6 +15,8 @@ import Image from "next/image";
 import { DragDropContext, Droppable, Draggable } from "react-beautiful-dnd";
 import { Upload, X } from "lucide-react";
 import { useState, useEffect, useCallback } from "react";
+import { useAtom } from "jotai";
+import { globalStateAtom } from "@/context/atoms";
 
 interface ListingDetailsModalProps {
   listing: any;
@@ -123,6 +125,7 @@ export function ListingDetailsModal({
   onClose,
   onUpdate,
 }: ListingDetailsModalProps) {
+  const [state] = useAtom(globalStateAtom);
   const [editedListing, setEditedListing] = useState<any>(null);
   const [isEditing, setIsEditing] = useState(false);
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
@@ -257,37 +260,24 @@ export function ListingDetailsModal({
 
   const handleSave = async () => {
     try {
-      console.log("Sending data:", {
-        id: editedListing.id,
-        homeInfoId: editedListing.home_info?.id,
-        userInfoId: editedListing.user_info?.id,
-        amenitiesId: editedListing.amenities?.id,
-      });
+      if (!state.user?.id) {
+        toast.error("Admin ID not found");
+        return;
+      }
 
       const response = await fetch("/api/admin/updateListing", {
-        method: "PUT",
+        method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
           id: editedListing.id,
-          status: editedListing.status,
+          home_info: editedListing.home_info,
+          user_info: editedListing.user_info,
+          amenities: editedListing.amenities,
           slug: editedListing.slug,
-          home_info: {
-            id: editedListing.home_info.id,
-            ...editedListing.home_info,
-            city: editedListing.home_info.city,
-            address: editedListing.home_info.address,
-            location: editedListing.home_info.location,
-          },
-          user_info: {
-            id: editedListing.user_info.id,
-            ...editedListing.user_info,
-          },
-          amenities: {
-            id: editedListing.amenities.id,
-            ...editedListing.amenities,
-          },
+          adminId: state.user.id,
+          status: editedListing.status,
         }),
       });
 
@@ -297,11 +287,11 @@ export function ListingDetailsModal({
       }
 
       toast.success("Listing updated successfully");
-      await onUpdate?.();
       setIsEditing(false);
+      if (onUpdate) onUpdate();
     } catch (error: any) {
-      toast.error(error.message || "Failed to update listing");
       console.error("Error updating listing:", error);
+      toast.error(error.message || "Failed to update listing");
     }
   };
 
@@ -329,51 +319,76 @@ export function ListingDetailsModal({
   };
 
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = e.target.files;
-    if (!files) return;
+    if (!e.target.files || e.target.files.length === 0) return;
+
+    const file = e.target.files[0];
+    const formData = new FormData();
+    formData.append("file", file);
+    formData.append("listingId", listing.id);
+    formData.append("adminId", state.user.id);
 
     try {
-      const formData = new FormData();
-      Array.from(files).forEach((file) => {
-        formData.append("files", file);
-      });
-
-      const response = await fetch("/api/admin/uploadImages", {
+      const response = await fetch("/api/admin/uploadImage", {
         method: "POST",
         body: formData,
       });
 
       if (!response.ok) {
-        throw new Error("Failed to upload images");
+        throw new Error("Failed to upload image");
       }
 
-      const { urls } = await response.json();
+      const data = await response.json();
+      setEditedListing((prev: any) => ({
+        ...prev,
+        home_info: {
+          ...prev.home_info,
+          listing_images: [...prev.home_info.listing_images, data.url],
+        },
+      }));
+
+      toast.success("Image uploaded successfully");
+      if (onUpdate) onUpdate();
+    } catch (error) {
+      console.error("Error uploading image:", error);
+      toast.error("Failed to upload image");
+    }
+  };
+
+  const handleImageDelete = async (index: number) => {
+    try {
+      const imageUrl = editedListing.home_info.listing_images[index];
+      const response = await fetch("/api/admin/deleteImage", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          adminId: state.user.id,
+          listingId: listing.id,
+          imageUrl,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to delete image");
+      }
 
       setEditedListing((prev: any) => ({
         ...prev,
         home_info: {
           ...prev.home_info,
-          listing_images: [...prev.home_info.listing_images, ...urls],
+          listing_images: prev.home_info.listing_images.filter(
+            (_: any, i: number) => i !== index
+          ),
         },
       }));
 
-      toast.success("Images uploaded successfully");
+      toast.success("Image deleted successfully");
+      if (onUpdate) onUpdate();
     } catch (error) {
-      toast.error("Failed to upload images");
-      console.error("Error uploading images:", error);
+      console.error("Error deleting image:", error);
+      toast.error("Failed to delete image");
     }
-  };
-
-  const handleImageDelete = (index: number) => {
-    setEditedListing((prev: any) => ({
-      ...prev,
-      home_info: {
-        ...prev.home_info,
-        listing_images: prev.home_info.listing_images.filter(
-          (_: any, i: number) => i !== index
-        ),
-      },
-    }));
   };
 
   return (
