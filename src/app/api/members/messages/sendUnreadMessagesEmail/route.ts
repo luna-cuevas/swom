@@ -89,18 +89,18 @@ export async function GET(request: Request) {
           sender: msg.messages.sender.name,
           preview: msg.messages.content.substring(0, 100) + (msg.messages.content.length > 100 ? '...' : '')
         })).slice(0, 3), // Preview first 3 messages
-        messagesUrl: `${process.env.NEXT_PUBLIC_APP_URL}/messages`
+        messagesUrl: `${process.env.BASE_URL}/messages`
       };
 
       // Send email using Brevo template
-      const emailResponse = await fetch(`${process.env.NEXT_PUBLIC_APP_URL}/api/admin/sendBrevoTemplate`, {
+      const emailResponse = await fetch(`${process.env.BASE_URL}/api/admin/sendBrevoTemplate`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
           email: user.email,
-          templateId: process.env.BREVO_UNREAD_MESSAGES_TEMPLATE_ID,
+          templateId: 5,
           params
         })
       });
