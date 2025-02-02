@@ -27,8 +27,8 @@ export function MessageInput({
   const handleSend = () => {
     if (message.trim() || attachments.length > 0) {
       onSendMessage(message, attachments);
-      // Don't clear the message and attachments here
-      // They will be cleared when the mutation succeeds
+      setMessage("");
+      setAttachments([]);
     }
   };
 

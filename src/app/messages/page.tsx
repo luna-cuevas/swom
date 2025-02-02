@@ -370,6 +370,7 @@ export default function MessagesPage() {
                       messages={messages}
                       currentUserId={state.user?.id}
                       typingUsers={typingUsers}
+                      conversationId={selectedConversationId || ""}
                     />
                   </div>
                   <MessageInput

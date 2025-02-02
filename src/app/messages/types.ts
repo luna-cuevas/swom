@@ -44,9 +44,9 @@ export interface Host {
 }
 
 export interface TypingStatus {
-  userId: string;
   isTyping: boolean;
-  timestamp: number;
+  name: string;
+  userId: string;
 }
 
 export interface FileAttachment {

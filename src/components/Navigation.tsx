@@ -45,47 +45,63 @@ const Navigation = () => {
     const subscribeToChannel = async () => {
       try {
         subscription = supabase
-          .channel(`read-receipts-channel-${user.id}`)
+          .channel(`message-status-channel-${user.id}`)
           .on(
             "postgres_changes",
             {
               event: "*",
               schema: "public",
-              table: "read_receipts",
-              // filter: `user_id=eq.${user.id}`,
+              table: "message_status",
+              filter: `user_id=eq.${user.id}`,
             },
-            (payload) => {
-              console.log("Table Event Received:", {
-                event: payload.eventType,
-                payload,
-                userId: user.id
-              });
-              const fetchUnreadCount = async () => {
-                try {
-                  console.log("Fetching unread count after table change");
-                  const count = await getUnreadMessageCount(user.id);
-                  console.log("New count:", count);
-                  const unreadConverstaions = await getUnreadConversations(
-                    state.user.id
-                  );
+            async () => {
+              try {
+                const response = await fetch(
+                  "/api/members/messages/get-unread-count",
+                  {
+                    method: "POST",
+                    body: JSON.stringify({ userId: user.id }),
+                  }
+                );
+                const data = await response.json();
+                if (!data.error) {
                   setState((prevState) => ({
                     ...prevState,
-                    unreadCount: count,
-                    unreadConversations: unreadConverstaions,
+                    unreadCount: data.totalUnread,
+                    unreadConversations: data.conversationCounts,
                   }));
-                } catch (err) {
-                  console.error("Error fetching count:", err);
                 }
-              };
-              fetchUnreadCount();
+              } catch (err) {
+                console.error("Error fetching unread count:", err);
+              }
             }
           )
           .subscribe();
 
-        console.log("Subscribed to channel with user ID:", user.id);
+        console.log(
+          "Subscribed to message status channel with user ID:",
+          user.id
+        );
 
         if (!subscription) {
           throw new Error("Failed to subscribe to channel");
+        }
+
+        // Initial fetch of unread counts
+        const response = await fetch("/api/members/messages/get-unread-count", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ userId: user.id }),
+        });
+        const data = await response.json();
+        if (!data.error) {
+          setState((prevState) => ({
+            ...prevState,
+            unreadCount: data.totalUnread,
+            unreadConversations: data.conversationCounts,
+          }));
         }
       } catch (error) {
         console.error("Error subscribing to channel:", error);

@@ -7,7 +7,6 @@ import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { useAtom } from "jotai";
 import { globalStateAtom } from "@/context/atoms";
-import { stripe } from "@/utils/stripe";
 
 const ResetPassword = () => {
   const supabase = getSupabaseClient();
@@ -21,36 +20,25 @@ const ResetPassword = () => {
 
   const [state, setState] = useAtom(globalStateAtom);
 
-  async function isUserSubscribed(
-    email: string,
-    stripe: any
-  ): Promise<boolean> {
-    console.log("checking subscription status");
+  async function isUserSubscribed(email: string): Promise<boolean> {
     try {
-      if (!stripe) {
-        console.log("Stripe.js has not loaded yet.");
-        return false;
-      }
-      // Retrieve the customer by email
-      const customers = await stripe.customers.list({ email: email });
-      const customer = customers.data[0]; // Assuming the first customer is the desired one
+      const response = await fetch("/api/members/subscription/check", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ email }),
+      });
 
-      if (customer) {
-        // Retrieve the customer's subscriptions
-        const subscriptions = await stripe.subscriptions.list({
-          customer: customer.id,
-          limit: 1, // Assuming only checking the latest subscription
-        });
-
-        return subscriptions.data.length > 0; // User is subscribed if there's at least one subscription
-      } else {
-        // Customer not found
-        console.log("Customer not found");
-        return false;
+      if (!response.ok) {
+        throw new Error("Failed to check subscription status");
       }
+
+      const data = await response.json();
+      return data.isSubscribed;
     } catch (error) {
       console.error("Error checking subscription status:", error);
-      throw error;
+      return false;
     }
   }
 
@@ -110,7 +98,7 @@ const ResetPassword = () => {
       console.log("session", session);
       toast.success("Signed in successfully");
       const loggedInUser = await fetchLoggedInUser(session.user);
-      const subbed = await isUserSubscribed(session.user.email, stripe);
+      const subbed = await isUserSubscribed(session.user.email);
       setState({
         ...state,
         session,
