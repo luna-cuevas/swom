@@ -40,26 +40,49 @@ export async function POST(request: Request) {
         message_id,
         messages_new!inner (
           id,
-          conversation_id
+          conversation_id,
+          sender_id,
+          content,
+          created_at,
+          conversations_new:conversation_id (
+            id,
+            host_email,
+            user_email,
+            last_message,
+            last_message_at,
+            listing_id
+          )
         )
       `)
       .eq('user_id', userId)
       .eq('status', 'unread');
 
+    console.log("unreadMessages", unreadMessages?.[0]?.messages_new?.[0]?.conversations_new);
+
     if (messagesError) {
-      console.error('Error getting unread messages:', messagesError);
+      console.error("Error getting unread messages:", messagesError);
       return NextResponse.json(
         { error: "Failed to get unread messages" },
         { status: 500 }
       );
     }
 
-    // Count unread messages per conversation
-    const conversationCounts: Record<string, number> = {};
+    // Count unread messages per conversation and store conversation details
+    const conversationCounts: Record<string, { count: number, conversation: any }> = {};
     unreadMessages?.forEach((msg) => {
-      if (msg.messages_new && msg.messages_new.length > 0) {
-        const convId = msg.messages_new[0].conversation_id;
-        conversationCounts[convId] = (conversationCounts[convId] || 0) + 1;
+      const message = msg.messages_new?.[0];
+      if (message?.conversation_id && message.conversations_new) {
+        const conversation = message.conversations_new;
+        const convId = message.conversation_id;
+
+        if (!conversationCounts[convId]) {
+          conversationCounts[convId] = {
+            count: 1,
+            conversation
+          };
+        } else {
+          conversationCounts[convId].count += 1;
+        }
       }
     });
 

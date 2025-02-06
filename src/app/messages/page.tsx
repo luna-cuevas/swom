@@ -249,16 +249,18 @@ export default function MessagesPage() {
                   <X className="h-6 w-6 text-gray-600" />
                 </button>
               )}
-              <div className="h-full overflow-hidden">
+              <div
+                className={`h-full overflow-hidden ${!mobileNavMenu ? "hidden md:block" : ""}`}>
                 <ConversationList
                   conversations={conversationsData}
-                  currentUserId={state.user.id}
+                  currentUserId={state.user?.id || ""}
                   selectedConversationId={selectedConversationId}
-                  onSelectConversation={(id: string) => {
+                  onSelectConversation={(id) => {
                     setSelectedConversationId(id);
                     setMobileNavMenu(false);
                   }}
                   contactingHost={contactingHost}
+                  unreadCounts={state.unreadConversations}
                 />
               </div>
             </div>

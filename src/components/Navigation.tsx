@@ -68,7 +68,13 @@ const Navigation = () => {
                   setState((prevState) => ({
                     ...prevState,
                     unreadCount: data.totalUnread,
-                    unreadConversations: data.conversationCounts,
+                    unreadConversations: Object.entries(
+                      data.conversationCounts
+                    ).map(([id, info]: [string, any]) => ({
+                      id,
+                      unreadCount: info.count,
+                      ...info.conversation,
+                    })),
                   }));
                 }
               } catch (err) {
@@ -100,7 +106,13 @@ const Navigation = () => {
           setState((prevState) => ({
             ...prevState,
             unreadCount: data.totalUnread,
-            unreadConversations: data.conversationCounts,
+            unreadConversations: Object.entries(data.conversationCounts).map(
+              ([id, info]: [string, any]) => ({
+                id,
+                unreadCount: info.count,
+                ...info.conversation,
+              })
+            ),
           }));
         }
       } catch (error) {
@@ -246,3 +258,11 @@ const Navigation = () => {
 };
 
 export default Navigation;
+
+export function NavigationWrapper() {
+  return (
+    <div suppressHydrationWarning>
+      <Navigation />
+    </div>
+  );
+}
