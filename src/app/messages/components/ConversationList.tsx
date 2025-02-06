@@ -57,6 +57,27 @@ export function ConversationList({
           </div>
         ) : (
           <ul className="divide-y divide-gray-200">
+            {/* {contactingHost && (
+              <li
+                className={cn(
+                  "p-3 flex items-center space-x-3 hover:bg-gray-50 transition-colors cursor-pointer",
+                  { "bg-white": true }
+                )}>
+                <Avatar className="h-12 w-12">
+                  <AvatarImage src={contactingHost.profileImage} />
+                  <AvatarFallback className="bg-[#E88527] text-white">
+                    {contactingHost.name.charAt(0).toUpperCase()}
+                  </AvatarFallback>
+                </Avatar>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-medium text-gray-900 truncate">
+                    {contactingHost.name}
+                  </p>
+                  <p className="text-sm text-gray-500">New conversation</p>
+                </div>
+              </li>
+            )} */}
+
             {conversations?.map((conversation) => {
               const otherParticipant = conversation.participants?.find(
                 (p) => p.user?.id !== currentUserId
@@ -64,7 +85,19 @@ export function ConversationList({
 
               if (!otherParticipant?.user) return null;
 
+              console.log("📝 Conversation details:", {
+                conversationId: conversation.id,
+                type: typeof conversation.id,
+                selectedId: selectedConversationId,
+                selectedType: typeof selectedConversationId,
+              });
+
               const isSelected = selectedConversationId === conversation.id;
+              console.log("🎯 Conversation selection check:", {
+                conversationId: conversation.id,
+                selectedId: selectedConversationId,
+                isSelected,
+              });
 
               return (
                 <li

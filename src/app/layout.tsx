@@ -1,6 +1,6 @@
 import "./globals.css";
 import type { Metadata } from "next";
-import { NavigationWrapper } from "@/components/Navigation";
+import Navigation from "@/components/Navigation";
 import Footer from "@/components/Footer";
 import Script from "next/script";
 import React from "react";
@@ -96,7 +96,7 @@ export default function RootLayout({
         <body className="relative">
           {/* <CookieConsentComponent /> */}
           <HotjarInit />
-          <NavigationWrapper />
+          <Navigation />
           {children}
           <SpeedInsights />
           <Analytics />
