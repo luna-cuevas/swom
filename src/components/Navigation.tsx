@@ -35,9 +35,42 @@ const Navigation = () => {
     any[]
   >([]);
 
+  // Add function to update both local state and localStorage
+  const updateUnreadCounts = (
+    totalUnread: number,
+    conversationCounts: any[]
+  ) => {
+    setLocalUnreadCount(totalUnread);
+    setLocalUnreadConversations(conversationCounts);
+
+    // Update localStorage
+    const currentState = JSON.parse(
+      localStorage.getItem("SWOMGlobalState-v3") || "{}"
+    );
+    localStorage.setItem(
+      "SWOMGlobalState-v3",
+      JSON.stringify({
+        ...currentState,
+        unreadCount: totalUnread,
+        unreadConversations: conversationCounts,
+      })
+    );
+  };
+
   useEffect(() => {
     setIsClient(true);
     setIsMounted(true);
+
+    // Load initial values from localStorage
+    const savedState = JSON.parse(
+      localStorage.getItem("SWOMGlobalState-v3") || "{}"
+    );
+    if (savedState.unreadCount !== undefined) {
+      setLocalUnreadCount(savedState.unreadCount);
+    }
+    if (savedState.unreadConversations) {
+      setLocalUnreadConversations(savedState.unreadConversations);
+    }
 
     const handleScroll = () => {
       setIsScrolled(window.scrollY > 10);
@@ -64,73 +97,41 @@ const Navigation = () => {
           return;
         }
 
-        // Create a channel for message status updates
-        const channel = supabase.channel("message_status_room", {
-          config: {
-            broadcast: {
-              self: true,
-              ack: true,
-            },
+        // Create a channel for message status changes
+        const channel = supabase.channel("message_status_changes").on(
+          "postgres_changes",
+          {
+            event: "*", // Listen to all events (INSERT, UPDATE, DELETE)
+            schema: "public",
+            table: "message_status",
+            filter: `user_id=eq.${user.id}`, // Only listen to changes for this user
           },
-        });
-
-        // Add broadcast handler
-        channel.on(
-          "broadcast",
-          { event: "message_status" },
           async (payload) => {
-            console.log("Received broadcast message in Navigation:", payload);
+            console.log("Received postgres change in Navigation:", payload);
 
-            // Only process if we have a user and the message is for this user
-            if (
-              user.id &&
-              payload.payload &&
-              payload.payload.user_id === user.id
-            ) {
-              try {
+            try {
+              // Fetch the actual count from server to ensure accuracy
+              const response = await fetch(
+                "/api/members/messages/get-unread-count",
+                {
+                  method: "POST",
+                  headers: {
+                    "Content-Type": "application/json",
+                  },
+                  body: JSON.stringify({ userId: user.id }),
+                }
+              );
+              const data = await response.json();
+              console.log("Navigation: Server unread count response:", data);
+              if (!data.error) {
+                updateUnreadCounts(data.totalUnread, data.conversationCounts);
                 console.log(
-                  "Processing message status in Navigation:",
-                  payload.payload.action
+                  "Navigation: Updated count from server:",
+                  data.totalUnread
                 );
-
-                // For new messages, increment the count immediately
-                if (payload.payload.action === "new_message") {
-                  // Only increment if we're not the sender
-                  if (payload.payload.sender_id !== user.id) {
-                    setLocalUnreadCount((prev) => prev + 1);
-                  }
-                }
-
-                // For mark_as_read, update from server
-                if (payload.payload.action === "mark_as_read") {
-                  // Fetch the actual count from server to ensure accuracy
-                  const response = await fetch(
-                    "/api/members/messages/get-unread-count",
-                    {
-                      method: "POST",
-                      headers: {
-                        "Content-Type": "application/json",
-                      },
-                      body: JSON.stringify({ userId: user.id }),
-                    }
-                  );
-                  const data = await response.json();
-                  console.log(
-                    "Navigation: Server unread count response:",
-                    data
-                  );
-                  if (!data.error) {
-                    setLocalUnreadCount(data.totalUnread);
-                    setLocalUnreadConversations(data.conversationCounts);
-                    console.log(
-                      "Navigation: Updated count from server:",
-                      data.totalUnread
-                    );
-                  }
-                }
-              } catch (err) {
-                console.error("Error updating Navigation unread count:", err);
               }
+            } catch (err) {
+              console.error("Error updating Navigation unread count:", err);
             }
           }
         );
@@ -139,7 +140,9 @@ const Navigation = () => {
         channel.subscribe((status) => {
           console.log("Navigation subscription status:", status);
           if (status === "SUBSCRIBED") {
-            console.log("Navigation successfully subscribed to broadcasts");
+            console.log(
+              "Navigation successfully subscribed to postgres changes"
+            );
             // Fetch initial counts when subscription is established
             fetch("/api/members/messages/get-unread-count", {
               method: "POST",
@@ -151,8 +154,7 @@ const Navigation = () => {
               .then((response) => response.json())
               .then((data) => {
                 if (!data.error) {
-                  setLocalUnreadCount(data.totalUnread);
-                  setLocalUnreadConversations(data.conversationCounts);
+                  updateUnreadCounts(data.totalUnread, data.conversationCounts);
                   console.log(
                     "Navigation: Initial unread count set:",
                     data.totalUnread
@@ -166,7 +168,7 @@ const Navigation = () => {
                 );
               });
           } else if (status === "CHANNEL_ERROR") {
-            console.error("Navigation broadcast subscription failed");
+            console.error("Navigation postgres changes subscription failed");
           }
         });
 
