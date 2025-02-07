@@ -167,6 +167,40 @@ export async function POST(req: Request) {
       // Don't return error here as the message was already created
     }
 
+    // Send broadcast message about new message status
+    const channel = supabase.channel("message_status_room");
+
+    await channel.subscribe(async (status) => {
+      if (status === "SUBSCRIBED") {
+        // Send notification to recipient
+        await channel.send({
+          type: "broadcast",
+          event: "message_status",
+          payload: {
+            user_id: partner_id,
+            sender_id: sender_id,
+            action: "new_message",
+            conversation_id
+          }
+        });
+
+        // Send notification to sender
+        await channel.send({
+          type: "broadcast",
+          event: "message_status",
+          payload: {
+            user_id: sender_id,
+            sender_id: sender_id,
+            action: "new_message",
+            conversation_id
+          }
+        });
+
+        // Clean up the channel after sending
+        await supabase.removeChannel(channel);
+      }
+    });
+
     // Get the message with its attachments
     const { data: messageWithAttachments, error: fetchError } = await supabase
       .from('messages_new')

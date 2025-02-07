@@ -17,12 +17,11 @@ export async function POST(request: Request) {
       process.env.SUPABASE_SERVICE_ROLE_KEY as string
     );
 
-    // Get unread message count
+    // Get unread message count from message_status table
     const { count: unreadCount, error: countError } = await supabase
       .from('message_status')
       .select('*', { count: 'exact' })
-      .eq('user_id', userId)
-      .eq('status', 'unread');
+      .eq('user_id', userId);
 
     if (countError) {
       console.error('Error getting unread count:', countError);
@@ -43,8 +42,7 @@ export async function POST(request: Request) {
           conversation_id
         )
       `)
-      .eq('user_id', userId)
-      .eq('status', 'unread');
+      .eq('user_id', userId);
 
     if (messagesError) {
       console.error('Error getting unread messages:', messagesError);
@@ -54,12 +52,16 @@ export async function POST(request: Request) {
       );
     }
 
-    // Count unread messages per conversation
-    const conversationCounts: Record<string, number> = {};
+    // Count messages per conversation and store conversation details
+    const conversationCounts: Record<string, { count: number, conversation: any }> = {};
     unreadMessages?.forEach((msg) => {
       if (msg.messages_new && msg.messages_new.length > 0) {
         const convId = msg.messages_new[0].conversation_id;
-        conversationCounts[convId] = (conversationCounts[convId] || 0) + 1;
+        if (!conversationCounts[convId]) {
+          conversationCounts[convId] = { count: 1, conversation: msg.messages_new[0] };
+        } else {
+          conversationCounts[convId].count += 1;
+        }
       }
     });
 
