@@ -214,6 +214,9 @@ const ListingsPage = () => {
   const searchParams = useSearchParams();
   const [isFiltered, setIsFiltered] = useState(false);
 
+  // Add new state for all listings
+  const [allListings, setAllListings] = useState<Listing[]>([]);
+
   // Create a debounced search function
   const debouncedSetSearch = useCallback(
     debounce((value: string) => {
@@ -230,6 +233,20 @@ const ListingsPage = () => {
     };
   }, [debouncedSetSearch]);
 
+  // Modify the fetchListings function to get all listings at once
+  const fetchAllListings = async (search: string = "") => {
+    console.log("search", search);
+    
+    const response = await fetch(
+      `/api/members/getListings?page=1&limit=1000&search=${encodeURIComponent(search)}`
+    );
+    if (!response.ok) {
+      throw new Error("Failed to fetch listings");
+    }
+    return response.json();
+  };
+
+  // Update the query to fetch all listings
   const {
     data: listingsData = {
       listings: [],
@@ -240,8 +257,8 @@ const ListingsPage = () => {
     },
     isLoading: queryLoading,
   } = useQuery<ListingsResponse & { isFiltered: boolean }>({
-    queryKey: ["listings", currentPage, debouncedSearchQuery],
-    queryFn: () => fetchListings(currentPage, 9, debouncedSearchQuery),
+    queryKey: ["listings", debouncedSearchQuery],
+    queryFn: () => fetchAllListings(debouncedSearchQuery),
     refetchOnWindowFocus: true,
   });
 
@@ -297,22 +314,13 @@ const ListingsPage = () => {
     setSearchQuery("");
   };
 
-  useEffect(() => {
-    setListings(listingsData.listings);
-    setFilteredListings(listingsData.listings);
-    setTotalPages(listingsData.totalPages);
-    setTotalCount(listingsData.totalCount);
-    setIsFiltered(listingsData.isFiltered);
-    setIsLoading(false);
-  }, [listingsData]);
-
-  // Separate effect for filtering
+  // Modify the filtering effect to handle pagination
   useEffect(() => {
     if (!listings.length) return;
 
     let result = [...listings];
 
-    // Apply property filters
+    // Apply all filters
     if (filters.propertyType) {
       result = result.filter(
         (listing) =>
@@ -366,8 +374,27 @@ const ListingsPage = () => {
       result = result.filter((listing) => listing.favorite);
     }
 
-    setFilteredListings(result);
-  }, [listings, filters, showFavorites, searchQuery]);
+    // Store all filtered results
+    setAllListings(result);
+
+    // Calculate pagination
+    const startIndex = (currentPage - 1) * 9;
+    const endIndex = startIndex + 9;
+    const paginatedResults = result.slice(startIndex, endIndex);
+
+    // Update state
+    setFilteredListings(paginatedResults);
+    setTotalCount(result.length);
+    setTotalPages(Math.ceil(result.length / 9));
+  }, [listings, filters, showFavorites, searchQuery, currentPage]);
+
+  // Update initial listings effect
+  useEffect(() => {
+    setListings(listingsData.listings);
+    setAllListings(listingsData.listings);
+    setIsFiltered(listingsData.isFiltered);
+    setIsLoading(false);
+  }, [listingsData]);
 
   // Handle whereIsIt changes
   useEffect(() => {
@@ -528,6 +555,7 @@ const ListingsPage = () => {
         onClose={() => setShowFilters(false)}
         filters={filters}
         setFilters={setFilters}
+        setCurrentPage={setCurrentPage}
         clearFilters={clearFilters}
         hasActiveFilters={hasActiveFilters()}
       />
@@ -599,7 +627,10 @@ const ListingsPage = () => {
                 {showMap ? "Show List" : "Show Map"}
               </button>
               <button
-                onClick={() => setShowFavorites(!showFavorites)}
+                onClick={() => {
+                  setCurrentPage(1);
+                  setShowFavorites(!showFavorites);
+                }}
                 className={`px-4 py-2 rounded-lg border border-[#172544] ${
                   showFavorites
                     ? "bg-[#172544] text-white"

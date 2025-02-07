@@ -16,6 +16,7 @@ interface FilterModalProps {
   setFilters: (filters: any) => void;
   clearFilters: () => void;
   hasActiveFilters: boolean;
+  setCurrentPage: (page: number) => void;
 }
 
 interface AccordionProps {
@@ -90,6 +91,7 @@ export default function FilterModal({
   setFilters,
   clearFilters,
   hasActiveFilters,
+  setCurrentPage,
 }: FilterModalProps) {
   // Add temporary state for filters
   const [tempFilters, setTempFilters] = useState(filters);
@@ -110,6 +112,7 @@ export default function FilterModal({
   // Apply filters and close modal
   const handleSave = () => {
     setFilters(tempFilters);
+    setCurrentPage(1);
     setHasChanges(false);
     onClose();
   };
@@ -124,6 +127,7 @@ export default function FilterModal({
   // Handle clearing filters
   const handleClear = () => {
     clearFilters();
+    setCurrentPage(1);
     setHasChanges(false);
     onClose();
   };
