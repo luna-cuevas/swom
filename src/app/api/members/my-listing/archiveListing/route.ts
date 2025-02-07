@@ -1,16 +1,17 @@
 import { createClient } from "@supabase/supabase-js";
 import { NextResponse } from "next/server";
+import { logMemberAction } from "@/lib/logging";
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL as string;
+const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY as string;
 
 export async function PUT(request: Request) {
   const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
   try {
-    const { listingId, userEmail, currentStatus } = await request.json();
+    const { listingId, userEmail, currentStatus, userId } = await request.json();
 
-    if (!listingId || !userEmail || !currentStatus) {
+    if (!listingId || !userEmail || !currentStatus || !userId) {
       return NextResponse.json(
         { error: "Missing required fields" },
         { status: 400 }
@@ -124,6 +125,14 @@ export async function PUT(request: Request) {
         { status: 500 }
       );
     }
+
+    // Log the action
+    await logMemberAction(supabase, userId, `${newStatus === "archived" ? "archive" : "unarchive"}_listing`, {
+      listing_id: listingId,
+      listing_title: updatedListing.home_info[0]?.title,
+      previous_status: currentStatus,
+      new_status: newStatus
+    });
 
     return NextResponse.json({
       success: true,

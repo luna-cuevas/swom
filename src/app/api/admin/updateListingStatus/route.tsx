@@ -1,5 +1,6 @@
 import { createClient } from "@supabase/supabase-js";
 import { NextResponse } from "next/server";
+import { logAdminAction } from "@/lib/logging";
 
 export async function POST(req: Request) {
   const supabase = createClient(
@@ -8,9 +9,9 @@ export async function POST(req: Request) {
   );
 
   try {
-    const { listingId, status } = await req.json();
+    const { listingId, status, adminId } = await req.json();
 
-    if (!listingId || !status) {
+    if (!listingId || !status || !adminId) {
       return NextResponse.json(
         { error: "Missing required fields" },
         { status: 400 }
@@ -200,6 +201,13 @@ export async function POST(req: Request) {
       } catch (emailError) {
         console.error("Error sending approval email:", emailError);
       }
+
+      // Log the approval action
+      await logAdminAction(supabase, adminId, "approve_listing", {
+        listing_id: listingId,
+        listing_title: listing.home_info.title,
+        user_email: listing.user_info.email,
+      });
     } else {
       // Update the status for rejected listings
       const { error: updateError } = await supabase
@@ -234,6 +242,13 @@ export async function POST(req: Request) {
       } catch (emailError) {
         console.error("Error sending rejection email:", emailError);
       }
+
+      // Log the rejection action
+      await logAdminAction(supabase, adminId, "reject_listing", {
+        listing_id: listingId,
+        listing_title: listing.home_info.title,
+        user_email: listing.user_info.email,
+      });
     }
 
     return NextResponse.json({ success: true });

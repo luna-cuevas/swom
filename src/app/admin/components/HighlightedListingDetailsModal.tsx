@@ -11,6 +11,8 @@ import { Button } from "@/components/ui/button";
 import { useState, useEffect } from "react";
 import { ChevronLeft, ChevronRight, Pencil, X } from "lucide-react";
 import { toast } from "react-toastify";
+import { useAtom } from "jotai";
+import { globalStateAtom } from "@/context/atoms";
 
 type Props = {
   listing: any;
@@ -31,6 +33,7 @@ export function HighlightedListingDetailsModal({
   const [startIndex, setStartIndex] = useState(0);
   const [isUpdating, setIsUpdating] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
+  const [state] = useAtom(globalStateAtom);
 
   // Update local state when listing prop changes
   useEffect(() => {
@@ -45,6 +48,11 @@ export function HighlightedListingDetailsModal({
   const hasPreviousImages = startIndex > 0;
 
   const updateHighlightTag = async () => {
+    if (!state.user?.id) {
+      toast.error("Admin ID not found");
+      return;
+    }
+
     try {
       setIsUpdating(true);
       const response = await fetch("/api/admin/updateTagline", {
@@ -53,6 +61,7 @@ export function HighlightedListingDetailsModal({
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
+          adminId: state.user.id,
           listingId: listing.id,
           tagline: highlightTag,
         }),

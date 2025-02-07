@@ -29,6 +29,7 @@ interface ConversationListProps {
     name: string;
     profileImage?: string;
   } | null;
+  unreadCounts?: Record<string, number>;
 }
 
 export function ConversationList({
@@ -37,6 +38,7 @@ export function ConversationList({
   selectedConversationId,
   onSelectConversation,
   contactingHost,
+  unreadCounts = {},
 }: ConversationListProps) {
   return (
     <div className="h-full flex flex-col">
@@ -116,12 +118,19 @@ export function ConversationList({
                     </AvatarFallback>
                   </Avatar>
                   <div className="flex-1 min-w-0">
-                    <p
-                      className={`text-sm font-medium truncate ${
-                        isSelected ? "text-[#E88527]" : "text-gray-900"
-                      }`}>
-                      {otherParticipant.user.name}
-                    </p>
+                    <div className="flex items-center justify-between">
+                      <p
+                        className={`text-sm font-medium truncate ${
+                          isSelected ? "text-[#E88527]" : "text-gray-900"
+                        }`}>
+                        {otherParticipant.user.name}
+                      </p>
+                      {unreadCounts[conversation.id] > 0 && (
+                        <div className="flex items-center justify-center min-w-[20px] h-5 px-1.5 rounded-full bg-[#E88527] text-white text-xs font-medium">
+                          {unreadCounts[conversation.id]}
+                        </div>
+                      )}
+                    </div>
                     {conversation.last_message && (
                       <p className="text-sm text-gray-500 truncate">
                         {conversation.last_message}

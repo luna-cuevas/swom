@@ -6,6 +6,9 @@ import ListingsTable from "./components/ListingsTable";
 import PendingApprovals from "./components/PendingApprovals";
 import HighlightedListings from "./components/HighlightedListings";
 import CityDescriptions from "./components/CityDescriptions";
+import UsersTable from "./components/UsersTable";
+import AdminLogsTable from "./components/AdminLogsTable";
+import MemberLogsTable from "./components/MemberLogsTable";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 
 const queryClient = new QueryClient();
@@ -21,9 +24,9 @@ export default function AdminDashboard() {
           </p>
         </div>
 
-        <Tabs defaultValue="all" className="w-full">
+        <Tabs defaultValue="listings" className="w-full">
           <TabsList className="w-full justify-start border-b">
-            <TabsTrigger value="all" className="flex-1 max-w-[200px]">
+            <TabsTrigger value="listings" className="flex-1 max-w-[200px]">
               Live Listings
             </TabsTrigger>
             <TabsTrigger value="pending" className="flex-1 max-w-[200px]">
@@ -35,9 +38,18 @@ export default function AdminDashboard() {
             <TabsTrigger value="cities" className="flex-1 max-w-[200px]">
               City Descriptions
             </TabsTrigger>
+            <TabsTrigger value="users" className="flex-1 max-w-[200px]">
+              Users
+            </TabsTrigger>
+            <TabsTrigger value="admin-logs" className="flex-1 max-w-[200px]">
+              Admin Logs
+            </TabsTrigger>
+            <TabsTrigger value="member-logs" className="flex-1 max-w-[200px]">
+              Member Logs
+            </TabsTrigger>
           </TabsList>
 
-          <TabsContent value="all">
+          <TabsContent value="listings">
             <Card className="p-6 pt-4">
               <div className="flex flex-col space-y-4">
                 <div className="flex items-center justify-between">
@@ -79,6 +91,41 @@ export default function AdminDashboard() {
                   <h2 className="text-lg font-semibold">City Descriptions</h2>
                 </div>
                 <CityDescriptions />
+              </div>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="users">
+            <Card className="p-6 pt-4">
+              <div className="flex flex-col space-y-4">
+                <div className="flex items-center justify-between">
+                  <h2 className="text-lg font-semibold">Users</h2>
+                </div>
+                <UsersTable />
+              </div>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="admin-logs">
+            <Card className="p-6 pt-4">
+              <div className="flex flex-col space-y-4">
+                <div className="flex items-center justify-between">
+                  <h2 className="text-lg font-semibold">Admin Activity Logs</h2>
+                </div>
+                <AdminLogsTable />
+              </div>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="member-logs">
+            <Card className="p-6 pt-4">
+              <div className="flex flex-col space-y-4">
+                <div className="flex items-center justify-between">
+                  <h2 className="text-lg font-semibold">
+                    Member Activity Logs
+                  </h2>
+                </div>
+                <MemberLogsTable />
               </div>
             </Card>
           </TabsContent>

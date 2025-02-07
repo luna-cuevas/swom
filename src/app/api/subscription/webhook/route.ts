@@ -2,6 +2,7 @@ import { getSupabaseAdmin } from "@/utils/supabaseClient";
 import { NextRequest, NextResponse } from "next/server";
 import { stripe } from "@/utils/stripe";
 import Stripe from "stripe";
+import { logMemberAction } from "@/lib/logging";
 
 // Configure the runtime
 export const runtime = 'nodejs';
@@ -96,6 +97,16 @@ export async function POST(req: NextRequest) {
         const subscription = event.data.object as Stripe.Subscription;
         const email = await getCustomerEmail(subscription.customer as string);
 
+        const { data: userData, error: userError } = await supabase
+          .from("appUsers")
+          .select("id")
+          .eq("email", email)
+          .single();
+
+        if (userError) {
+          throw new Error(`Failed to fetch user: ${userError.message}`);
+        }
+
         const { error: updateError } = await supabase
           .from("appUsers")
           .update({
@@ -109,6 +120,12 @@ export async function POST(req: NextRequest) {
           throw new Error(`Failed to update user: ${updateError.message}`);
         }
 
+        await logMemberAction(supabase, userData.id, 'subscription_created', {
+          subscription_id: subscription.id,
+          status: subscription.status,
+          email: email
+        });
+
         logSuccess("Successfully updated subscription", { email });
         break;
       }
@@ -117,6 +134,16 @@ export async function POST(req: NextRequest) {
         logSuccess("Processing subscription update");
         const subscription = event.data.object as Stripe.Subscription;
         const email = await getCustomerEmail(subscription.customer as string);
+
+        const { data: userData, error: userError } = await supabase
+          .from("appUsers")
+          .select("id")
+          .eq("email", email)
+          .single();
+
+        if (userError) {
+          throw new Error(`Failed to fetch user: ${userError.message}`);
+        }
 
         const { error: updateError } = await supabase
           .from("appUsers")
@@ -131,6 +158,12 @@ export async function POST(req: NextRequest) {
           throw new Error(`Failed to update subscription: ${updateError.message}`);
         }
 
+        await logMemberAction(supabase, userData.id, 'subscription_updated', {
+          subscription_id: subscription.id,
+          status: subscription.status,
+          email: email
+        });
+
         logSuccess("Successfully updated subscription", { email });
         break;
       }
@@ -139,6 +172,16 @@ export async function POST(req: NextRequest) {
         logSuccess("Processing subscription deletion");
         const subscription = event.data.object as Stripe.Subscription;
         const email = await getCustomerEmail(subscription.customer as string);
+
+        const { data: userData, error: userError } = await supabase
+          .from("appUsers")
+          .select("id")
+          .eq("email", email)
+          .single();
+
+        if (userError) {
+          throw new Error(`Failed to fetch user: ${userError.message}`);
+        }
 
         const { error: updateError } = await supabase
           .from("appUsers")
@@ -152,6 +195,11 @@ export async function POST(req: NextRequest) {
           throw new Error(`Failed to cancel subscription: ${updateError.message}`);
         }
 
+        await logMemberAction(supabase, userData.id, 'subscription_deleted', {
+          subscription_id: subscription.id,
+          email: email
+        });
+
         logSuccess("Successfully cancelled subscription", { email });
         break;
       }
@@ -160,6 +208,16 @@ export async function POST(req: NextRequest) {
         logSuccess("Processing payment failure");
         const invoice = event.data.object as Stripe.Invoice;
         const email = await getCustomerEmail(invoice.customer as string);
+
+        const { data: userData, error: userError } = await supabase
+          .from("appUsers")
+          .select("id")
+          .eq("email", email)
+          .single();
+
+        if (userError) {
+          throw new Error(`Failed to fetch user: ${userError.message}`);
+        }
 
         const { error: updateError } = await supabase
           .from("appUsers")
@@ -171,6 +229,11 @@ export async function POST(req: NextRequest) {
         if (updateError) {
           throw new Error(`Failed to update payment failure status: ${updateError.message}`);
         }
+
+        await logMemberAction(supabase, userData.id, 'subscription_payment_failed', {
+          invoice_id: invoice.id,
+          email: email
+        });
 
         logSuccess("Successfully handled payment failure", { email });
         break;

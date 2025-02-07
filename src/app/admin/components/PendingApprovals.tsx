@@ -23,6 +23,8 @@ import {
 } from "@/components/ui/dialog";
 import { TableSkeleton } from "./TableSkeleton";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useAtom } from "jotai";
+import { globalStateAtom } from "@/context/atoms";
 
 type HomeInfo = {
   id: string;
@@ -67,6 +69,8 @@ export default function PendingApprovals() {
     listing: null,
   });
 
+  const [state, setState] = useAtom(globalStateAtom);
+
   const { data: pendingListings = [], isLoading } = useQuery<PendingListing[]>({
     queryKey: ["pendingListings"],
     queryFn: async () => {
@@ -98,13 +102,22 @@ export default function PendingApprovals() {
   });
 
   const handleApprove = async (listingId: string) => {
+    if (!state.user?.id) {
+      toast.error("Admin ID not found");
+      return;
+    }
+
     try {
       const response = await fetch("/api/admin/updateListingStatus", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ listingId, status: "approved" }),
+        body: JSON.stringify({
+          listingId,
+          status: "approved",
+          adminId: state.user?.id,
+        }),
       });
 
       if (!response.ok) throw new Error("Failed to approve listing");
@@ -119,13 +132,22 @@ export default function PendingApprovals() {
   };
 
   const handleReject = async (listingId: string) => {
+    if (!state.user?.id) {
+      toast.error("Admin ID not found");
+      return;
+    }
+
     try {
       const response = await fetch("/api/admin/updateListingStatus", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ listingId, status: "rejected" }),
+        body: JSON.stringify({
+          listingId,
+          status: "rejected",
+          adminId: state.user?.id,
+        }),
       });
 
       if (!response.ok) throw new Error("Failed to reject listing");
@@ -140,13 +162,21 @@ export default function PendingApprovals() {
   };
 
   const handleToggleHighlight = async (listingId: string) => {
+    if (!state.user?.id) {
+      toast.error("Admin ID not found");
+      return;
+    }
+
     try {
       const response = await fetch("/api/admin/toggleHighlight", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ listingId }),
+        body: JSON.stringify({
+          listingId,
+          adminId: state.user.id,
+        }),
       });
 
       if (!response.ok) throw new Error("Failed to toggle highlight status");
@@ -190,7 +220,7 @@ export default function PendingApprovals() {
         <div className="flex items-center gap-4">
           <Skeleton className="h-10 w-[384px]" />
         </div>
-        <TableSkeleton columns={columns} />
+        <TableSkeleton columns={columns.length} />
       </div>
     );
   }

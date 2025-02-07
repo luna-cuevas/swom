@@ -30,6 +30,14 @@ export async function GET(req: Request) {
           id,
           name,
           profileImage
+        ),
+        attachments:message_attachments(
+          id,
+          filename,
+          file_type,
+          file_size,
+          url,
+          thumbnail_url
         )
       `)
       .eq('conversation_id', conversationId)
@@ -55,6 +63,20 @@ export async function GET(req: Request) {
       console.log('Updated last_read_at for user:', userId);
     }
 
+    console.log("deleting read receipt", conversationId, userId);
+
+    // Delete all read receipts for the given conversation ID and user ID
+    const { error: deleteError } = await supabase
+      .from("read_receipts")
+      .delete()
+      .eq("conversation_id", conversationId)
+      .eq("user_id", userId);
+
+    if (deleteError) {
+      console.error("Error deleting read receipts:", deleteError);
+      return NextResponse.json({ error: deleteError.message }, { status: 500 });
+    }
+
     // Transform the messages to match the expected format
     const formattedMessages = messages?.map(message => ({
       id: message.id,
@@ -64,7 +86,8 @@ export async function GET(req: Request) {
         id: message.sender.id,
         name: message.sender.name,
         avatar_url: message.sender.profileImage
-      }
+      },
+      attachments: message.attachments || []
     }));
 
     return NextResponse.json({ messages: formattedMessages });

@@ -1,6 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
-import { Message, ListingInfo } from "../types";
+import { Message, ListingInfo, FileAttachment } from "../types";
 
 interface UseMessagesProps {
   conversationId: string | null;
@@ -22,6 +22,8 @@ export function useMessages({
   userEmail,
 }: UseMessagesProps) {
   const [newMessage, setNewMessage] = useState("");
+  const [attachments, setAttachments] = useState<FileAttachment[]>([]);
+  const [error, setError] = useState<string | null>(null);
   const queryClient = useQueryClient();
 
   // Fetch messages for the current conversation
@@ -44,10 +46,12 @@ export function useMessages({
       content,
       conversation_id,
       sender_id,
+      attachments,
     }: {
       content: string;
       conversation_id: string;
       sender_id: string;
+      attachments?: FileAttachment[];
     }) => {
       const response = await fetch("/api/members/messages/send-message", {
         method: "POST",
@@ -59,9 +63,15 @@ export function useMessages({
           listing_id: listingInfo?.id,
           user_email: userEmail,
           host_email: contactingHostEmail,
+          attachments,
         }),
       });
-      return response.json();
+
+      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(data.error || "Failed to send message");
+      }
+      return data;
     },
     onSuccess: () => {
       // Invalidate and refetch messages and conversations
@@ -72,19 +82,31 @@ export function useMessages({
         queryKey: ["conversations", userId],
       });
       setNewMessage("");
+      setAttachments([]);
+      setError(null);
+    },
+    onError: (error: Error) => {
+      setError(error.message);
+      console.error("Error sending message:", error);
     },
   });
 
   // Handler for sending messages
-  const sendMessage = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!newMessage.trim() || !conversationId || !userId) return;
+  const sendMessage = async (content: string, messageAttachments?: FileAttachment[]) => {
+    if ((!content.trim() && (!messageAttachments || messageAttachments.length === 0)) || !conversationId || !userId) {
+      return;
+    }
 
-    sendMessageMutation.mutate({
-      conversation_id: conversationId,
-      content: newMessage,
-      sender_id: userId,
-    });
+    try {
+      await sendMessageMutation.mutate({
+        conversation_id: conversationId,
+        content,
+        sender_id: userId,
+        attachments: messageAttachments
+      });
+    } catch (err) {
+      console.error("Error in sendMessage:", err);
+    }
   };
 
   return {
@@ -92,5 +114,7 @@ export function useMessages({
     newMessage,
     setNewMessage,
     sendMessage,
+    error,
+    isLoading: sendMessageMutation.isPending
   };
 } 

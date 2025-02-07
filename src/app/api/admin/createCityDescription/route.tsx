@@ -1,5 +1,6 @@
 import { createClient } from "@supabase/supabase-js";
 import { NextResponse } from "next/server";
+import { logAdminAction } from "@/lib/logging";
 
 export async function POST(request: Request) {
   const supabase = createClient(
@@ -8,10 +9,9 @@ export async function POST(request: Request) {
   );
 
   try {
-    const body = await request.json();
-    const { city, description } = body;
+    const { city, description, adminId } = await request.json();
 
-    if (!city || !description) {
+    if (!city || !description || !adminId) {
       return new NextResponse("Missing required fields", { status: 400 });
     }
 
@@ -25,6 +25,13 @@ export async function POST(request: Request) {
     if (error) {
       return new NextResponse(error.message, { status: 500 });
     }
+
+    // Log the city description creation
+    await logAdminAction(supabase, adminId, "create_city_description", {
+      city,
+      description_length: description.length,
+      city_description_id: data.id,
+    });
 
     return NextResponse.json(data);
   } catch (error) {

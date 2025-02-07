@@ -2,6 +2,7 @@ export interface Message {
   id: string;
   content: string;
   created_at: string;
+  attachments?: FileAttachment[];
   sender: {
     id: string;
     name: string;
@@ -43,7 +44,16 @@ export interface Host {
 }
 
 export interface TypingStatus {
-  userId: string;
   isTyping: boolean;
-  timestamp: number;
+  name: string;
+  userId: string;
+}
+
+export interface FileAttachment {
+  id: string;
+  filename: string;
+  file_type: string;
+  file_size: number;
+  url: string;
+  thumbnail_url?: string;
 } 

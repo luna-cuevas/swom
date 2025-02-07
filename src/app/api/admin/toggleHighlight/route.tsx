@@ -1,5 +1,20 @@
 import { createClient } from "@supabase/supabase-js";
 import { NextResponse } from "next/server";
+import { logAdminAction } from "@/lib/logging";
+
+interface HomeInfo {
+  title: string;
+}
+
+interface UserInfo {
+  email: string;
+}
+
+interface ListingData {
+  is_highlighted: boolean;
+  home_info: HomeInfo;
+  user_info: UserInfo;
+}
 
 export async function POST(req: Request) {
   const supabase = createClient(
@@ -8,21 +23,27 @@ export async function POST(req: Request) {
   );
 
   try {
-    const { listingId } = await req.json();
+    const { listingId, adminId } = await req.json();
 
-    if (!listingId) {
+    if (!listingId || !adminId) {
       return NextResponse.json(
-        { error: "Missing listing ID" },
+        { error: "Missing required fields" },
         { status: 400 }
       );
     }
 
     // First try to find and update in listings table
-    const { data: listingData, error: listingFetchError } = await supabase
+    const { data: listingData, error: listingFetchError } = (await supabase
       .from("listings")
-      .select("is_highlighted")
+      .select(
+        `
+        is_highlighted,
+        home_info:home_info_id(title),
+        user_info:user_info_id(email)
+      `
+      )
       .eq("id", listingId)
-      .single();
+      .single()) as { data: ListingData | null; error: any };
 
     if (listingData) {
       // Update in listings table
@@ -33,6 +54,16 @@ export async function POST(req: Request) {
 
       if (updateError) throw updateError;
 
+      // Log the highlight toggle action
+      await logAdminAction(supabase, adminId, "toggle_highlight", {
+        listing_id: listingId,
+        listing_title: listingData.home_info.title,
+        user_email: listingData.user_info.email,
+        previous_state: listingData.is_highlighted,
+        new_state: !listingData.is_highlighted,
+        table: "listings",
+      });
+
       return NextResponse.json({
         success: true,
         is_highlighted: !listingData.is_highlighted,
@@ -40,11 +71,17 @@ export async function POST(req: Request) {
     }
 
     // If not found in listings, try needs_approval table
-    const { data: pendingData, error: pendingFetchError } = await supabase
+    const { data: pendingData, error: pendingFetchError } = (await supabase
       .from("needs_approval")
-      .select("is_highlighted")
+      .select(
+        `
+        is_highlighted,
+        home_info:home_info_id(title),
+        user_info:user_info_id(email)
+      `
+      )
       .eq("id", listingId)
-      .single();
+      .single()) as { data: ListingData | null; error: any };
 
     if (pendingFetchError) throw pendingFetchError;
     if (!pendingData) throw new Error("Listing not found in any table");
@@ -56,6 +93,16 @@ export async function POST(req: Request) {
       .eq("id", listingId);
 
     if (updateError) throw updateError;
+
+    // Log the highlight toggle action for pending listing
+    await logAdminAction(supabase, adminId, "toggle_highlight", {
+      listing_id: listingId,
+      listing_title: pendingData.home_info.title,
+      user_email: pendingData.user_info.email,
+      previous_state: pendingData.is_highlighted,
+      new_state: !pendingData.is_highlighted,
+      table: "needs_approval",
+    });
 
     return NextResponse.json({
       success: true,

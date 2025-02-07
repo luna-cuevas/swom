@@ -1,5 +1,6 @@
 import { createClient } from "@supabase/supabase-js";
 import { NextResponse } from "next/server";
+import { logAdminAction } from "@/lib/logging";
 
 export async function POST(req: Request) {
   const supabase = createClient(
@@ -8,13 +9,27 @@ export async function POST(req: Request) {
   );
 
   try {
-    const { listingId, status } = await req.json();
+    // Get admin session
 
-    if (!listingId || !status) {
+    const { listingId, status, adminId } = await req.json();
+
+    if (!listingId || !status || !adminId) {
       return NextResponse.json(
         { error: "Missing required fields" },
         { status: 400 }
       );
+    }
+
+    // Get listing details for logging
+    const { data: listing, error: listingError } = await supabase
+      .from("listings")
+      .select("*, home_info:home_info_id(title), user_info:user_info_id(email)")
+      .eq("id", listingId)
+      .single();
+
+    if (listingError) {
+      console.error("Error fetching listing details:", listingError);
+      throw listingError;
     }
 
     // Update the listing status
@@ -26,6 +41,16 @@ export async function POST(req: Request) {
       .single();
 
     if (error) throw error;
+
+    // Log the admin action
+    await logAdminAction(supabase, adminId, `${status}_listing`, {
+      listing_id: listingId,
+      listing_title: listing.home_info.title,
+      user_email: listing.user_info.email,
+      slug: listing.slug,
+      previous_status: listing.status,
+      new_status: status === "publish" ? "published" : "archived",
+    });
 
     return NextResponse.json(data);
   } catch (error) {
