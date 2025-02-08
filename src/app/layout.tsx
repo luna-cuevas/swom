@@ -1,6 +1,6 @@
 import "./globals.css";
 import type { Metadata } from "next";
-import Navigation from "@/components/Navigation";
+import Navigation from "@/components/navigation/Navigation";
 import Footer from "@/components/Footer";
 import Script from "next/script";
 import React from "react";
@@ -12,7 +12,7 @@ import { GoogleAnalytics } from "@next/third-parties/google";
 import HotjarInit from "@/components/HotjarInit";
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-import SignIn from "@/components/SignIn";
+import SignIn from "@/components/navigation/SignIn";
 
 export const metadata: Metadata = {
   title: `SWOM - Swap your home. - ${process.env.NEXT_PUBLIC_VERCEL_ENV === "dev" && "[Development]"}`,

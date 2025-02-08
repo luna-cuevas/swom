@@ -3,18 +3,18 @@
 import Image from "next/image";
 import Link from "next/link";
 import React, { useEffect, useState, useRef } from "react";
-import SignIn from "@/components/SignIn";
+import SignIn from "@/components/navigation/SignIn";
 import { toast } from "react-toastify";
 import { usePathname, useRouter } from "next/navigation";
 import { globalStateAtom } from "@/context/atoms";
 import { useAtom } from "jotai";
-import getUnreadMessageCount from "../utils/getUnreadMessageCount";
+import getUnreadMessageCount from "../../utils/getUnreadMessageCount";
 import { RealtimeChannel } from "@supabase/supabase-js";
 import getUnreadConversations from "@/utils/getUnreadConversations";
 import { getSupabaseClient } from "@/utils/supabaseClient";
-import { MobileNav } from "./navigation/mobile-nav";
-import { NavigationLinks } from "./navigation/navigation-links";
-import { UserNav } from "./navigation/user-nav";
+import { MobileNav } from "./mobile-nav";
+import { NavigationLinks } from "./navigation-links";
+import { UserNav } from "./user-nav";
 import { cn } from "@/lib/utils";
 
 const Navigation = () => {

@@ -18,7 +18,7 @@ import { useFormHandling } from "./hooks/useFormHandling";
 import { AddListingModal } from "./components/AddListingModal";
 
 const BecomeMemberDropzone = dynamic(
-  () => import("@/components/BecomeMemberDropzone"),
+  () => import("@/app/become-member/components/BecomeMemberDropzone"),
   {
     loading: () => <p>Loading...</p>,
   }

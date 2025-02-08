@@ -3,7 +3,7 @@ import { motion } from "framer-motion";
 import dynamic from "next/dynamic";
 
 const BecomeMemberDropzone = dynamic(
-  () => import("@/components/BecomeMemberDropzone"),
+  () => import("@/app/become-member/components/BecomeMemberDropzone"),
   {
     loading: () => <p>Loading...</p>,
   }
