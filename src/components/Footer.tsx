@@ -88,7 +88,7 @@ const Footer = () => {
                 sizes="(max-width: 768px) 96px, 96px"
               />
             </div>
-            <p className="text-sm text-foreground/70 max-w-xs">
+            <p className="text-sm text-muted-foreground max-w-xs font-['Noto']">
               Connecting and empowering communities through innovative
               solutions.
             </p>
@@ -96,18 +96,26 @@ const Footer = () => {
 
           {/* Quick Links */}
           <div className="space-y-4">
-            <h3 className="text-sm font-semibold">Quick Links</h3>
+            <h2 className="text-sm font-['Kanit']">Quick Links</h2>
             <nav className="grid gap-3">
-              <Link href="/how-it-works" className={linkClassName}>
+              <Link
+                href="/how-it-works"
+                className="text-sm text-muted-foreground hover:text-foreground transition-colors font-['Noto']">
                 What is Swom
               </Link>
-              <Link href="/become-member" className={linkClassName}>
+              <Link
+                href="/become-member"
+                className="text-sm text-muted-foreground hover:text-foreground transition-colors font-['Noto']">
                 Become a member
               </Link>
-              <Link href="/how-it-works" className={linkClassName}>
+              <Link
+                href="/how-it-works"
+                className="text-sm text-muted-foreground hover:text-foreground transition-colors font-['Noto']">
                 How it works
               </Link>
-              <Link href="/about-us" className={linkClassName}>
+              <Link
+                href="/about-us"
+                className="text-sm text-muted-foreground hover:text-foreground transition-colors font-['Noto']">
                 About us
               </Link>
             </nav>
@@ -115,12 +123,16 @@ const Footer = () => {
 
           {/* Legal Links */}
           <div className="space-y-4">
-            <h3 className="text-sm font-semibold">Legal</h3>
+            <h2 className="text-sm font-['Kanit']">Legal</h2>
             <nav className="grid gap-3">
-              <Link href="/terms-conditions" className={linkClassName}>
+              <Link
+                href="/terms-conditions"
+                className="text-sm text-muted-foreground hover:text-foreground transition-colors font-['Noto']">
                 Terms & Conditions
               </Link>
-              <Link href="/privacy-policy" className={linkClassName}>
+              <Link
+                href="/privacy-policy"
+                className="text-sm text-muted-foreground hover:text-foreground transition-colors font-['Noto']">
                 Privacy Policy
               </Link>
             </nav>
@@ -128,17 +140,17 @@ const Footer = () => {
 
           {/* Contact Section */}
           <div className="space-y-4">
-            <h3 className="text-sm font-semibold">Contact Us</h3>
+            <h2 className="text-sm font-['Kanit']">Contact Us</h2>
             {!showContactForm ? (
               <div className="space-y-4">
-                <p className="text-sm text-foreground/70">
+                <p className="text-sm text-muted-foreground font-['Noto']">
                   Have questions? We&apos;d love to hear from you.
                 </p>
                 <Button
                   variant="outline"
                   size="sm"
                   onClick={() => setShowContactForm(true)}
-                  className="w-full">
+                  className="w-full font-['Noto']">
                   <Mail className="h-4 w-4 mr-2" />
                   Get in touch
                 </Button>
@@ -147,10 +159,10 @@ const Footer = () => {
               <div className="rounded-lg border bg-background/50 p-4">
                 {messageSent ? (
                   <div className="space-y-3">
-                    <p className="text-sm font-medium">
+                    <p className="text-sm font-medium font-['Noto']">
                       Thank you for reaching out!
                     </p>
-                    <p className="text-sm text-foreground/70">
+                    <p className="text-sm text-muted-foreground font-['Noto']">
                       We&apos;ll get back to you soon.
                     </p>
                     <Button
@@ -165,14 +177,16 @@ const Footer = () => {
                           message: "",
                         });
                       }}
-                      className="w-full">
+                      className="w-full font-['Noto']">
                       Send Another Message
                     </Button>
                   </div>
                 ) : (
                   <form onSubmit={handleSubmission} className="space-y-3">
                     {error && (
-                      <p className="text-destructive text-xs">{error}</p>
+                      <p className="text-destructive text-xs font-['Noto']">
+                        {error}
+                      </p>
                     )}
                     <Input
                       name="email"
@@ -185,7 +199,7 @@ const Footer = () => {
                           email: e.target.value,
                         })
                       }
-                      className="text-sm"
+                      className="text-sm font-['Noto']"
                       required
                     />
                     <Select
@@ -196,15 +210,27 @@ const Footer = () => {
                           reason: value,
                         })
                       }>
-                      <SelectTrigger className="text-sm">
+                      <SelectTrigger className="text-sm font-['Noto']">
                         <SelectValue placeholder="Reason" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="general">General Inquiry</SelectItem>
-                        <SelectItem value="support">Support</SelectItem>
-                        <SelectItem value="membership">Membership</SelectItem>
-                        <SelectItem value="feedback">Feedback</SelectItem>
-                        <SelectItem value="other">Other</SelectItem>
+                        <SelectItem value="general" className="font-['Noto']">
+                          General Inquiry
+                        </SelectItem>
+                        <SelectItem value="support" className="font-['Noto']">
+                          Support
+                        </SelectItem>
+                        <SelectItem
+                          value="membership"
+                          className="font-['Noto']">
+                          Membership
+                        </SelectItem>
+                        <SelectItem value="feedback" className="font-['Noto']">
+                          Feedback
+                        </SelectItem>
+                        <SelectItem value="other" className="font-['Noto']">
+                          Other
+                        </SelectItem>
                       </SelectContent>
                     </Select>
                     <Textarea
@@ -217,7 +243,7 @@ const Footer = () => {
                           message: e.target.value,
                         })
                       }
-                      className="text-sm min-h-[80px]"
+                      className="text-sm min-h-[80px] font-['Noto']"
                       required
                     />
                     <ReCAPTCHA
@@ -232,10 +258,13 @@ const Footer = () => {
                         variant="ghost"
                         size="sm"
                         onClick={() => setShowContactForm(false)}
-                        className="flex-1">
+                        className="flex-1 font-['Noto']">
                         Cancel
                       </Button>
-                      <Button type="submit" size="sm" className="flex-1">
+                      <Button
+                        type="submit"
+                        size="sm"
+                        className="flex-1 font-['Noto']">
                         Send
                       </Button>
                     </div>
@@ -249,7 +278,7 @@ const Footer = () => {
         {/* Bottom Bar */}
         <div className="pt-8 border-t">
           <div className="flex flex-col sm:flex-row justify-between items-center gap-4">
-            <p className="text-xs text-foreground/60">
+            <p className="text-xs text-muted-foreground font-['Noto']">
               © {currentYear} SWOM. All rights reserved.
             </p>
             <div className="flex items-center gap-6">
