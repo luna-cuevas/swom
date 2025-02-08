@@ -222,22 +222,28 @@ const CarouselPage = (props: Props) => {
                     {slideProps.children}
                   </div>
                   {props.homePage && (
-                    <div className="absolute z-50 top-[10%] -right-4 text-md">
-                      <div className="absolute z-0 inset-0 transform skew-x-[10deg] bg-[#f4ece7b3]" />
+                    <div className="absolute z-[100000] top-[10%] -right-4 text-md">
+                      <div className="absolute z-0 inset-0 transform skew-x-[10deg] bg-white/80 backdrop-blur-md shadow-lg" />
                       {state.session == null ? (
-                        <div className="relative z-50 py-4 px-8 text-[#172544]">
+                        <div className="relative z-50 py-4 px-8 text-[#172544] select-none cursor-default">
                           {slideProps.slide.highlightTag ||
                             "Let's meet your new favorite home."}
                           <br />
-                          <strong>Listing No. {slideProps.slide.slug}</strong>
+                          <strong className="font-medium">
+                            Listing No. {slideProps.slide.slug}
+                          </strong>
                         </div>
                       ) : (
-                        <Link href={`/listings/${slideProps.slide.listingNum}`}>
-                          <div className="relative z-50 py-4 px-8 text-[#172544]">
+                        <Link
+                          href={`/listings/${slideProps.slide.listingNum}`}
+                          className="block transition-transform hover:scale-105 select-none">
+                          <div className="relative z-50 py-4 px-8 text-[#172544] cursor-pointer">
                             {slideProps.slide.highlightTag ||
                               "Let's meet your new favorite home."}
                             <br />
-                            <strong>Listing No. {slideProps.slide.slug}</strong>
+                            <strong className="font-medium">
+                              Listing No. {slideProps.slide.slug}
+                            </strong>
                           </div>
                         </Link>
                       )}
