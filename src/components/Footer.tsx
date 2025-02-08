@@ -132,7 +132,7 @@ const Footer = () => {
             {!showContactForm ? (
               <div className="space-y-4">
                 <p className="text-sm text-foreground/70">
-                  Have questions? We'd love to hear from you.
+                  Have questions? We&apos;d love to hear from you.
                 </p>
                 <Button
                   variant="outline"
@@ -151,7 +151,7 @@ const Footer = () => {
                       Thank you for reaching out!
                     </p>
                     <p className="text-sm text-foreground/70">
-                      We'll get back to you soon.
+                      We&apos;ll get back to you soon.
                     </p>
                     <Button
                       variant="outline"
