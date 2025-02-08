@@ -9,6 +9,7 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@google-cloud/recaptcha-enterprise": "^5.13.0",
     "@googlemaps/google-maps-services-js": "^3.3.42",
     "@heroicons/react": "^2.1.5",
     "@hotjar/browser": "^1.0.9",

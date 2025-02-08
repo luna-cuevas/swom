@@ -57,7 +57,7 @@ const ResetPassword = () => {
 
     try {
       // Make a GET request to the API route with the user ID as a query parameter
-      const response = await fetch(`/api/getUser`, {
+      const response = await fetch(`/api/members/getUser`, {
         headers: {
           "Content-Type": "application/json",
           Accept: "application/json",

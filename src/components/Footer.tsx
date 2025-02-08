@@ -1,115 +1,304 @@
-'use client';
-import Image from 'next/image';
-import Link from 'next/link';
-import React, { useState } from 'react';
+"use client";
+import React, { useState } from "react";
+import Image from "next/image";
+import Link from "next/link";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import ReCAPTCHA from "react-google-recaptcha";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Info, UserPlus, Home, Mail, X } from "lucide-react";
+import { cn } from "@/lib/utils";
 
-type Props = {};
-
-const Footer = (props: Props) => {
+const Footer = () => {
   const [messageContents, setMessageContents] = useState({
-    email: '',
-    language: 'English',
+    email: "",
+    language: "English",
+    reason: "",
+    message: "",
   });
-
   const [messageSent, setMessageSent] = useState(false);
+  const [error, setError] = useState("");
+  const [showContactForm, setShowContactForm] = useState(false);
+  const [recaptchaToken, setRecaptchaToken] = useState<string | null>(null);
+
   const handleSubmission = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    const response = await fetch('/api/sendMail', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        email: messageContents.email,
-        language: messageContents.language,
-      }),
-    });
+    setError("");
 
-    if (response.ok) {
-      setMessageSent(true);
+    if (!recaptchaToken) {
+      setError("Please complete the reCAPTCHA verification");
+      return;
+    }
 
-      console.log('Email sent successfully');
-    } else {
-      console.error('Failed to send email');
+    if (!messageContents.reason) {
+      setError("Please select a reason for contact");
+      return;
+    }
+
+    if (!messageContents.message.trim()) {
+      setError("Please enter your message");
+      return;
+    }
+
+    try {
+      const response = await fetch("/api/members/contact", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ ...messageContents, recaptchaToken }),
+      });
+
+      if (response.ok) {
+        setMessageSent(true);
+      } else {
+        const data = await response.json();
+        setError(data.error || "Failed to send message");
+      }
+    } catch (err) {
+      setError("Failed to send message");
     }
   };
 
-  return (
-    <div className="md:h-[250px] h-[400px] bg-[#7F8119] md:flex-row flex-col flex justify-center align-middle w-full">
-      <div className="md:w-1/2 flex align-middle justify-center gap-4 my-auto  h-1/2">
-        <div
-          style={{
-            filter:
-              'invert(98%) sepia(3%) saturate(2%) hue-rotate(304deg) brightness(105%) contrast(100%)',
-          }}
-          className="relative flex my-auto h-1/2 w-1/3 ">
-          <Image
-            src="/footer-logo.jpg"
-            alt="logo"
-            fill
-            sizes=" (max-width: 768px) 30vw, (max-width: 1024px) 20vw, 15vw"
-            className="object-contain"
-          />
-        </div>
-        <div className=" my-auto border-l-2 px-4 border-white">
-          <ul className="text-[#ffffff] gap-1 flex flex-col font-extralight">
-            <Link href="/how-it-works">What is Swom</Link>
-            <Link href="/become-member">Become a member</Link>
-            <Link href="/how-it-works">How it works</Link>
-            <Link href="/about-us">About us</Link>
-            <Link href="/terms-conditions">Terms & Conditions</Link>
-            <Link href="/privacy-policy">Privacy Policy</Link>
-          </ul>
-          <div>{/* media icons */}</div>
-        </div>
-      </div>
+  const linkClassName =
+    "text-sm text-foreground/70 hover:text-foreground transition-colors";
 
-      <div className="md:w-1/3 w-3/4  m-auto flex flex-col">
-        {messageSent ? (
-          <p className="text-[#ffffff]">
-            Thank you for contacting us. We will get back to you as soon as
-            possible.
-          </p>
-        ) : (
-          <form
-            onSubmit={(e) => {
-              handleSubmission(e);
-            }}>
-            <p className="text-[#ffffff]">Contact us</p>
-            <input
-              name="email"
-              onChange={(e) => {
-                setMessageContents({
-                  ...messageContents,
-                  email: e.target.value,
-                });
-              }}
-              placeholder="Email"
-              className="w-full p-4  rounded-lg my-2 bg-[#ffffff]"
-              type="text"
-            />
-            <select
-              name="language"
-              onChange={(e) => {
-                setMessageContents({
-                  ...messageContents,
-                  language: e.target.value,
-                });
-              }}
-              className="w-fit p-4 rounded-lg my-1 bg-[#ffffff]"
-              id="">
-              <option value="English">English</option>
-              <option value="Spanish">Spanish</option>
-            </select>
-            <button
-              type="submit"
-              className="bg-[#ffffff] ml-4 w-fit  p-4 rounded-lg my-1">
-              Send
-            </button>
-          </form>
-        )}
+  const currentYear = new Date().getFullYear();
+
+  return (
+    <footer className="border-t bg-background">
+      <div className="container mx-auto px-4 py-12">
+        {/* Main Footer Content */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 mb-12">
+          {/* Brand Section */}
+          <div className="space-y-6">
+            <div className="relative h-8 w-24">
+              <Image
+                src="/swom-logo.jpg"
+                alt="SWOM"
+                fill
+                className="object-contain"
+                sizes="(max-width: 768px) 96px, 96px"
+              />
+            </div>
+            <p className="text-sm text-foreground/70 max-w-xs">
+              Connecting and empowering communities through innovative
+              solutions.
+            </p>
+          </div>
+
+          {/* Quick Links */}
+          <div className="space-y-4">
+            <h3 className="text-sm font-semibold">Quick Links</h3>
+            <nav className="grid gap-3">
+              <Link href="/how-it-works" className={linkClassName}>
+                What is Swom
+              </Link>
+              <Link href="/become-member" className={linkClassName}>
+                Become a member
+              </Link>
+              <Link href="/how-it-works" className={linkClassName}>
+                How it works
+              </Link>
+              <Link href="/about-us" className={linkClassName}>
+                About us
+              </Link>
+            </nav>
+          </div>
+
+          {/* Legal Links */}
+          <div className="space-y-4">
+            <h3 className="text-sm font-semibold">Legal</h3>
+            <nav className="grid gap-3">
+              <Link href="/terms-conditions" className={linkClassName}>
+                Terms & Conditions
+              </Link>
+              <Link href="/privacy-policy" className={linkClassName}>
+                Privacy Policy
+              </Link>
+            </nav>
+          </div>
+
+          {/* Contact Section */}
+          <div className="space-y-4">
+            <h3 className="text-sm font-semibold">Contact Us</h3>
+            {!showContactForm ? (
+              <div className="space-y-4">
+                <p className="text-sm text-foreground/70">
+                  Have questions? We'd love to hear from you.
+                </p>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setShowContactForm(true)}
+                  className="w-full">
+                  <Mail className="h-4 w-4 mr-2" />
+                  Get in touch
+                </Button>
+              </div>
+            ) : (
+              <div className="rounded-lg border bg-background/50 p-4">
+                {messageSent ? (
+                  <div className="space-y-3">
+                    <p className="text-sm font-medium">
+                      Thank you for reaching out!
+                    </p>
+                    <p className="text-sm text-foreground/70">
+                      We'll get back to you soon.
+                    </p>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => {
+                        setMessageSent(false);
+                        setMessageContents({
+                          email: "",
+                          language: "English",
+                          reason: "",
+                          message: "",
+                        });
+                      }}
+                      className="w-full">
+                      Send Another Message
+                    </Button>
+                  </div>
+                ) : (
+                  <form onSubmit={handleSubmission} className="space-y-3">
+                    {error && (
+                      <p className="text-destructive text-xs">{error}</p>
+                    )}
+                    <Input
+                      name="email"
+                      type="email"
+                      placeholder="Email"
+                      value={messageContents.email}
+                      onChange={(e) =>
+                        setMessageContents({
+                          ...messageContents,
+                          email: e.target.value,
+                        })
+                      }
+                      className="text-sm"
+                      required
+                    />
+                    <Select
+                      value={messageContents.reason}
+                      onValueChange={(value) =>
+                        setMessageContents({
+                          ...messageContents,
+                          reason: value,
+                        })
+                      }>
+                      <SelectTrigger className="text-sm">
+                        <SelectValue placeholder="Reason" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="general">General Inquiry</SelectItem>
+                        <SelectItem value="support">Support</SelectItem>
+                        <SelectItem value="membership">Membership</SelectItem>
+                        <SelectItem value="feedback">Feedback</SelectItem>
+                        <SelectItem value="other">Other</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <Textarea
+                      name="message"
+                      placeholder="Your message"
+                      value={messageContents.message}
+                      onChange={(e) =>
+                        setMessageContents({
+                          ...messageContents,
+                          message: e.target.value,
+                        })
+                      }
+                      className="text-sm min-h-[80px]"
+                      required
+                    />
+                    <ReCAPTCHA
+                      sitekey={
+                        process.env.NEXT_PUBLIC_GOOGLE_RECAPTCHA_SITE_KEY || ""
+                      }
+                      onChange={(token) => setRecaptchaToken(token)}
+                    />
+                    <div className="flex gap-2">
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => setShowContactForm(false)}
+                        className="flex-1">
+                        Cancel
+                      </Button>
+                      <Button type="submit" size="sm" className="flex-1">
+                        Send
+                      </Button>
+                    </div>
+                  </form>
+                )}
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Bottom Bar */}
+        <div className="pt-8 border-t">
+          <div className="flex flex-col sm:flex-row justify-between items-center gap-4">
+            <p className="text-xs text-foreground/60">
+              © {currentYear} SWOM. All rights reserved.
+            </p>
+            <div className="flex items-center gap-6">
+              <Link
+                href="#"
+                className="text-foreground/60 hover:text-foreground">
+                <svg
+                  className="h-4 w-4"
+                  fill="currentColor"
+                  viewBox="0 0 24 24"
+                  aria-hidden="true">
+                  <path d="M8.29 20.251c7.547 0 11.675-6.253 11.675-11.675 0-.178 0-.355-.012-.53A8.348 8.348 0 0022 5.92a8.19 8.19 0 01-2.357.646 4.118 4.118 0 001.804-2.27 8.224 8.224 0 01-2.605.996 4.107 4.107 0 00-6.993 3.743 11.65 11.65 0 01-8.457-4.287 4.106 4.106 0 001.27 5.477A4.072 4.072 0 012.8 9.713v.052a4.105 4.105 0 003.292 4.022 4.095 4.095 0 01-1.853.07 4.108 4.108 0 003.834 2.85A8.233 8.233 0 012 18.407a11.616 11.616 0 006.29 1.84" />
+                </svg>
+              </Link>
+              <Link
+                href="#"
+                className="text-foreground/60 hover:text-foreground">
+                <svg
+                  className="h-4 w-4"
+                  fill="currentColor"
+                  viewBox="0 0 24 24"
+                  aria-hidden="true">
+                  <path
+                    fillRule="evenodd"
+                    d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z"
+                    clipRule="evenodd"
+                  />
+                </svg>
+              </Link>
+              <Link
+                href="#"
+                className="text-foreground/60 hover:text-foreground">
+                <svg
+                  className="h-4 w-4"
+                  fill="currentColor"
+                  viewBox="0 0 24 24"
+                  aria-hidden="true">
+                  <path
+                    fillRule="evenodd"
+                    d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10c5.51 0 10-4.48 10-10S17.51 2 12 2zm6.605 4.61a8.502 8.502 0 011.93 5.314c-.281-.054-3.101-.629-5.943-.271-.065-.141-.12-.293-.184-.445a25.416 25.416 0 00-.564-1.236c3.145-1.28 4.577-3.124 4.761-3.362zM12 3.475c2.17 0 4.154.813 5.662 2.148-.152.216-1.443 1.941-4.48 3.08-1.399-2.57-2.95-4.675-3.189-5A8.687 8.687 0 0112 3.475zm-3.633.803a53.896 53.896 0 013.167 4.935c-3.992 1.063-7.517 1.04-7.896 1.04a8.581 8.581 0 014.729-5.975zM3.453 12.01v-.26c.37.01 4.512.065 8.775-1.215.25.477.477.965.694 1.453-.109.033-.228.065-.336.098-4.404 1.42-6.747 5.303-6.942 5.629a8.522 8.522 0 01-2.19-5.705zM12 20.547a8.482 8.482 0 01-5.239-1.8c.152-.315 1.888-3.656 6.703-5.337.022-.01.033-.01.054-.022a35.318 35.318 0 011.823 6.475 8.4 8.4 0 01-3.341.684zm4.761-1.465c-.086-.52-.542-3.015-1.659-6.084 2.679-.423 5.022.271 5.314.369a8.468 8.468 0 01-3.655 5.715z"
+                    clipRule="evenodd"
+                  />
+                </svg>
+              </Link>
+            </div>
+          </div>
+        </div>
       </div>
-    </div>
+    </footer>
   );
 };
 

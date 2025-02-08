@@ -18,7 +18,7 @@ async function logConsent() {
 
   // Send the data to your backend
   // replace "/your-endpoint-url" with your API
-  const response = await fetch("/api/updateConsent", {
+  const response = await fetch("/api/shared/updateConsent", {
     method: "POST",
     headers: {
       "Content-Type": "application/json",

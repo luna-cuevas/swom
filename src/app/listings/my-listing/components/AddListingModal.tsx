@@ -282,7 +282,7 @@ export function AddListingModal({
     setIsSearching(true);
     try {
       const response = await fetch(
-        `/api/geocode?address=${encodeURIComponent(query)}`
+        `/api/shared/geocode?address=${encodeURIComponent(query)}`
       );
       if (!response.ok) throw new Error("Failed to geocode address");
 

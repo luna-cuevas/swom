@@ -17,7 +17,7 @@ const Page = (props: Props) => {
   const router = useRouter();
 
   const getSubscriptionInfo = async () => {
-    const subInfo = await fetch("/api/subscription/getSubscription", {
+    const subInfo = await fetch("/api/members/subscription/getSubscription", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -49,7 +49,7 @@ const Page = (props: Props) => {
 
   const handleCancelMembership = async () => {
     const cancelMembership = await fetch(
-      "/api/subscription/cancelSubscription",
+      "/api/members/subscription/cancelSubscription",
       {
         method: "POST",
         headers: {
@@ -78,13 +78,16 @@ const Page = (props: Props) => {
   };
 
   const handleUpdateMembership = async () => {
-    const updateMembership = await fetch("/api/subscription/updateMembership", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ email: state.user.email }),
-    });
+    const updateMembership = await fetch(
+      "/api/members/subscription/updateMembership",
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ email: state.user.email }),
+      }
+    );
     const updateMembershipData = await updateMembership.json();
     if (updateMembershipData) {
       console.log("updateMembershipData", updateMembershipData);

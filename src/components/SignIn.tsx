@@ -16,13 +16,16 @@ const SignIn = () => {
   async function isUserSubscribed(email: string): Promise<boolean> {
     console.log("checking subscription status");
     try {
-      const response = await fetch("/api/subscription/checkSubscription", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ email }),
-      });
+      const response = await fetch(
+        "/api/members/subscription/checkSubscription",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ email }),
+        }
+      );
 
       if (!response.ok) {
         throw new Error("Failed to check subscription status");
@@ -51,7 +54,7 @@ const SignIn = () => {
 
     try {
       // Make a GET request to the API route with the user ID as a query parameter
-      const response = await fetch(`/api/getUser`, {
+      const response = await fetch(`/api/members/getUser`, {
         headers: {
           "Content-Type": "application/json",
           Accept: "application/json",
@@ -84,11 +87,11 @@ const SignIn = () => {
     console.log("Session user ID:", session?.user?.id);
     console.log("Current state user ID:", state.user.id);
     console.log("Full state:", state);
-    
+
     if (event === "SIGNED_IN" && session !== null) {
       const loggedInUser = await fetchLoggedInUser(session.user);
       const subbed = await isUserSubscribed(session.user.email);
-      
+
       if (!hasShownToast.current) {
         toast.success("Signed in successfully");
         hasShownToast.current = true;
@@ -116,7 +119,7 @@ const SignIn = () => {
         signInActive: false,
       }));
     } else if (event === "SIGNED_OUT") {
-      hasShownToast.current = false;  // Reset the ref when user signs out
+      hasShownToast.current = false; // Reset the ref when user signs out
       setState((prevState) => ({
         ...prevState,
         session: null,

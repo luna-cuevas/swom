@@ -124,7 +124,7 @@ export const useBecomeMember = () => {
         }))
       );
 
-      const response = await fetch('/api/become-member', {
+      const response = await fetch('/api/members/become-member', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

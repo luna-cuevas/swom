@@ -39,7 +39,7 @@ const SignUpForm = () => {
   const handleSendOTP = async (email: string) => {
     setIsLoading(true);
     try {
-      const response = await fetch("/api/signup/send-otp", {
+      const response = await fetch("/api/members/signUp/send-otp", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email }),
@@ -75,7 +75,7 @@ const SignUpForm = () => {
       const token = e.currentTarget.otp.value as string;
       console.log("[SignUpForm] Verifying OTP for email:", email);
 
-      const response = await fetch("/api/signup/verify-otp", {
+      const response = await fetch("/api/members/signUp/verify-otp", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, token }),
@@ -139,7 +139,7 @@ const SignUpForm = () => {
       }
 
       console.log("[SignUpForm] Sending password update request");
-      const response = await fetch("/api/signup/update-password", {
+      const response = await fetch("/api/members/signUp/update-password", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, password }),
@@ -188,7 +188,7 @@ const SignUpForm = () => {
   const handleSubscription = async () => {
     setCurrentStep(STEP.LOADING_CHECKOUT);
     const stripe = await loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLIC_KEY!);
-    const response = await fetch("/api/subscription/makeSubscription", {
+    const response = await fetch("/api/members/subscription/makeSubscription", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
@@ -214,7 +214,7 @@ const SignUpForm = () => {
   };
 
   const fetchLoggedInUser = async (user: any) => {
-    const response = await fetch(`/api/getUser`, {
+    const response = await fetch(`/api/members/getUser`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
