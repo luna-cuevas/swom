@@ -48,7 +48,7 @@ export async function PUT(request: Request) {
     const userData = JSON.parse(formData.get("data") as string);
     const imageFile = formData.get("image") as File | null;
 
-    const { email, userId, name, profession, age, phone } = userData;
+    const { email, userId, name, profileImage, profession, age, phone } = userData;
 
     if (!email || !userId) {
       return NextResponse.json(
@@ -58,7 +58,7 @@ export async function PUT(request: Request) {
     }
 
     // Handle image upload if provided
-    let profileImageUrl = userData.profileImage;
+    let profileImageUrl = profileImage;
     if (imageFile) {
       try {
         const buffer = Buffer.from(await imageFile.arrayBuffer());
