@@ -10,8 +10,12 @@ import UsersTable from "./components/UsersTable";
 import AdminLogsTable from "./components/AdminLogsTable";
 import MemberLogsTable from "./components/MemberLogsTable";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import dynamic from "next/dynamic";
 
 const queryClient = new QueryClient();
+const PendingListingsPage = dynamic(() => import("./pending-listings/page"), {
+  ssr: false,
+});
 
 export default function AdminDashboard() {
   return (
@@ -46,6 +50,11 @@ export default function AdminDashboard() {
             </TabsTrigger>
             <TabsTrigger value="member-logs" className="flex-1 max-w-[200px]">
               Member Logs
+            </TabsTrigger>
+            <TabsTrigger
+              value="sanity-migration"
+              className="flex-1 max-w-[200px]">
+              Sanity Migration
             </TabsTrigger>
           </TabsList>
 
@@ -126,6 +135,17 @@ export default function AdminDashboard() {
                   </h2>
                 </div>
                 <MemberLogsTable />
+              </div>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="sanity-migration">
+            <Card className="p-6 pt-4">
+              <div className="flex flex-col space-y-4">
+                <div className="flex items-center justify-between">
+                  <h2 className="text-lg font-semibold">Sanity Migration</h2>
+                </div>
+                <PendingListingsPage />
               </div>
             </Card>
           </TabsContent>

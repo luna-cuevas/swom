@@ -11,7 +11,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "react-toastify";
-import { Star } from "lucide-react";
+import { Star, Trash2 } from "lucide-react";
 import { ListingDetailsModal } from "./ListingDetailsModal";
 import {
   Dialog,
@@ -61,7 +61,7 @@ export default function PendingApprovals() {
   const [error, setError] = useState<string | null>(null);
   const [confirmDialog, setConfirmDialog] = useState<{
     isOpen: boolean;
-    type: "approve" | "reject";
+    type: "approve" | "reject" | "delete";
     listing: PendingListing | null;
   }>({
     isOpen: false,
@@ -161,6 +161,35 @@ export default function PendingApprovals() {
     }
   };
 
+  const handleDelete = async (listingId: string) => {
+    if (!state.user?.id) {
+      toast.error("Admin ID not found");
+      return;
+    }
+
+    try {
+      const response = await fetch("/api/admin/deletePendingListing", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          listingId,
+          adminId: state.user.id,
+        }),
+      });
+
+      if (!response.ok) throw new Error("Failed to delete listing");
+
+      toast.success("Listing deleted successfully");
+      queryClient.invalidateQueries({ queryKey: ["pendingListings"] });
+      setConfirmDialog({ isOpen: false, type: "delete", listing: null });
+    } catch (error) {
+      console.error("Error deleting listing:", error);
+      toast.error("Failed to delete listing");
+    }
+  };
+
   const handleToggleHighlight = async (listingId: string) => {
     if (!state.user?.id) {
       toast.error("Admin ID not found");
@@ -250,65 +279,78 @@ export default function PendingApprovals() {
       <div className="border rounded-md">
         <Table>
           <TableHeader>
-            <TableRow className="hover:bg-transparent">
+            <TableRow>
               {columns.map((column) => (
-                <TableHead
-                  key={column}
-                  className="text-center border-r h-11 font-medium last:border-r-0">
-                  {column}
-                </TableHead>
+                <TableHead key={column}>{column}</TableHead>
               ))}
             </TableRow>
           </TableHeader>
           <TableBody>
-            {filteredListings.map((listing: PendingListing) => (
+            {filteredListings.map((listing) => (
               <TableRow
                 key={listing.id}
-                className="cursor-pointer hover:bg-gray-100"
+                className="cursor-pointer hover:bg-gray-50"
                 onClick={() => setSelectedListing(listing)}>
-                <TableCell className="text-center border-r">
+                <TableCell className="font-medium">
                   {listing.home_info.title}
                 </TableCell>
-                <TableCell className="text-center border-r">
-                  {listing.user_info.email}
-                </TableCell>
-                <TableCell className="text-center border-r">
-                  {listing.home_info.city}
-                </TableCell>
-                <TableCell className="text-center border-r">
-                  {listing.user_info.recommended === "wikimujeres"
-                    ? "Yes"
-                    : "No"}
-                </TableCell>
+                <TableCell>{listing.user_info.email}</TableCell>
+                <TableCell>{listing.home_info.city}</TableCell>
+                <TableCell>{listing.user_info.recommended}</TableCell>
                 <TableCell
-                  className="text-center"
-                  onClick={(e) => e.stopPropagation()}>
-                  <div className="flex justify-center gap-2">
-                    <Button
-                      variant="default"
-                      size="sm"
-                      onClick={() =>
-                        setConfirmDialog({
-                          isOpen: true,
-                          type: "approve",
-                          listing,
-                        })
-                      }>
-                      Approve
-                    </Button>
-                    <Button
-                      variant="destructive"
-                      size="sm"
-                      onClick={() =>
-                        setConfirmDialog({
-                          isOpen: true,
-                          type: "reject",
-                          listing,
-                        })
-                      }>
-                      Reject
-                    </Button>
-                  </div>
+                  className="flex items-center gap-2"
+                  onClick={(e) => e.stopPropagation()} // Prevent row click on actions
+                >
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() =>
+                      setConfirmDialog({
+                        isOpen: true,
+                        type: "approve",
+                        listing,
+                      })
+                    }>
+                    Approve
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="bg-red-50 hover:bg-red-100 hover:text-red-600"
+                    onClick={() =>
+                      setConfirmDialog({
+                        isOpen: true,
+                        type: "reject",
+                        listing,
+                      })
+                    }>
+                    Reject
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => handleToggleHighlight(listing.id)}>
+                    <Star
+                      className={`h-4 w-4 ${
+                        listing.is_highlighted
+                          ? "fill-yellow-400 text-yellow-400"
+                          : "text-gray-400"
+                      }`}
+                    />
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="text-red-600 hover:text-red-800 hover:bg-red-100"
+                    onClick={() =>
+                      setConfirmDialog({
+                        isOpen: true,
+                        type: "delete",
+                        listing,
+                      })
+                    }>
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
                 </TableCell>
               </TableRow>
             ))}
@@ -325,45 +367,57 @@ export default function PendingApprovals() {
       <Dialog
         open={confirmDialog.isOpen}
         onOpenChange={(isOpen) =>
-          setConfirmDialog((prev) => ({ ...prev, isOpen }))
+          setConfirmDialog({ ...confirmDialog, isOpen })
         }>
         <DialogContent>
           <DialogHeader>
             <DialogTitle>
               {confirmDialog.type === "approve"
                 ? "Approve Listing"
-                : "Reject Listing"}
+                : confirmDialog.type === "reject"
+                  ? "Reject Listing"
+                  : "Delete Listing"}
             </DialogTitle>
             <DialogDescription>
               {confirmDialog.type === "approve"
-                ? `You're about to approve the listing "${confirmDialog.listing?.home_info.title}" by ${confirmDialog.listing?.user_info.name}. This will send out a welcome email (Brevo template 1).`
-                : `You're about to reject the listing "${confirmDialog.listing?.home_info.title}" by ${confirmDialog.listing?.user_info.name}.`}
+                ? "Are you sure you want to approve this listing?"
+                : confirmDialog.type === "reject"
+                  ? "Are you sure you want to reject this listing?"
+                  : "Are you sure you want to delete this listing? This action cannot be undone."}
             </DialogDescription>
           </DialogHeader>
-          <DialogFooter className="flex space-x-2">
+          <DialogFooter>
             <Button
               variant="outline"
               onClick={() =>
-                setConfirmDialog((prev) => ({ ...prev, isOpen: false }))
+                setConfirmDialog({
+                  isOpen: false,
+                  type: "approve",
+                  listing: null,
+                })
               }>
               Cancel
             </Button>
             <Button
               variant={
-                confirmDialog.type === "approve" ? "default" : "destructive"
+                confirmDialog.type === "delete" ? "destructive" : "default"
               }
               onClick={() => {
                 if (confirmDialog.listing) {
                   if (confirmDialog.type === "approve") {
                     handleApprove(confirmDialog.listing.id);
-                  } else {
+                  } else if (confirmDialog.type === "reject") {
                     handleReject(confirmDialog.listing.id);
+                  } else {
+                    handleDelete(confirmDialog.listing.id);
                   }
                 }
               }}>
               {confirmDialog.type === "approve"
-                ? "Yes, Approve"
-                : "Yes, Reject"}
+                ? "Approve"
+                : confirmDialog.type === "reject"
+                  ? "Reject"
+                  : "Delete"}
             </Button>
           </DialogFooter>
         </DialogContent>
