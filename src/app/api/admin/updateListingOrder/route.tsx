@@ -9,56 +9,41 @@ export async function POST(request: Request) {
   );
 
   try {
-    const { listingId, newRank, isHighlighted, adminId } = await request.json();
+    const { listings, adminId } = await request.json();
 
-    if (!listingId || typeof newRank !== "number" || !adminId) {
+    if (!listings || !Array.isArray(listings) || !adminId) {
       return NextResponse.json(
         { error: "Invalid request parameters" },
         { status: 400 }
       );
     }
 
-    // Get listing details for logging
-    const { data: listing, error: fetchError } = await supabase
-      .from("listings")
-      .select(
-        `
-        *,
-        home_info:home_info_id(title),
-        user_info:user_info_id(email)
-      `
-      )
-      .eq("id", listingId)
-      .single();
+    // Update each listing's order rank
+    for (const listing of listings) {
+      const { id, global_order_rank, highlighted_order_rank } = listing;
 
-    if (fetchError) {
-      console.error("Error fetching listing details:", fetchError);
-      throw fetchError;
+      if (!id) continue;
+
+      const updateData: any = {};
+      if (typeof global_order_rank === "number") {
+        updateData.global_order_rank = global_order_rank;
+      }
+      if (typeof highlighted_order_rank === "number") {
+        updateData.highlighted_order_rank = highlighted_order_rank;
+      }
+
+      const { error } = await supabase
+        .from("listings")
+        .update(updateData)
+        .eq("id", id);
+
+      if (error) throw error;
     }
-
-    const oldRank = isHighlighted
-      ? listing.highlighted_order_rank
-      : listing.global_order_rank;
-
-    // Update the appropriate order rank based on whether it's a highlighted listing
-    const { error } = await supabase
-      .from("listings")
-      .update({
-        [isHighlighted ? "highlighted_order_rank" : "global_order_rank"]:
-          newRank,
-      })
-      .eq("id", listingId);
-
-    if (error) throw error;
 
     // Log the order change
     await logAdminAction(supabase, adminId, "update_listing_order", {
-      listing_id: listingId,
-      listing_title: listing.home_info.title,
-      user_email: listing.user_info.email,
-      order_type: isHighlighted ? "highlighted" : "global",
-      previous_rank: oldRank,
-      new_rank: newRank,
+      number_of_listings: listings.length,
+      action: "bulk_update_order",
     });
 
     return NextResponse.json({ success: true });
