@@ -27,7 +27,7 @@ export async function POST(req: Request) {
       customer_email: body.email,
       allow_promotion_codes: true,
       success_url: success_url,
-      cancel_url: `${origin}/home`,
+      cancel_url: `${origin}/`,
     });
     return NextResponse.json(session);
   } catch (err: unknown) {
