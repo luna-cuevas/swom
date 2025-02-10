@@ -7,7 +7,6 @@ import { useRouter, useSearchParams } from "next/navigation";
 import React, { useEffect, useState } from "react";
 import { toast } from "react-toastify";
 import { loadStripe } from "@stripe/stripe-js";
-import { sanityClient } from "../../../../../sanity/lib/client";
 import { motion, AnimatePresence } from "framer-motion";
 
 const STEP = {
