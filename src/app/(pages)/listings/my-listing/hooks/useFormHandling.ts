@@ -86,18 +86,50 @@ export function useFormHandling(
         return cleaned;
       };
 
-      return JSON.stringify(clean(obj1)) !== JSON.stringify(clean(obj2));
+      // Special handling for user info comparison
+      if (obj1.open_to_other_cities && obj2.open_to_other_cities) {
+        const currentCities = Object.values(obj1.open_to_other_cities).filter(Boolean);
+        const initialCities = Array.isArray(obj2.open_to_other_cities)
+          ? obj2.open_to_other_cities.filter(Boolean)
+          : Object.values(obj2.open_to_other_cities).filter(Boolean);
+
+        console.log('Cities comparison:', {
+          currentCities,
+          initialCities,
+          areEqual: JSON.stringify(currentCities) === JSON.stringify(initialCities)
+        });
+
+        // If cities are different, return true (indicating changes)
+        if (JSON.stringify(currentCities) !== JSON.stringify(initialCities)) {
+          return true;
+        }
+      }
+
+      const cleanObj1 = clean(obj1);
+      const cleanObj2 = clean(obj2);
+
+      // Remove open_to_other_cities from comparison as it's handled separately
+      delete cleanObj1.open_to_other_cities;
+      delete cleanObj2.open_to_other_cities;
+
+      return JSON.stringify(cleanObj1) !== JSON.stringify(cleanObj2);
     };
 
+    // Special comparison for address changes
+    const hasAddressChanges = JSON.stringify(data.home_info?.address) !== JSON.stringify(initialFormState.home_info?.address);
+
     const hasUserInfoChanges = compareObjects(data.user_info, initialFormState.user_info);
-    const hasHomeInfoChanges = compareObjects(data.home_info, initialFormState.home_info);
+    const hasHomeInfoChanges = compareObjects(data.home_info, initialFormState.home_info) || hasAddressChanges;
     const hasAmenitiesChanges = compareObjects(data.amenities, initialFormState.amenities);
 
     console.log("Form changes detected:", {
       hasUserInfoChanges,
       hasHomeInfoChanges,
+      hasAddressChanges,
       hasAmenitiesChanges,
-      imageChanges: imageFiles.length > 0
+      imageChanges: imageFiles.length > 0,
+      currentCities: data.user_info.open_to_other_cities,
+      initialCities: initialFormState.user_info.open_to_other_cities
     });
 
     setFormDirty(hasUserInfoChanges || hasHomeInfoChanges || hasAmenitiesChanges || imageFiles.length > 0);
