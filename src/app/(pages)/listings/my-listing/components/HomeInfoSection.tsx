@@ -1,8 +1,13 @@
-import { UseFormRegister } from "react-hook-form";
+import { UseFormRegister, UseFormSetValue } from "react-hook-form";
 import { ListingFormData } from "../types";
+import { LoadScript, Autocomplete } from "@react-google-maps/api";
+import React from "react";
+
+const libraries: ("places" | "geometry")[] = ["places"];
 
 interface Props {
   register: UseFormRegister<ListingFormData>;
+  setValue: UseFormSetValue<ListingFormData>;
   searchTerm: string;
   onSearchTermChange: (value: string) => void;
   citySearchOpen: boolean;
@@ -13,6 +18,7 @@ interface Props {
 
 export function HomeInfoSection({
   register,
+  setValue,
   searchTerm,
   onSearchTermChange,
   citySearchOpen,
@@ -20,6 +26,25 @@ export function HomeInfoSection({
   onCitySelect,
   status,
 }: Props) {
+  const [autocomplete, setAutocomplete] = React.useState<any>(null);
+  const [addressString, setAddressString] = React.useState<string>("");
+  const [scriptLoaded, setScriptLoaded] = React.useState(false);
+
+  const onPlaceChanged = () => {
+    if (!autocomplete) return;
+
+    const place = autocomplete.getPlace();
+    if (!place || !place.geometry) return;
+
+    setValue("home_info.address", {
+      lat: place.geometry.location.lat(),
+      lng: place.geometry.location.lng(),
+      query: place.formatted_address,
+    });
+
+    setAddressString(place.formatted_address);
+  };
+
   return (
     <div className="bg-white rounded-xl shadow-sm p-6">
       <div className="flex items-center justify-between mb-6">
@@ -68,6 +93,52 @@ export function HomeInfoSection({
               <option value="it rests freely">It rests freely</option>
               <option value="other">A rural area</option>
             </select>
+          </div>
+        </div>
+
+        {/* Address Search */}
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">
+            Address
+          </label>
+          <div className="relative">
+            <LoadScript
+              googleMapsApiKey={
+                process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY ?? ""
+              }
+              libraries={libraries}
+              onLoad={() => setScriptLoaded(true)}>
+              {scriptLoaded && (
+                <Autocomplete
+                  onLoad={setAutocomplete}
+                  onPlaceChanged={onPlaceChanged}>
+                  <input
+                    className="w-full p-3 border rounded-lg bg-gray-50 pl-10 focus:bg-white transition-colors"
+                    placeholder="Search for an address"
+                    value={addressString}
+                    onChange={(e) => setAddressString(e.target.value)}
+                  />
+                </Autocomplete>
+              )}
+            </LoadScript>
+            <svg
+              className="w-5 h-5 absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24">
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"
+              />
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"
+              />
+            </svg>
           </div>
         </div>
 

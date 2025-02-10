@@ -398,6 +398,7 @@ export default function Page() {
                 <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
                   <HomeInfoSection
                     register={register}
+                    setValue={setValue}
                     searchTerm={searchTerm}
                     onSearchTermChange={handleInputChange}
                     citySearchOpen={citySearchOpen}
@@ -445,6 +446,7 @@ export default function Page() {
                         lng: listings[activeListingIndex]?.home_info?.address
                           ?.lng,
                       }}
+                      noSearch={true}
                     />
                   </div>
                 </div>
