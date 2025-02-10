@@ -55,7 +55,7 @@ export function MobileNav({
         className="flex h-[96vh] w-full flex-col border-b bg-background/95 p-0 backdrop-blur supports-[backdrop-filter]:bg-background/60 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:slide-out-to-top data-[state=open]:slide-in-from-top">
         <SheetHeader className="p-4">
           <Link
-            href="/home"
+            href="/"
             onClick={() => setOpen(false)}
             className="flex items-center space-x-2">
             <Image

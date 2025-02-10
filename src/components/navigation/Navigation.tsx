@@ -260,7 +260,7 @@ const Navigation = () => {
       <div className="container flex h-16 items-center justify-between">
         <div className="flex items-center gap-6">
           <Link
-            href="/home"
+            href="/"
             className="flex w-[150px] h-[40px] relative items-center">
             <Image
               className="object-contain"

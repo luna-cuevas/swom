@@ -35,7 +35,7 @@ const CarouselPage = (props: Props) => {
   const slideshowRef = useRef(null);
   const [isMounted, setIsMounted] = useState(false);
   const pathname = usePathname();
-  console.log(pathname);
+  console.log("pathname", pathname);
 
   useEffect(() => {
     setIsMounted(true);
@@ -69,7 +69,7 @@ const CarouselPage = (props: Props) => {
   return (
     <div className="relative w-full h-full flex justify-center mx-auto ">
       <div
-        className={`h-full w-full mx-auto ${pathname !== "/home" && "max-w-[1140px]"}`}>
+        className={`h-full w-full mx-auto ${pathname !== "/" && "max-w-[1140px]"}`}>
         <Lightbox
           index={selectedImage}
           slides={[
@@ -85,7 +85,7 @@ const CarouselPage = (props: Props) => {
               backgroundColor: "#fff",
               height: "100%",
               width: "100%",
-              maxWidth: pathname !== "/home" ? "1140px" : "100%",
+              maxWidth: pathname !== "/" ? "1140px" : "100%",
               margin: "0 auto",
               display: "flex",
               alignItems: "center",
@@ -215,7 +215,7 @@ const CarouselPage = (props: Props) => {
                   }}
                   className="h-full w-full relative">
                   {props.overlay && (
-                    <div className="absolute inset-0 bg-black/20 z-10" />
+                    <div className="absolute inset-0 bg-black/30 z-10" />
                   )}
                   <div
                     className={`${!props.homePage && "cursor-pointer"} h-full w-full`}>
