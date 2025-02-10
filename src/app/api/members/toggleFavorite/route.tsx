@@ -26,19 +26,29 @@ export async function POST(request: Request) {
 
     if (userError) throw userError;
 
+    // Ensure favorites is an array
     let favorites = user?.favorites || [];
+    if (!Array.isArray(favorites)) {
+      favorites = [];
+    }
+
+    interface Favorite {
+      listingId: string;
+    }
+
+    // Check if the listing is already favorited
     const isLiked = favorites.some(
-      (fav: { listingId: string }) => fav.listingId === listingId
+      (fav: Favorite) => fav?.listingId === listingId
     );
 
     if (isLiked) {
       // Remove from favorites
       favorites = favorites.filter(
-        (fav: { listingId: string }) => fav.listingId !== listingId
+        (fav: Favorite) => fav?.listingId !== listingId
       );
     } else {
       // Add to favorites
-      favorites = [...favorites, { listingId }];
+      favorites.push({ listingId });
     }
 
     // Update favorites

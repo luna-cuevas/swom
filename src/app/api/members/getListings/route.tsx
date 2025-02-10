@@ -125,6 +125,7 @@ export async function GET(request: Request) {
     const page = parseInt(url.searchParams.get("page") || "1");
     const limit = parseInt(url.searchParams.get("limit") || "9");
     const searchQuery = url.searchParams.get("search") || "";
+    const userId = url.searchParams.get("userId");
     const start = (page - 1) * limit;
 
     // First get all listings to apply search filter
@@ -225,13 +226,28 @@ export async function GET(request: Request) {
 
         if (!appUser?.subscribed) return null;
 
-        // Add favorite status to the listing
+        // Get the current user's favorites if userId is provided
+        let userFavorites = [];
+        if (userId) {
+          const { data: currentUser } = await supabase
+            .from("appUsers")
+            .select("favorites")
+            .eq("id", userId)
+            .single();
+
+          // Handle the favorites array correctly
+          userFavorites = currentUser?.favorites || [];
+          if (!Array.isArray(userFavorites)) {
+            userFavorites = [];
+          }
+        }
+
+        // Add favorite status to the listing based on the current user's favorites
         return {
           ...listing,
           favorite:
-            appUser.favorites?.some(
-              (fav: { listingId: string }) => fav.listingId === listing.id
-            ) || false,
+            Array.isArray(userFavorites) &&
+            userFavorites.some((fav) => fav?.listingId === listing.id),
         };
       })
     );

@@ -5,6 +5,7 @@ import Image from "next/image";
 import { useAtom } from "jotai";
 import { globalStateAtom } from "@/context/atoms";
 import { toast } from "react-toastify";
+import { Listing } from "@/app/(pages)/listings/types";
 
 interface Location {
   lat: number;
@@ -45,15 +46,21 @@ interface ListingInfo {
 }
 
 interface Props {
-  listing: ListingInfo;
-  setListings?: React.Dispatch<React.SetStateAction<ListingInfo[]>>;
+  listing: Listing;
+  setListings?: React.Dispatch<React.SetStateAction<Listing[]>>;
   myListingPage?: boolean;
+  toggleFavorite?: (listingId: string) => Promise<void>;
 }
 
-const ListingCard = ({ listing, setListings, myListingPage }: Props) => {
+const ListingCard = ({
+  listing,
+  setListings,
+  myListingPage,
+  toggleFavorite,
+}: Props) => {
   const [state] = useAtom(globalStateAtom);
 
-  const toggleFavorite = async (e: React.MouseEvent) => {
+  const handleToggleFavorite = async (e: React.MouseEvent) => {
     e.preventDefault(); // Prevent navigation when clicking favorite
 
     if (!state.user?.id) {
@@ -61,30 +68,38 @@ const ListingCard = ({ listing, setListings, myListingPage }: Props) => {
       return;
     }
 
-    try {
-      const response = await fetch("/api/members/toggleFavorite", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          listingId: listing.id,
-          userId: state.user.id,
-        }),
-      });
+    if (toggleFavorite) {
+      // Use the provided toggleFavorite function
+      await toggleFavorite(listing.id);
+    } else {
+      // Use the default implementation
+      try {
+        const response = await fetch("/api/members/toggleFavorite", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            listingId: listing.id,
+            userId: state.user.id,
+          }),
+        });
 
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        // Update local state
+        setListings?.((prev) =>
+          prev.map((item) =>
+            item.id === listing.id
+              ? { ...item, favorite: !item.favorite }
+              : item
+          )
+        );
+      } catch (error: any) {
+        toast.error(`Error toggling favorite: ${error.message}`);
       }
-
-      // Update local state
-      setListings?.((prev) =>
-        prev.map((item) =>
-          item.id === listing.id ? { ...item, favorite: !item.favorite } : item
-        )
-      );
-    } catch (error: any) {
-      toast.error(`Error toggling favorite: ${error.message}`);
     }
   };
 
@@ -110,7 +125,7 @@ const ListingCard = ({ listing, setListings, myListingPage }: Props) => {
         </Link>
         {setListings && (
           <button
-            onClick={toggleFavorite}
+            onClick={handleToggleFavorite}
             className="absolute top-2 right-2 p-2 rounded-full bg-white/90 backdrop-blur-sm shadow-md hover:shadow-lg transition-all hover:bg-white">
             <svg
               className={`w-5 h-5 ${

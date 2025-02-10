@@ -185,7 +185,7 @@ const Page = () => {
         <div className="max-w-screen-2xl mx-auto px-6 py-4">
           <div className="flex items-center justify-between">
             <Link
-              href="/listings"
+              href={`/listings${window.location.search}`}
               className="text-gray-800 hover:text-gray-600">
               <svg
                 xmlns="http://www.w3.org/2000/svg"

@@ -2,7 +2,7 @@
 import ListingCard from "@/app/(pages)/listings/components/ListingCard";
 import React, { useState, useEffect, useCallback } from "react";
 import dynamic from "next/dynamic";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useAtom } from "jotai";
 import { globalStateAtom } from "@/context/atoms";
 import { toast } from "react-toastify";
@@ -217,6 +217,134 @@ const ListingsPage = () => {
   // Add new state for all listings
   const [allListings, setAllListings] = useState<Listing[]>([]);
 
+  const queryClient = useQueryClient();
+
+  // Load state from URL parameters on initial load
+  useEffect(() => {
+    const loadStateFromURL = async () => {
+      const page = searchParams.get("page");
+      const map = searchParams.get("map");
+      const search = searchParams.get("search");
+      const lat = searchParams.get("lat");
+      const lng = searchParams.get("lng");
+      const locationQuery = searchParams.get("locationQuery");
+      const favorites = searchParams.get("favorites");
+
+      // Load individual filter parameters
+      const propertyType = searchParams.get("type");
+      const bedrooms = searchParams.get("beds");
+      const bathrooms = searchParams.get("baths");
+      const mainOrSecond = searchParams.get("residence");
+
+      // Load amenities from URL
+      const amenityParams = Array.from(searchParams.entries())
+        .filter(([key]) => key.startsWith("amenity-"))
+        .reduce(
+          (acc, [key, value]) => {
+            const amenityName = key.replace("amenity-", "");
+            acc[amenityName] = value === "true";
+            return acc;
+          },
+          {} as Record<string, boolean>
+        );
+
+      // Set initial states
+      if (page) setCurrentPage(parseInt(page));
+      if (map) setShowMap(map === "true");
+      if (favorites) setShowFavorites(favorites === "true");
+      if (search) {
+        setSearchQuery(search);
+        setDebouncedSearchQuery(search);
+      }
+      if (lat && lng && locationQuery) {
+        setWhereIsIt({
+          lat: parseFloat(lat),
+          lng: parseFloat(lng),
+          query: locationQuery,
+        });
+      }
+
+      // Set filters if any are present
+      const newFilters = {
+        propertyType: propertyType || "",
+        bedrooms: bedrooms || "",
+        bathrooms: bathrooms || "",
+        mainOrSecond: mainOrSecond || "",
+        amenities: {
+          ...filters.amenities,
+          ...amenityParams,
+        },
+      };
+
+      if (
+        propertyType ||
+        bedrooms ||
+        bathrooms ||
+        mainOrSecond ||
+        Object.keys(amenityParams).length > 0
+      ) {
+        setFilters(newFilters);
+        setIsFiltered(true);
+      }
+    };
+
+    loadStateFromURL();
+  }, [searchParams]);
+
+  // Update URL parameters when state changes
+  useEffect(() => {
+    const updateURL = () => {
+      const params = new URLSearchParams();
+
+      // Add basic parameters
+      if (currentPage > 1) params.set("page", currentPage.toString());
+      if (showMap) params.set("map", "true");
+      if (showFavorites) params.set("favorites", "true");
+      if (debouncedSearchQuery) params.set("search", debouncedSearchQuery);
+
+      // Add location parameters
+      if (whereIsIt.lat !== 0 && whereIsIt.lng !== 0) {
+        params.set("lat", whereIsIt.lat.toString());
+        params.set("lng", whereIsIt.lng.toString());
+        params.set("locationQuery", whereIsIt.query);
+      }
+
+      // Add filter parameters in a SEO-friendly way
+      if (filters.propertyType) params.set("type", filters.propertyType);
+      if (filters.bedrooms) params.set("beds", filters.bedrooms);
+      if (filters.bathrooms) params.set("baths", filters.bathrooms);
+      if (filters.mainOrSecond) params.set("residence", filters.mainOrSecond);
+
+      // Add active amenities
+      Object.entries(filters.amenities).forEach(([key, value]) => {
+        if (value === true) {
+          params.set(`amenity-${key}`, "true");
+        }
+      });
+
+      // Update URL without triggering navigation
+      const newUrl = `${window.location.pathname}${params.toString() ? `?${params.toString()}` : ""}`;
+      window.history.replaceState({}, "", newUrl);
+    };
+
+    // Debounce the URL update to prevent too frequent updates
+    const timeoutId = setTimeout(updateURL, 100);
+    return () => clearTimeout(timeoutId);
+  }, [
+    currentPage,
+    showMap,
+    debouncedSearchQuery,
+    whereIsIt,
+    filters,
+    isFiltered,
+    showFavorites,
+  ]);
+
+  // Update isFiltered state when filters change
+  useEffect(() => {
+    setIsFiltered(hasActiveFilters());
+  }, [filters, searchQuery]);
+
   // Create a debounced search function
   const debouncedSetSearch = useCallback(
     debounce((value: string) => {
@@ -238,7 +366,7 @@ const ListingsPage = () => {
     console.log("search", search);
 
     const response = await fetch(
-      `/api/members/getListings?page=1&limit=1000&search=${encodeURIComponent(search)}`
+      `/api/members/getListings?page=1&limit=1000&search=${encodeURIComponent(search)}${state.user?.id ? `&userId=${state.user.id}` : ""}`
     );
     if (!response.ok) {
       throw new Error("Failed to fetch listings");
@@ -256,6 +384,7 @@ const ListingsPage = () => {
       isFiltered: false,
     },
     isLoading: queryLoading,
+    refetch: refetchListings,
   } = useQuery<ListingsResponse & { isFiltered: boolean }>({
     queryKey: ["listings", debouncedSearchQuery],
     queryFn: () => fetchAllListings(debouncedSearchQuery),
@@ -522,6 +651,51 @@ const ListingsPage = () => {
     );
   };
 
+  const toggleFavorite = async (listingId: string) => {
+    if (!state.user?.id) {
+      toast.error("Please log in to favorite listings");
+      return;
+    }
+
+    try {
+      const response = await fetch("/api/members/toggleFavorite", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          listingId,
+          userId: state.user.id,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const data = await response.json();
+
+      // Update both listings and filteredListings
+      const updateListingState = (prev: Listing[]) =>
+        prev.map((item) =>
+          item.id === listingId ? { ...item, favorite: !item.favorite } : item
+        );
+
+      setListings(updateListingState);
+      setFilteredListings(updateListingState);
+
+      // Invalidate and refetch
+      await queryClient.invalidateQueries({ queryKey: ["listings"] });
+      await refetchListings();
+
+      toast.success(
+        data.favorite ? "Added to favorites" : "Removed from favorites"
+      );
+    } catch (error: any) {
+      toast.error(`Error toggling favorite: ${error.message}`);
+    }
+  };
+
   if (isLoading || queryLoading) {
     return (
       <div
@@ -584,6 +758,37 @@ const ListingsPage = () => {
                 Filters
                 {hasActiveFilters() && (
                   <span className="w-2 h-2 rounded-full bg-[#172544]" />
+                )}
+              </button>
+              <button
+                onClick={() => {
+                  if (!state.user?.id) {
+                    toast.error("Please log in to view favorites");
+                    return;
+                  }
+                  setShowFavorites(!showFavorites);
+                }}
+                className={`flex-1 sm:flex-none px-4 py-2.5 rounded-lg border font-medium transition-colors flex items-center justify-center gap-2 ${
+                  showFavorites
+                    ? "bg-[#172544] text-white border-[#172544]"
+                    : "bg-white border-gray-200 text-gray-700 hover:border-[#172544] hover:text-[#172544]"
+                }`}>
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  fill={showFavorites ? "currentColor" : "none"}
+                  viewBox="0 0 24 24"
+                  strokeWidth={1.5}
+                  stroke="currentColor"
+                  className="w-5 h-5">
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12z"
+                  />
+                </svg>
+                Favorites
+                {showFavorites && (
+                  <span className="w-2 h-2 rounded-full bg-white" />
                 )}
               </button>
               <button
@@ -685,6 +890,7 @@ const ListingsPage = () => {
                         key={listing.id}
                         listing={listing}
                         setListings={setFilteredListings}
+                        toggleFavorite={toggleFavorite}
                       />
                     ))}
                   </div>
