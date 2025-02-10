@@ -410,6 +410,10 @@ const Page = () => {
                         id: listing.id,
                         user_info: {
                           email: listing.user_info.email,
+                          name: listing.user_info.name,
+                          profile_image_url:
+                            listing.user_info.profile_image_url,
+                          profession: listing.user_info.profession,
                         },
                         home_info: {
                           address: {
@@ -420,6 +424,10 @@ const Page = () => {
                           title: listing.home_info.title,
                           located_in: listing.home_info.located_in,
                           listing_images: listing.home_info.listing_images,
+                          property_type: listing.home_info.property_type,
+                          how_many_sleep: listing.home_info.how_many_sleep,
+                          bathrooms: listing.home_info.bathrooms,
+                          area: listing.home_info.area,
                         },
                       },
                     ]}
