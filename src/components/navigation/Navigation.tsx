@@ -192,7 +192,7 @@ const Navigation = () => {
 
   useEffect(() => {
     if (
-      navigation !== "/home" &&
+      navigation !== "/" &&
       navigation !== "/become-member" &&
       navigation !== "/about-us" &&
       navigation !== "/how-it-works" &&
@@ -200,7 +200,7 @@ const Navigation = () => {
       navigation !== "/forgot-password" &&
       state.session === null
     ) {
-      router.push("/home");
+      router.push("/");
     }
   }, [navigation]);
 
@@ -240,7 +240,7 @@ const Navigation = () => {
         },
       });
 
-      router.push("/home");
+      router.push("/");
       toast.success("Signed out successfully");
     } catch (error) {
       console.error("Error signing out:", error);

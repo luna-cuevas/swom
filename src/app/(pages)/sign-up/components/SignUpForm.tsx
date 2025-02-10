@@ -263,7 +263,7 @@ const SignUpForm = () => {
   useEffect(() => {
     if (sessionId) {
       toast.success("Subscribed successfully");
-      setTimeout(() => router.push("/home"), 2000);
+      setTimeout(() => router.push("/"), 2000);
     }
   }, [sessionId]);
 
