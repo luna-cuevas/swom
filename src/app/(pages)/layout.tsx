@@ -90,6 +90,19 @@ export default function RootLayout({
           rel="stylesheet"
           href="https://cdn.jsdelivr.net/gh/orestbida/cookieconsent@3.0.1/dist/cookieconsent.css"
         />
+        <Script
+          async
+          src="https://www.googletagmanager.com/gtag/js?id=AW-16836227126"
+          strategy="afterInteractive"
+        />
+        <Script id="google-ads-tag" strategy="afterInteractive">
+          {`
+            window.dataLayer = window.dataLayer || [];
+            function gtag(){dataLayer.push(arguments);}
+            gtag('js', new Date());
+            gtag('config', 'AW-16836227126');
+          `}
+        </Script>
       </head>
       <GoogleAnalytics gaId="G-Z15K7DHQM2" />
       <Providers>
