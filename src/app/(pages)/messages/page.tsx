@@ -28,6 +28,7 @@ import {
 import { Label } from "@/components/ui/label";
 import { MessageInput } from "./components/MessageInput";
 import { FileAttachment } from "./types";
+import { ReservationDialog } from "./components/ReservationDialog";
 
 /**
  * MessagesPage Component
@@ -322,42 +323,17 @@ export default function MessagesPage() {
                         <Home className="h-4 w-4 mr-2" />
                         View Listing
                       </Button>
-                      <Dialog>
-                        <DialogTrigger asChild>
-                          <Button className="flex-1 md:flex-none bg-[#E88527] hover:bg-[#e88427ca]">
-                            <CalendarDays className="h-4 w-4 mr-2" />
-                            Reserve
-                          </Button>
-                        </DialogTrigger>
-                        <DialogContent className="sm:max-w-[425px]">
-                          <DialogHeader>
-                            <DialogTitle>Reserve Listing</DialogTitle>
-                            <DialogDescription>
-                              Select your dates and create a reservation
-                              request.
-                            </DialogDescription>
-                          </DialogHeader>
-                          <div className="grid gap-4 py-4">
-                            <div className="grid gap-2">
-                              <Label>Dates</Label>
-                              <DatePickerWithRange
-                                date={dateRange}
-                                onDateChange={setDateRange}
-                              />
-                            </div>
-                          </div>
-                          <Button
-                            className="w-full bg-[#E88527] hover:bg-[#e88427ca]"
-                            onClick={() => {
-                              console.log("Creating reservation...", {
-                                listingId: listingInfo.id,
-                                dates: dateRange,
-                              });
-                            }}>
-                            Confirm Reservation
-                          </Button>
-                        </DialogContent>
-                      </Dialog>
+                      <ReservationDialog
+                        dateRange={dateRange}
+                        onDateChange={setDateRange}
+                        listingId={listingInfo.id}
+                        userId={state.user?.id}
+                        partnerId={contactingHost?.id || ''}
+                        partnerName={contactingHost?.name || ''}
+                        onConfirm={() => {
+                          console.log("Reservation confirmed");
+                        }}
+                      />
                     </div>
                   </div>
                 )}
