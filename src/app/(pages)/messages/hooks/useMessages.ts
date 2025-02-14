@@ -47,12 +47,16 @@ export function useMessages({
       conversation_id,
       sender_id,
       attachments,
+      type
     }: {
       content: string;
       conversation_id: string;
       sender_id: string;
       attachments?: FileAttachment[];
+      type?: string;
     }) => {
+      console.log('Mutation sending message with type:', type);
+      
       const response = await fetch("/api/members/messages/send-message", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -64,14 +68,15 @@ export function useMessages({
           user_email: userEmail,
           host_email: contactingHostEmail,
           attachments,
+          type
         }),
       });
 
-      const data = await response.json();
       if (!response.ok) {
+        const data = await response.json();
         throw new Error(data.error || "Failed to send message");
       }
-      return data;
+      return response.json();
     },
     onSuccess: () => {
       // Invalidate and refetch messages and conversations
@@ -92,7 +97,11 @@ export function useMessages({
   });
 
   // Handler for sending messages
-  const sendMessage = async (content: string, messageAttachments?: FileAttachment[]) => {
+  const sendMessage = async (
+    content: string, 
+    messageAttachments?: FileAttachment[],
+    type?: string
+  ) => {
     if ((!content.trim() && (!messageAttachments || messageAttachments.length === 0)) || !conversationId || !userId) {
       return;
     }
@@ -102,7 +111,8 @@ export function useMessages({
         conversation_id: conversationId,
         content,
         sender_id: userId,
-        attachments: messageAttachments
+        attachments: messageAttachments,
+        type
       });
     } catch (err) {
       console.error("Error in sendMessage:", err);

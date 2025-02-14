@@ -16,6 +16,7 @@ import { useState, useCallback } from "react";
 import { useDropzone } from "react-dropzone";
 import Datepicker from "react-tailwindcss-datepicker";
 import { getSupabaseClient } from "@/utils/supabaseClient";
+import { useMessages } from "../hooks/useMessages";
 
 interface ReservationDialogProps {
   dateRange: DateRange | undefined;
@@ -69,6 +70,14 @@ export function ReservationDialog({
   const [partnerListings, setPartnerListings] = useState<Listing[]>([]);
   const [selectedMyListing, setSelectedMyListing] = useState<string>('');
   const [selectedPartnerListing, setSelectedPartnerListing] = useState<string>('');
+
+  const { sendMessage } = useMessages({
+    conversationId,
+    userId,
+    listingInfo: null,
+    contactingHostEmail: null,
+    userEmail: undefined,
+  });
 
   const onDrop = useCallback((acceptedFiles: File[]) => {
     setFiles(acceptedFiles);
@@ -163,32 +172,18 @@ export function ReservationDialog({
 
       console.log('Successfully created reservation:', reservation);
 
-      const messageData = {
-        conversation_id: conversationId,
-        content: "New SWOM Proposal",
-        sender_id: userId,
-        proposal: {
+      console.log('Sending proposal with type:', 'PROPOSAL');
+      
+      // Send the proposal message using the useMessages hook
+      await sendMessage(
+        JSON.stringify({
           ...proposalData,
-          reservation_id: reservation.id
-        }
-      };
-
-      console.log('Sending proposal message:', messageData);
-
-      // Then send the proposal message
-      const response = await fetch("/api/members/messages/send-message", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(messageData),
-      });
-
-      if (!response.ok) {
-        console.error('Failed to send message:', await response.text());
-        throw new Error("Failed to send proposal");
-      }
-
-      const messageResponse = await response.json();
-      console.log('Message sent successfully:', messageResponse);
+          reservation_id: reservation.id,
+          type: 'PROPOSAL'
+        }), 
+        undefined,  // no attachments
+        'PROPOSAL'  // explicitly pass type for the message record
+      );
 
       onConfirm();
     } catch (error) {

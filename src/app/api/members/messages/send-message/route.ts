@@ -20,7 +20,7 @@ export async function POST(req: Request) {
       process.env.SUPABASE_SERVICE_ROLE_KEY as string
     );
 
-    const { conversation_id, content, sender_id, listing_id, user_email, host_email, attachments } = await req.json();
+    const { conversation_id, content, sender_id, listing_id, user_email, host_email, attachments, type } = await req.json();
 
     if (!conversation_id || !sender_id || (!content && (!attachments || attachments.length === 0))) {
       return NextResponse.json(
@@ -83,6 +83,7 @@ export async function POST(req: Request) {
         conversation_id,
         content: content || '',  // Use empty string if no content (attachment only)
         sender_id,
+        type,
       })
       .select(`
         *,
@@ -205,7 +206,10 @@ export async function POST(req: Request) {
     const { data: messageWithAttachments, error: fetchError } = await supabase
       .from('messages_new')
       .select(`
-        *,
+        id,
+        content,
+        created_at,
+        type,
         sender:appUsers(
           id,
           name,
@@ -226,6 +230,7 @@ export async function POST(req: Request) {
       id: message.id,
       content: message.content,
       created_at: message.created_at,
+      type: message.type,
       sender: {
         id: message.sender.id,
         name: message.sender.name,

@@ -7,10 +7,12 @@ import { format } from "date-fns";
 import { FileAttachmentView } from "./FileAttachment";
 import { FileAttachment, TypingStatus } from "../types";
 import { useQueryClient } from "@tanstack/react-query";
+import { ProposalMessage } from "./ProposalMessage";
 
 interface Message {
   id: string;
   content: string;
+  type?: string;
   created_at: string;
   attachments?: FileAttachment[];
   sender: {
@@ -153,7 +155,7 @@ export function MessageList({
             {messages.map((message) => {
               const isCurrentUser = message.sender.id === currentUserId;
               const isUnread = !isCurrentUser;
-
+              console.log('Message type:', message.type);
               return (
                 <li
                   key={message.id}
@@ -181,22 +183,33 @@ export function MessageList({
                   </Avatar>
                   <div
                     className={cn(
-                      "my-auto py-2 font-sans md:text-lg px-10 rounded-3xl",
+                      "my-auto py-2 font-sans md:text-lg",
                       {
-                        "bg-[#dbd7d6]": isCurrentUser,
-                        "bg-[#E5DEDB]": !isCurrentUser,
+                        "px-10 rounded-3xl bg-[#dbd7d6]": !message.type,
+                        "px-10 rounded-3xl bg-[#E5DEDB]": !message.type && !isCurrentUser,
                       }
                     )}>
-                    {message.content}
-                    {message.attachments && message.attachments.length > 0 && (
-                      <div className="flex flex-col gap-2 mt-2">
-                        {message.attachments.map((attachment) => (
-                          <FileAttachmentView
-                            key={attachment.id}
-                            attachment={attachment}
-                          />
-                        ))}
-                      </div>
+                    {message.type === 'PROPOSAL' ? (
+                      <ProposalMessage
+                        proposal={JSON.parse(message.content)}
+                        messageId={message.id}
+                        isOwnMessage={isCurrentUser}
+                        conversationId={conversationId}
+                      />
+                    ) : (
+                      <>
+                        {message.content}
+                        {message.attachments && message.attachments.length > 0 && (
+                          <div className="flex flex-col gap-2 mt-2">
+                            {message.attachments.map((attachment) => (
+                              <FileAttachmentView
+                                key={attachment.id}
+                                attachment={attachment}
+                              />
+                            ))}
+                          </div>
+                        )}
+                      </>
                     )}
                   </div>
                 </li>

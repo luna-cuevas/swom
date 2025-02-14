@@ -82,6 +82,7 @@ export async function GET(req: Request) {
       id: message.id,
       content: message.content,
       created_at: message.created_at,
+      type: message.type,
       sender: {
         id: message.sender.id,
         name: message.sender.name,
