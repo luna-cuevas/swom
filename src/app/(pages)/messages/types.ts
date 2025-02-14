@@ -3,6 +3,7 @@ export interface Message {
   content: string;
   created_at: string;
   attachments?: FileAttachment[];
+  proposal?: SwomProposal;
   sender: {
     id: string;
     name: string;
@@ -56,4 +57,25 @@ export interface FileAttachment {
   file_size: number;
   url: string;
   thumbnail_url?: string;
+}
+
+export interface SwomProposal {
+  exchange_type: 'simultaneous' | 'non_simultaneous';
+  initiator_dates: {
+    startDate: string | null;
+    endDate: string | null;
+  };
+  partner_dates?: {
+    startDate: string | null;
+    endDate: string | null;
+  };
+  initiator_details: {
+    numberOfPeople: number;
+    carExchange: boolean;
+  };
+  partner_details: {
+    numberOfPeople: number;
+    carExchange: boolean;
+  };
+  status: 'pending' | 'accepted' | 'rejected';
 } 

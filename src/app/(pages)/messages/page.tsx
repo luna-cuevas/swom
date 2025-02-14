@@ -330,6 +330,7 @@ export default function MessagesPage() {
                         userId={state.user?.id}
                         partnerId={contactingHost?.id || ''}
                         partnerName={contactingHost?.name || ''}
+                        conversationId={selectedConversationId || ''}
                         onConfirm={() => {
                           console.log("Reservation confirmed");
                         }}

@@ -25,6 +25,7 @@ interface ReservationDialogProps {
   userId: string;
   partnerId: string;
   partnerName: string;
+  conversationId: string;
 }
 
 interface Listing {
@@ -43,6 +44,7 @@ export function ReservationDialog({
   userId,
   partnerId,
   partnerName,
+  conversationId,
 }: ReservationDialogProps) {
   const [exchangeType, setExchangeType] = useState<'simultaneous' | 'non_simultaneous'>('simultaneous');
   const [initiatorDates, setInitiatorDates] = useState({
@@ -93,32 +95,105 @@ export function ReservationDialog({
 
     setIsSubmitting(true);
     try {
-      // Create the reservation in your database
       const supabase = getSupabaseClient();
-      const { data, error } = await supabase
+
+      // First get the conversation emails
+      console.log('Fetching conversation:', conversationId);
+      const { data: conversation, error: conversationError } = await supabase
+        .from('conversations_new')
+        .select('user_email, host_email')
+        .eq('id', conversationId)
+        .single();
+
+      if (conversationError) {
+        console.error('Error fetching conversation:', conversationError);
+        throw conversationError;
+      }
+
+      console.log('Found conversation:', conversation);
+
+      // Then get the user IDs from appUsers
+      const { data: users, error: usersError } = await supabase
+        .from('appUsers')
+        .select('id, email')
+        .in('email', [conversation.user_email, conversation.host_email]);
+
+      if (usersError) {
+        console.error('Error fetching users:', usersError);
+        throw usersError;
+      }
+
+      console.log('Found users:', users);
+
+      // Determine initiator and partner IDs
+      const initiator_id = users.find(u => u.email === conversation.user_email)?.id;
+      const partner_id = users.find(u => u.email === conversation.host_email)?.id;
+
+      console.log('Identified users:', { initiator_id, partner_id });
+
+      if (!initiator_id || !partner_id) {
+        throw new Error('Could not identify both users');
+      }
+
+      const proposalData = {
+        exchange_type: exchangeType,
+        initiator_dates: initiatorDates,
+        partner_dates: partnerDates,
+        initiator_details: initiatorDetails,
+        partner_details: partnerDetails,
+        initiator_id,
+        partner_id,
+        listing_id: listingId,
+        status: 'pending'
+      };
+
+      console.log('Creating reservation with data:', proposalData);
+
+      // Create the reservation
+      const { data: reservation, error: reservationError } = await supabase
         .from('reservations')
-        .insert([
-          {
-            exchange_type: exchangeType,
-            initiator_dates: initiatorDates,
-            partner_dates: partnerDates,
-            initiator_details: initiatorDetails,
-            partner_details: partnerDetails,
-            initiator_id: userId,
-            partner_id: partnerId,
-            listing_id: listingId,
-            status: 'pending'
-          }
-        ])
+        .insert([proposalData])
         .select()
         .single();
 
-      if (error) throw error;
+      if (reservationError) {
+        console.error('Supabase reservation error:', reservationError);
+        throw reservationError;
+      }
+
+      console.log('Successfully created reservation:', reservation);
+
+      const messageData = {
+        conversation_id: conversationId,
+        content: "New SWOM Proposal",
+        sender_id: userId,
+        proposal: {
+          ...proposalData,
+          reservation_id: reservation.id
+        }
+      };
+
+      console.log('Sending proposal message:', messageData);
+
+      // Then send the proposal message
+      const response = await fetch("/api/members/messages/send-message", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(messageData),
+      });
+
+      if (!response.ok) {
+        console.error('Failed to send message:', await response.text());
+        throw new Error("Failed to send proposal");
+      }
+
+      const messageResponse = await response.json();
+      console.log('Message sent successfully:', messageResponse);
 
       onConfirm();
     } catch (error) {
-      console.error('Error creating reservation:', error);
-      alert('Failed to create reservation. Please try again.');
+      console.error('Error creating proposal:', error);
+      alert('Failed to create proposal. Please try again.');
     } finally {
       setIsSubmitting(false);
     }
