@@ -19,6 +19,7 @@ import {
   Trash2,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { format } from "date-fns";
 
 type HomeInfo = {
   id: string;
@@ -124,6 +125,9 @@ export function SortableListingRow({
       </TableCell>
       <TableCell className="text-center border-r" onClick={onClick}>
         {listing.slug}
+      </TableCell>
+      <TableCell className="text-center border-r" onClick={onClick}>
+        {format(new Date(listing.created_at), "MMM d, yyyy")}
       </TableCell>
       <TableCell className="text-center border-r" onClick={onClick}>
         <div className="flex flex-col gap-1 items-center">

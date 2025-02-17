@@ -43,19 +43,30 @@ export async function POST(req: Request) {
     if (!listing) throw new Error("Listing not found");
 
     if (status === "approved") {
-      // First check if user already exists
-      const { data: existingUser } = await supabase
-        .from("users")
-        .select("id")
-        .eq("email", listing.user_info.email)
-        .single();
+      // First check if user exists in auth system
+      const { data: users, error: listUsersError } =
+        await supabase.auth.admin.listUsers();
+      const existingAuthUser = users?.users.find(
+        (user) => user.email === listing.user_info.email
+      );
 
       let userId;
 
-      if (existingUser) {
-        userId = existingUser.id;
+      if (existingAuthUser) {
+        // User exists in auth system
+        userId = existingAuthUser.id;
+
+        // Update user metadata if needed
+        await supabase.auth.admin.updateUserById(userId, {
+          user_metadata: {
+            name: listing.user_info.name,
+            dob: listing.user_info.dob || "",
+            phone: listing.user_info.phone,
+            role: "member",
+          },
+        });
       } else {
-        // Create user in auth system only if they don't exist
+        // Create new user in auth system
         const { data: userData, error: userError } =
           await supabase.auth.admin.createUser({
             email: listing.user_info.email,
@@ -77,8 +88,69 @@ export async function POST(req: Request) {
         userId = userData.user.id;
       }
 
-      // Insert into listings table with the user_id
-      const { error: insertError } = await supabase.from("listings").insert({
+      // Check if user exists in appUsers table
+      const { data: existingAppUser } = await supabase
+        .from("appUsers")
+        .select("id")
+        .eq("id", userId)
+        .maybeSingle();
+
+      if (!existingAppUser) {
+        // Create entry in appUsers table only if it doesn't exist
+        const appUserData: {
+          id: string;
+          name: string;
+          email: string;
+          role: string;
+          profession: string;
+          age: string;
+          profileImage: string;
+          favorites: any[];
+          privacyPolicy: string;
+          privacyPolicyDate?: string;
+          created_at: string;
+        } = {
+          id: userId,
+          name: listing.user_info.name,
+          email: listing.user_info.email,
+          role: "member",
+          profession: listing.user_info.profession || "",
+          age: listing.user_info.age || "",
+          profileImage: listing.user_info.profile_image_url || "",
+          favorites: [],
+          privacyPolicy: listing.privacy_policy_accepted ? "accepted" : "",
+          created_at: new Date().toISOString(),
+        };
+
+        // Only add privacyPolicyDate if it exists
+        if (listing.privacy_policy_date) {
+          appUserData.privacyPolicyDate = listing.privacy_policy_date;
+        }
+
+        const { error: appUserError } = await supabase
+          .from("appUsers")
+          .insert(appUserData);
+
+        if (appUserError) {
+          console.error("Error inserting into appUsers table:", appUserError);
+          return NextResponse.json(
+            {
+              error: `Error inserting into appUsers table: ${appUserError.message}`,
+            },
+            { status: 500 }
+          );
+        }
+      }
+
+      // Check if listing already exists
+      const { data: existingListing } = await supabase
+        .from("listings")
+        .select("id")
+        .eq("id", listing.id)
+        .maybeSingle();
+
+      // Prepare listing data
+      const listingData = {
         id: listing.id,
         status: "approved",
         user_id: userId,
@@ -93,51 +165,71 @@ export async function POST(req: Request) {
         privacy_policy_date: listing.privacy_policy_date,
         created_at: listing.created_at,
         is_highlighted: listing.is_highlighted,
-      });
+      };
+
+      let insertError;
+      if (existingListing) {
+        // Update existing listing
+        const { error } = await supabase
+          .from("listings")
+          .update(listingData)
+          .eq("id", listing.id);
+        insertError = error;
+      } else {
+        // Insert new listing
+        const { error } = await supabase.from("listings").insert(listingData);
+        insertError = error;
+      }
 
       if (insertError) {
-        console.error("Error inserting into listings table:", insertError);
+        console.error("Error inserting/updating listings table:", insertError);
         return NextResponse.json(
           {
-            error: `Error inserting into listings table: ${insertError.message}`,
+            error: `Error inserting/updating listings table: ${insertError.message}`,
           },
           { status: 500 }
         );
       }
 
-      // Create entry in appUsers table
-      const { error: appUserError } = await supabase.from("appUsers").insert({
-        id: userId,
-        name: listing.user_info.name,
-        email: listing.user_info.email,
-        role: "member",
-        profession: listing.user_info.profession || "",
-        age: listing.user_info.age || "",
-        profileImage: listing.user_info.profile_image_url || "",
-        favorites: [],
-        privacyPolicy: listing.privacy_policy_accepted ? "accepted" : "",
-        privacyPolicyDate: listing.privacy_policy_date || "",
-        created_at: new Date().toISOString(),
-      });
+      // Delete from needs_approval table
+      const { error: deleteError } = await supabase
+        .from("needs_approval")
+        .delete()
+        .eq("id", listingId);
 
-      if (appUserError) {
-        console.error("Error inserting into appUsers table:", appUserError);
-        return NextResponse.json(
-          {
-            error: `Error inserting into appUsers table: ${appUserError.message}`,
-          },
-          { status: 500 }
-        );
-      }
+      if (deleteError) throw deleteError;
 
-      // Send password reset email using Brevo template 3
+      // Send emails and log action only if all previous operations succeeded
       try {
+        // Send approval email first
+        const approvalEmailResponse = await fetch(
+          `${process.env.BASE_URL}/api/admin/sendBrevoTemplate`,
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              email: listing.user_info.email,
+              templateId: 1,
+              params: {
+                name: listing.user_info.name,
+              },
+            }),
+          }
+        );
+
+        if (!approvalEmailResponse.ok) {
+          throw new Error("Failed to send approval email");
+        }
+
+        // Send password reset email using Brevo template 3
         const resetUrl =
           process.env.NODE_ENV === "development"
             ? `http://localhost:3000/sign-up?email=${listing.user_info.email}`
             : `https://swom.travel/sign-up?email=${listing.user_info.email}`;
 
-        const emailResponse = await fetch(
+        const resetEmailResponse = await fetch(
           `${process.env.BASE_URL}/api/admin/sendBrevoTemplate`,
           {
             method: "POST",
@@ -155,59 +247,24 @@ export async function POST(req: Request) {
           }
         );
 
-        if (!emailResponse.ok) {
-          console.error(
-            "Failed to send password reset email:",
-            await emailResponse.json()
-          );
+        if (!resetEmailResponse.ok) {
+          throw new Error("Failed to send password reset email");
         }
-      } catch (emailError) {
-        console.error("Error sending password reset email:", emailError);
+
+        // Log the approval action
+        await logAdminAction(supabase, adminId, "approve_listing", {
+          listing_id: listingId,
+          listing_title: listing.home_info.title,
+          user_email: listing.user_info.email,
+          action_details: JSON.stringify({
+            status: "approved",
+            listing_id: listingId,
+          }),
+        });
+      } catch (error) {
+        console.error("Error in final steps:", error);
+        // Don't throw the error as emails and logging are not critical for the approval process
       }
-
-      // Delete from needs_approval table
-      const { error: deleteError } = await supabase
-        .from("needs_approval")
-        .delete()
-        .eq("id", listingId);
-
-      if (deleteError) throw deleteError;
-
-      // Send approval email
-      try {
-        const emailResponse = await fetch(
-          `${process.env.BASE_URL}/api/admin/sendBrevoTemplate`,
-          {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-            },
-            body: JSON.stringify({
-              email: listing.user_info.email,
-              templateId: 1,
-              params: {
-                name: listing.user_info.name,
-              },
-            }),
-          }
-        );
-
-        if (!emailResponse.ok) {
-          console.error(
-            "Failed to send approval email:",
-            await emailResponse.json()
-          );
-        }
-      } catch (emailError) {
-        console.error("Error sending approval email:", emailError);
-      }
-
-      // Log the approval action
-      await logAdminAction(supabase, adminId, "approve_listing", {
-        listing_id: listingId,
-        listing_title: listing.home_info.title,
-        user_email: listing.user_info.email,
-      });
     } else {
       // Update the status for rejected listings
       const { error: updateError } = await supabase

@@ -54,6 +54,9 @@ const columns = ["Title", "Email", "Location", "Wiki Mujeres", "Actions"];
 
 export default function PendingApprovals() {
   const [filter, setFilter] = useState("");
+  const [statusFilter, setStatusFilter] = useState<
+    "pending" | "approved_unpaid"
+  >("pending");
   const queryClient = useQueryClient();
   const [selectedListing, setSelectedListing] = useState<PendingListing | null>(
     null
@@ -72,19 +75,22 @@ export default function PendingApprovals() {
   const [state, setState] = useAtom(globalStateAtom);
 
   const { data: pendingListings = [], isLoading } = useQuery<PendingListing[]>({
-    queryKey: ["pendingListings"],
+    queryKey: ["pendingListings", statusFilter],
     queryFn: async () => {
       try {
-        const response = await fetch("/api/admin/getPendingListings", {
-          cache: "no-store",
-          headers: {
-            "Cache-Control": "no-cache",
-            Pragma: "no-cache",
-          },
-        });
+        const response = await fetch(
+          `/api/admin/getPendingListings?status=${statusFilter}`,
+          {
+            cache: "no-store",
+            headers: {
+              "Cache-Control": "no-cache",
+              Pragma: "no-cache",
+            },
+          }
+        );
         if (!response.ok) {
           const error = await response.json();
-          throw new Error(error.error || "Failed to fetch pending listings");
+          throw new Error(error.error || "Failed to fetch listings");
         }
         const data = await response.json();
         if (!data || !Array.isArray(data)) {
@@ -94,7 +100,7 @@ export default function PendingApprovals() {
         return data;
       } catch (error: any) {
         setError(error.message);
-        console.error("Error fetching pending listings:", error);
+        console.error("Error fetching listings:", error);
         throw error;
       }
     },
@@ -267,13 +273,25 @@ export default function PendingApprovals() {
     <div className="space-y-4">
       <div className="flex items-center gap-4">
         <Input
-          placeholder="Search pending listings..."
+          placeholder="Search listings..."
           value={filter}
           onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
             setFilter(e.target.value)
           }
           className="max-w-sm"
         />
+        <div className="flex items-center gap-2">
+          <Button
+            variant={statusFilter === "pending" ? "default" : "outline"}
+            onClick={() => setStatusFilter("pending")}>
+            Pending
+          </Button>
+          <Button
+            variant={statusFilter === "approved_unpaid" ? "default" : "outline"}
+            onClick={() => setStatusFilter("approved_unpaid")}>
+            Approved (Unpaid)
+          </Button>
+        </div>
       </div>
 
       <div className="border rounded-md">
@@ -301,31 +319,35 @@ export default function PendingApprovals() {
                   className="flex items-center gap-2"
                   onClick={(e) => e.stopPropagation()} // Prevent row click on actions
                 >
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() =>
-                      setConfirmDialog({
-                        isOpen: true,
-                        type: "approve",
-                        listing,
-                      })
-                    }>
-                    Approve
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="bg-red-50 hover:bg-red-100 hover:text-red-600"
-                    onClick={() =>
-                      setConfirmDialog({
-                        isOpen: true,
-                        type: "reject",
-                        listing,
-                      })
-                    }>
-                    Reject
-                  </Button>
+                  {statusFilter === "pending" ? (
+                    <>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() =>
+                          setConfirmDialog({
+                            isOpen: true,
+                            type: "approve",
+                            listing,
+                          })
+                        }>
+                        Approve
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="bg-red-50 hover:bg-red-100 hover:text-red-600"
+                        onClick={() =>
+                          setConfirmDialog({
+                            isOpen: true,
+                            type: "reject",
+                            listing,
+                          })
+                        }>
+                        Reject
+                      </Button>
+                    </>
+                  ) : null}
                   <Button
                     variant="ghost"
                     size="sm"
