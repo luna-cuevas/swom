@@ -22,11 +22,12 @@ export async function POST(request: Request) {
 
   try {
     const requestBody = {
+      sender: { email: "info@swom.travel" }, // Explicitly set sender
       to: [{ email }],
       templateId: parseInt(templateId),
       ...(params && Object.keys(params).length > 0 ? { params } : {}),
     };
-
+    
     console.log("Sending email with:", { email, templateId, params });
 
     const options = {
