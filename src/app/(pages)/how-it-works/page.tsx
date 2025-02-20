@@ -78,9 +78,7 @@ const Page: React.FC<Props> = (props) => {
               <div className="col-start-1 w-1/2 col-span-2">
                 <h1 className="text-7xl font-bold font-sans">2</h1>
                 <p className="text-2xl">
-                  Upon receiving your username and password, sign in, make the
-                  membership payment, and proceed to create your personal
-                  profile and listing with just a few straightforward steps.
+                  Upon receiving your username and password, sign in, make the membership payment of USD200, and proceed to create your personal profile and listing with just a few straightforward steps.
                 </p>
               </div>
               <div className="col-start-2">

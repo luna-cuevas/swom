@@ -30,6 +30,9 @@ import {
   Archive,
   Upload,
   Trash2,
+  ArrowUpDown,
+  ArrowUp,
+  ArrowDown,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { TableSkeleton } from "./TableSkeleton";
@@ -88,6 +91,7 @@ const columns = [
   "Email",
   "Location",
   "Slug",
+  "Created At",
   "Status",
   "Wiki Mujeres",
   "Actions",
@@ -97,6 +101,9 @@ export default function ListingsTable() {
   const [filter, setFilter] = useState("");
   const [wikiFilter, setWikiFilter] = useState<boolean | null>(null);
   const [statusFilter, setStatusFilter] = useState<string | null>(null);
+  const [sortDirection, setSortDirection] = useState<"asc" | "desc" | null>(
+    null
+  );
   const queryClient = useQueryClient();
   const [selectedListing, setSelectedListing] = useState<Listing | null>(null);
   const [isEditingOrder, setIsEditingOrder] = useState(false);
@@ -159,6 +166,33 @@ export default function ListingsTable() {
 
     return matchesSearch && matchesStatus;
   });
+
+  const sortListings = (listingsToSort: Listing[]) => {
+    if (!sortDirection) return listingsToSort;
+
+    return [...listingsToSort].sort((a, b) => {
+      const dateA = new Date(a.created_at).getTime();
+      const dateB = new Date(b.created_at).getTime();
+      return sortDirection === "asc" ? dateA - dateB : dateB - dateA;
+    });
+  };
+
+  const handleSortToggle = () => {
+    setSortDirection((current) => {
+      if (current === null) return "desc";
+      if (current === "desc") return "asc";
+      return null;
+    });
+  };
+
+  const getSortIcon = () => {
+    if (!sortDirection) return <ArrowUpDown className="h-4 w-4" />;
+    return sortDirection === "asc" ? (
+      <ArrowUp className="h-4 w-4" />
+    ) : (
+      <ArrowDown className="h-4 w-4" />
+    );
+  };
 
   const handleToggleHighlight = async (
     listingId: string,
@@ -238,20 +272,20 @@ export default function ListingsTable() {
 
       if (!response.ok) throw new Error("Failed to send password reset email");
 
-      // Also trigger Supabase password reset
-      const supabaseResponse = await fetch("/api/admin/resetPassword", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          email: listing.user_info.email,
-          adminId: state.user.id,
-        }),
-      });
+      // // Also trigger Supabase password reset
+      // const supabaseResponse = await fetch("/api/admin/resetPassword", {
+      //   method: "POST",
+      //   headers: {
+      //     "Content-Type": "application/json",
+      //   },
+      //   body: JSON.stringify({
+      //     email: listing.user_info.email,
+      //     adminId: state.user.id,
+      //   }),
+      // });
 
-      if (!supabaseResponse.ok)
-        throw new Error("Failed to trigger password reset");
+      // if (!supabaseResponse.ok)
+      //   throw new Error("Failed to trigger password reset");
 
       toast.success("Password reset email sent successfully");
     } catch (error) {
@@ -382,8 +416,9 @@ export default function ListingsTable() {
     );
   }
 
-  const displayedListings =
-    pendingOrder.length > 0 ? pendingOrder : filteredListings;
+  const displayedListings = sortListings(
+    pendingOrder.length > 0 ? pendingOrder : filteredListings
+  );
 
   return (
     <div className="space-y-4">
@@ -447,7 +482,19 @@ export default function ListingsTable() {
               <TableRow>
                 {isEditingOrder && <TableHead className="w-[50px]" />}
                 {columns.map((column) => (
-                  <TableHead key={column}>{column}</TableHead>
+                  <TableHead key={column}>
+                    {column === "Created At" ? (
+                      <Button
+                        variant="ghost"
+                        onClick={handleSortToggle}
+                        className="h-8 px-2 hover:bg-transparent">
+                        {column}
+                        {getSortIcon()}
+                      </Button>
+                    ) : (
+                      column
+                    )}
+                  </TableHead>
                 ))}
               </TableRow>
             </TableHeader>
@@ -460,9 +507,9 @@ export default function ListingsTable() {
                   collisionDetection={closestCenter}
                   onDragEnd={handleDragEnd}>
                   <SortableContext
-                    items={filteredListings}
+                    items={displayedListings}
                     strategy={verticalListSortingStrategy}>
-                    {filteredListings.map((listing) => (
+                    {displayedListings.map((listing) => (
                       <SortableListingRow
                         key={listing.id}
                         listing={listing}

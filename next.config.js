@@ -1,6 +1,15 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: false,
+  async redirects() {
+    return [
+      {
+        source: "/wikimujeres",
+        destination: "/",
+        permanent: true,
+      },
+    ];
+  },
   images: {
     domains: [
       "img.icons8.com",

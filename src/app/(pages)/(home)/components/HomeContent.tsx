@@ -110,6 +110,9 @@ export const HomeContent = ({ highlightedListings }: HomeContentProps) => {
           <p className="text-xl md:text-2xl font-light mb-8">
             Exchange your home for free, for travel, for work, for fun!
           </p>
+          <p className="text-xl md:text-2xl font-light mb-8">
+            Join now for USD200 a year.
+          </p>
           <Link
             href="/become-member"
             className="inline-block px-8 py-3 bg-[#172544] text-white rounded-full text-lg hover:bg-[#2a3b5e] transition-colors duration-300">
