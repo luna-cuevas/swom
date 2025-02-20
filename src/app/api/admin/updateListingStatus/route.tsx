@@ -222,8 +222,11 @@ export async function POST(req: Request) {
           params: { name: listing.user_info.name },
         };
 
+        // Get the base URL from environment or default to the request URL
+        const baseUrl = new URL(req.url).origin;
+
         const approvalEmailResponse = await fetch(
-          `${process.env.BASE_URL}/api/admin/sendBrevoTemplate`,
+          `${baseUrl}/api/admin/sendBrevoTemplate`,
           {
             method: "POST",
             headers: {
@@ -234,9 +237,14 @@ export async function POST(req: Request) {
         );
 
         if (!approvalEmailResponse.ok) {
-          const errorData = await approvalEmailResponse.text();
-          console.error("Failed to send approval email:", errorData);
-          throw new Error(`Failed to send approval email: ${errorData}`);
+          const errorText = await approvalEmailResponse.text();
+          console.error(
+            "Failed to send approval email. Status:",
+            approvalEmailResponse.status,
+            "Response:",
+            errorText
+          );
+          throw new Error(`Failed to send approval email: ${errorText}`);
         }
 
         const emailResponseData = await approvalEmailResponse.json();
@@ -248,26 +256,35 @@ export async function POST(req: Request) {
             ? `http://localhost:3000/sign-up?email=${listing.user_info.email}`
             : `https://swom.travel/sign-up?email=${listing.user_info.email}`;
 
+        const resetEmailPayload = {
+          email: listing.user_info.email,
+          templateId: 3,
+          params: {
+            name: listing.user_info.name,
+            url: resetUrl,
+          },
+        };
+
         const resetEmailResponse = await fetch(
-          `${process.env.BASE_URL}/api/admin/sendBrevoTemplate`,
+          `${baseUrl}/api/admin/sendBrevoTemplate`,
           {
             method: "POST",
             headers: {
               "Content-Type": "application/json",
             },
-            body: JSON.stringify({
-              email: listing.user_info.email,
-              templateId: 3,
-              params: {
-                name: listing.user_info.name,
-                url: resetUrl,
-              },
-            }),
+            body: JSON.stringify(resetEmailPayload),
           }
         );
 
         if (!resetEmailResponse.ok) {
-          throw new Error("Failed to send password reset email");
+          const errorText = await resetEmailResponse.text();
+          console.error(
+            "Failed to send reset email. Status:",
+            resetEmailResponse.status,
+            "Response:",
+            errorText
+          );
+          throw new Error(`Failed to send reset email: ${errorText}`);
         }
 
         // Log the approval action
