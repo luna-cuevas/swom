@@ -14,29 +14,34 @@ export async function POST(request: Request) {
 
   const url = "https://api.brevo.com/v3/smtp/email";
 
+  // Prepare request body
+  const requestBody = {
+    sender: { email: "info@swom.travel" }, // Explicitly set sender
+    to: [{ email }],
+    templateId: parseInt(templateId),
+    params: params || { placeholder: "" }, // Always present, but empty if undefined
+  };
+
+  // Convert request body to string
+  const requestBodyString = JSON.stringify(requestBody);
+  const contentLength = Buffer.byteLength(requestBodyString, "utf-8"); // Calculate content length
+
   const headers = {
     accept: "application/json",
     "content-type": "application/json",
     "api-key": process.env.BREVO_API_KEY as string,
+    "content-length": contentLength.toString(), // Explicitly set content-length
   };
 
-  try {
-    const requestBody = {
-      sender: { email: "info@swom.travel" }, // Explicitly set sender
-      to: [{ email }],
-      templateId: parseInt(templateId),
-      params: params || { placeholder: "" },  // Always present, but empty if undefined
-    };
-    
-    console.log("Sending email with:", { email, templateId, params });
+  console.log("Sending email with:", { email, templateId, params, contentLength });
 
-    const options = {
+  try {
+    const response = await fetch(url, {
       method: "POST",
       headers,
-      body: JSON.stringify(requestBody),
-    };
+      body: requestBodyString, // Use precomputed string
+    });
 
-    const response = await fetch(url, options);
     const data = await response.json();
 
     if (!response.ok) {
