@@ -212,27 +212,25 @@ export async function POST(req: Request) {
       // Send emails and log action only if all previous operations succeeded
       try {
         // Send approval email first
+
+        const emailPayload = JSON.stringify({
+          email: listing.user_info.email,
+          templateId: 1,
+          params: { name: listing.user_info.name },
+        });
+
         const approvalEmailResponse = await fetch(
           `${process.env.BASE_URL}/api/admin/sendBrevoTemplate`,
           {
             method: "POST",
             headers: {
               "Content-Type": "application/json",
+              "Content-Length": Buffer.byteLength(emailPayload, "utf-8").toString(), // ✅ Ensure length is explicitly set
+
             },
-            body: JSON.stringify({
-              email: listing.user_info.email,
-              templateId: 1,
-              params: {
-                name: listing.user_info.name,
-              },
-            }),
+            body: emailPayload,
           }
         );
-        const emailPayload = JSON.stringify({
-          email: listing.user_info.email,
-          templateId: 1,
-          params: { name: listing.user_info.name },
-      });
   
       console.info("📩 Email payload before sending:", emailPayload);
       console.info("📏 Calculated Content-Length for email request:", Buffer.byteLength(emailPayload, "utf-8"));
