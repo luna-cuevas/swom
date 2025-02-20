@@ -25,7 +25,7 @@ export async function POST(request: Request) {
       sender: { email: "info@swom.travel" }, // Explicitly set sender
       to: [{ email }],
       templateId: parseInt(templateId),
-      params: params || {},  // Always present, but empty if undefined
+      params: params || { placeholder: "" },  // Always present, but empty if undefined
     };
     
     console.log("Sending email with:", { email, templateId, params });
