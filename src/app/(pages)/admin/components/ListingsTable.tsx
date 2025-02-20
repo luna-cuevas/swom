@@ -91,9 +91,9 @@ const columns = [
   "Email",
   "Location",
   "Slug",
+  "Created At",
   "Status",
   "Wiki Mujeres",
-  "Created At",
   "Actions",
 ];
 
