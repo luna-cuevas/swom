@@ -9,6 +9,11 @@ export async function POST(req: Request) {
   );
 
   try {
+    const clonedReq = req.clone(); 
+    const rawBody = await clonedReq.text();
+    console.info("📩 Raw request body received:", rawBody);
+    console.info("📏 Actual received body size:", Buffer.byteLength(rawBody, "utf-8"));
+  
     const { listingId, status, adminId } = await req.json();
 
     if (!listingId || !status || !adminId) {
@@ -17,6 +22,8 @@ export async function POST(req: Request) {
         { status: 400 }
       );
     }
+    console.info("✅ Parsed request body:", { listingId, status, adminId });
+
 
     // Start a transaction by getting the listing data first
     const { data: listing, error: fetchError } = await supabase
@@ -41,6 +48,7 @@ export async function POST(req: Request) {
 
     if (fetchError) throw fetchError;
     if (!listing) throw new Error("Listing not found");
+    console.info("🏡 Listing data fetched from Supabase:", JSON.stringify(listing, null, 2));
 
     if (status === "approved") {
       // First check if user exists in auth system
@@ -79,14 +87,16 @@ export async function POST(req: Request) {
             },
             email_confirm: true,
           });
-
-        if (userError) {
-          console.error("Error creating user:", userError);
-          throw userError;
+          
+          
+          if (userError) {
+            console.error("Error creating user:", userError);
+            throw userError;
+          }
+          
+          userId = userData.user.id;
         }
-
-        userId = userData.user.id;
-      }
+        console.info("👤 User ID determined:", userId);
 
       // Check if user exists in appUsers table
       const { data: existingAppUser } = await supabase
@@ -218,11 +228,22 @@ export async function POST(req: Request) {
             }),
           }
         );
+        const emailPayload = JSON.stringify({
+          email: listing.user_info.email,
+          templateId: 1,
+          params: { name: listing.user_info.name },
+      });
+  
+      console.info("📩 Email payload before sending:", emailPayload);
+      console.info("📏 Calculated Content-Length for email request:", Buffer.byteLength(emailPayload, "utf-8"));
+  
 
         if (!approvalEmailResponse.ok) {
           throw new Error("Failed to send approval email");
         }
-
+        const emailResponseData = await approvalEmailResponse.json();
+        console.info("📧 Brevo response:", emailResponseData);
+    
         // Send password reset email using Brevo template 3
         const resetUrl =
           process.env.NODE_ENV === "development"
