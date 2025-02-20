@@ -272,20 +272,20 @@ export default function ListingsTable() {
 
       if (!response.ok) throw new Error("Failed to send password reset email");
 
-      // Also trigger Supabase password reset
-      const supabaseResponse = await fetch("/api/admin/resetPassword", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          email: listing.user_info.email,
-          adminId: state.user.id,
-        }),
-      });
+      // // Also trigger Supabase password reset
+      // const supabaseResponse = await fetch("/api/admin/resetPassword", {
+      //   method: "POST",
+      //   headers: {
+      //     "Content-Type": "application/json",
+      //   },
+      //   body: JSON.stringify({
+      //     email: listing.user_info.email,
+      //     adminId: state.user.id,
+      //   }),
+      // });
 
-      if (!supabaseResponse.ok)
-        throw new Error("Failed to trigger password reset");
+      // if (!supabaseResponse.ok)
+      //   throw new Error("Failed to trigger password reset");
 
       toast.success("Password reset email sent successfully");
     } catch (error) {
