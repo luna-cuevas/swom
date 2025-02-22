@@ -176,11 +176,7 @@ export function ReservationDialog({
       
       // Send the proposal message using the useMessages hook
       await sendMessage(
-        JSON.stringify({
-          ...proposalData,
-          reservation_id: reservation.id,
-          type: 'PROPOSAL'
-        }), 
+        reservation.id, 
         undefined,  // no attachments
         'PROPOSAL'  // explicitly pass type for the message record
       );

@@ -6,8 +6,9 @@ import { cn } from "@/lib/utils";
 import { format } from "date-fns";
 import { FileAttachmentView } from "./FileAttachment";
 import { FileAttachment, TypingStatus } from "../types";
-import { useQueryClient } from "@tanstack/react-query";
+import { useQueryClient, useQuery } from "@tanstack/react-query";
 import { ProposalMessage } from "./ProposalMessage";
+import { createClient } from "@supabase/supabase-js";
 
 interface Message {
   id: string;
@@ -138,6 +139,33 @@ export function MessageList({
     };
   }, [messages, currentUserId, markMessagesAsRead]);
 
+  // Call useReservationDetails for all proposal messages at once
+  const proposalIds = messages
+    .filter(msg => msg.type === 'PROPOSAL')
+    .map(msg => msg.content);
+
+  const { data: reservationDetails } = useQuery({
+    queryKey: ['reservations', proposalIds],
+    queryFn: async () => {
+      if (proposalIds.length === 0) return {};
+      const supabase = createClient(
+        process.env.NEXT_PUBLIC_SUPABASE_URL!,
+        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+      );
+      
+      const { data } = await supabase
+        .from('reservations')
+        .select('*')
+        .in('id', proposalIds);
+        
+      return data?.reduce((acc, reservation) => ({
+        ...acc,
+        [reservation.id]: reservation
+      }), {}) || {};
+    },
+    enabled: proposalIds.length > 0
+  });
+
   return (
     <div
       ref={containerRef}
@@ -155,7 +183,7 @@ export function MessageList({
             {messages.map((message) => {
               const isCurrentUser = message.sender.id === currentUserId;
               const isUnread = !isCurrentUser;
-              console.log('Message type:', message.type);
+
               return (
                 <li
                   key={message.id}
@@ -190,12 +218,16 @@ export function MessageList({
                       }
                     )}>
                     {message.type === 'PROPOSAL' ? (
-                      <ProposalMessage
-                        proposal={JSON.parse(message.content)}
-                        messageId={message.id}
-                        isOwnMessage={isCurrentUser}
-                        conversationId={conversationId}
-                      />
+                      reservationDetails?.[message.content] ? (
+                        <ProposalMessage
+                          proposal={reservationDetails[message.content]}
+                          messageId={message.id}
+                          isOwnMessage={isCurrentUser}
+                          conversationId={conversationId}
+                        />
+                      ) : (
+                        <div>Loading proposal...</div>
+                      )
                     ) : (
                       <>
                         {message.content}
