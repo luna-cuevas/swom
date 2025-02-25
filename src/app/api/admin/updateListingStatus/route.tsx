@@ -258,7 +258,7 @@ export async function POST(req: Request) {
 
         const resetEmailPayload = {
           email: listing.user_info.email,
-          templateId: 3,
+          templateId: 7,
           params: {
             name: listing.user_info.name,
             url: resetUrl,
