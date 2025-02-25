@@ -243,7 +243,7 @@ export async function POST(req: Request) {
             },
             body: JSON.stringify({
               email: user_info.email,
-              templateId: 3,
+              templateId: 7,
               params: {
                 name: user_info.name,
                 url: resetUrl,

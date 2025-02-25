@@ -262,7 +262,7 @@ export default function ListingsTable() {
         },
         body: JSON.stringify({
           email: listing.user_info.email,
-          templateId: 3,
+          templateId: 7,
           params: {
             name: listing.user_info.name,
           },
