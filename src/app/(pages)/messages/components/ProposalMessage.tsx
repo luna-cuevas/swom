@@ -20,12 +20,12 @@ export function ProposalMessage({ proposal, messageId, isOwnMessage, conversatio
     setIsUpdating(true);
     try {
       const supabase = getSupabaseClient();
-      
+      console.log('Proposal ID:', proposal.id);
       // Update the proposal status
       const { error: proposalError } = await supabase
         .from('reservations')
         .update({ status: accept ? 'accepted' : 'rejected' })
-        .eq('message_id', messageId);
+        .eq('id', proposal.id);
 
       if (proposalError) throw proposalError;
 

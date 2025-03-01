@@ -61,6 +61,7 @@ export interface FileAttachment {
 }
 
 export interface SwomProposal {
+  id: string;
   exchange_type: 'simultaneous' | 'non_simultaneous';
   initiator_dates: {
     startDate: string | null;
